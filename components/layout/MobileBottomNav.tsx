@@ -18,6 +18,9 @@ export default function MobileBottomNav() {
   const { userPlan, setUserPlan } = useTerminalStore();
   const isPremium = userPlan === 'premium';
 
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+  if (isAuthPage) return null;
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
       {/* Plan Badge - floating above nav bar, top right */}
@@ -35,7 +38,7 @@ export default function MobileBottomNav() {
           {isPremium ? 'Premium' : 'Free'}
         </button>
       </div>
-      <div 
+      <div
         className="bg-[#0F1924] border-t border-[#222F44]"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)', marginBottom: '-1px' }}
       >

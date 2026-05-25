@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import TopBar from './TopBar';
 import RightSidebar from './RightSidebar';
 import { useLayout } from './LayoutProvider';
@@ -12,6 +13,13 @@ interface PageContentProps {
 
 export default function PageContent({ children }: PageContentProps) {
   const { rightSidebarContent, useDefaultRightSidebar, showTopBar } = useLayout();
+  const pathname = usePathname();
+
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex h-full bg-[#0a1017]">

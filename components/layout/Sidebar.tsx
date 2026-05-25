@@ -20,6 +20,9 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar, userPlan } = useTerminalStore();
 
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+  if (isAuthPage) return null;
+
   return (
     <>
       {/* Mobile backdrop */}

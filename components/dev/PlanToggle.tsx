@@ -1,12 +1,17 @@
 'use client';
 
 import { useTerminalStore } from '@/lib/store';
+import { usePathname } from 'next/navigation';
 import { Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function PlanToggle() {
+  const pathname = usePathname();
   const { userPlan, setUserPlan } = useTerminalStore();
   const isPremium = userPlan === 'premium';
+
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+  if (isAuthPage) return null;
 
   return (
     <button
