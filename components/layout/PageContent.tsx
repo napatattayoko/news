@@ -15,7 +15,7 @@ export default function PageContent({ children }: PageContentProps) {
   const { rightSidebarContent, useDefaultRightSidebar, showTopBar } = useLayout();
   const pathname = usePathname();
 
-  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(pathname);
 
   if (isAuthPage) {
     return <>{children}</>;

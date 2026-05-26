@@ -20,7 +20,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar, userPlan } = useTerminalStore();
 
-  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(pathname);
   if (isAuthPage) return null;
 
   return (

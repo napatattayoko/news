@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -23,7 +23,7 @@ export default function LoginPage() {
       setEmailError('กรุณากรอกชื่อผู้ใช้หรืออีเมล');
       return false;
     }
-    
+
     // If it looks like an email, validate standard format
     if (val.includes('@')) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,7 +38,7 @@ export default function LoginPage() {
         return false;
       }
     }
-    
+
     setEmailError('');
     return true;
   };
@@ -60,7 +60,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
-    
+
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
 
@@ -121,9 +121,8 @@ export default function LoginPage() {
             }}
             onBlur={() => validateEmail(email)}
             placeholder="ชื่อผู้ใช้ หรือ user@example.com"
-            className={`w-full bg-[#20293a] border ${
-              emailError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
-            } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors`}
+            className={`w-full bg-[#20293a] border ${emailError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
+              } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors`}
             required
           />
           {emailError && (
@@ -150,9 +149,8 @@ export default function LoginPage() {
               }}
               onBlur={() => validatePassword(password)}
               placeholder="รหัสผ่านอย่างน้อย 8 ตัวอักษร"
-              className={`w-full bg-[#20293a] border ${
-                passwordError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
-              } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors pr-10`}
+              className={`w-full bg-[#20293a] border ${passwordError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
+                } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors pr-10`}
               required
             />
             <button

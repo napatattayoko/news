@@ -18,7 +18,7 @@ export default function MobileBottomNav() {
   const { userPlan, setUserPlan } = useTerminalStore();
   const isPremium = userPlan === 'premium';
 
-  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(pathname);
   if (isAuthPage) return null;
 
   return (
