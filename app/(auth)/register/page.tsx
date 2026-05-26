@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import { toast } from '@/lib/toast';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -12,14 +11,15 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  
   const [usernameError, setUsernameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Validate Username
@@ -81,6 +81,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError('');
 
     const isUsernameValid = validateUsername(username);
     const isEmailValid = validateEmail(email);
@@ -88,7 +89,7 @@ export default function RegisterPage() {
     const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
 
     if (!isUsernameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
-      toast.error('กรุณาตรวจสอบข้อมูล', 'ข้อมูลการสมัครสมาชิกไม่ถูกต้องหรือไม่ตรงกัน');
+      setSubmitError('กรุณากรอกข้อมูลการสมัครสมาชิกให้ถูกต้องและตรงกัน');
       return;
     }
 
@@ -96,49 +97,36 @@ export default function RegisterPage() {
 
     try {
       // MOCK SERVER DELAY: 1.5 seconds
-      // --- READY TO PLUG IN API ---
-      // เมื่อพี่ซันส่ง API มาให้ สามารถใช้โค้ดด้านล่างนี้ได้ทันที:
-      //
-      // const response = await fetch('https://api.ideatrade1.com/auth/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ username, email, password })
-      // });
-      // const result = await response.json();
-      // if (!response.ok) throw new Error(result.message || 'Something went wrong');
-      //
-      // ----------------------------
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast.success(
-        'สมัครสมาชิกสำเร็จ',
-        'ระบบสร้างบัญชีของคุณเรียบร้อยแล้ว กำลังนำคุณไปยังหน้าล็อกอิน'
-      );
-
-      // Redirect to login screen after 2 seconds
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      // Redirect to login screen after 1 second upon successful simulated registration
+      router.push('/login');
 
     } catch (error: any) {
-      toast.error('สมัครสมาชิกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาดในการลงทะเบียน');
+      setSubmitError(error.message || 'เกิดข้อผิดพลาดในการลงทะเบียน');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="w-full rounded-2xl bg-gradient-to-tr from-transparent via-transparent via-[60%] to-[#0D7FF2]/60 p-8 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+    <div className="w-full rounded-2xl bg-gradient-to-tr from-transparent via-transparent via-[60%] to-[#0D7FF2]/60 p-8 shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-800/40 backdrop-blur-sm">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-white tracking-wide">
           IMPACT TERMINAL
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      {submitError && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-md p-3 mb-5 font-medium text-center animate-pulse">
+          {submitError}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Username */}
-        <div className="space-y-3">
-          <label className="text-xs  text-white ml-1">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-slate-300 ml-1">
             Username
           </label>
           <input
@@ -151,8 +139,9 @@ export default function RegisterPage() {
             }}
             onBlur={() => validateUsername(username)}
             placeholder="ชื่อผู้ใช้"
-            className={`w-full bg-[#20293a] border ${usernameError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
-              } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors`}
+            className={`w-full bg-[#20293a] border ${
+              usernameError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
+            } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors`}
             required
           />
           {usernameError && (
@@ -175,8 +164,9 @@ export default function RegisterPage() {
             }}
             onBlur={() => validateEmail(email)}
             placeholder="user@example.com"
-            className={`w-full bg-[#20293a] border ${emailError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
-              } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors`}
+            className={`w-full bg-[#20293a] border ${
+              emailError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
+            } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors`}
             required
           />
           {emailError && (
@@ -201,8 +191,9 @@ export default function RegisterPage() {
               }}
               onBlur={() => validatePassword(password)}
               placeholder="รหัสผ่านอย่างน้อย 8 ตัวอักษร"
-              className={`w-full bg-[#20293a] border ${passwordError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
-                } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors pr-10`}
+              className={`w-full bg-[#20293a] border ${
+                passwordError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
+              } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors pr-10`}
               required
             />
             <button
@@ -235,8 +226,9 @@ export default function RegisterPage() {
               }}
               onBlur={() => validateConfirmPassword(confirmPassword)}
               placeholder="ยืนยันรหัสผ่านของคุณ"
-              className={`w-full bg-[#20293a] border ${confirmPasswordError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
-                } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors pr-10`}
+              className={`w-full bg-[#20293a] border ${
+                confirmPasswordError ? 'border-red-500 focus:ring-red-500 font-medium' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
+              } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors pr-10`}
               required
             />
             <button
@@ -287,4 +279,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
