@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
-    
+
     // Check validation first
     const isValid = validateEmail(email);
     if (!isValid) {
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
     try {
       // MOCK SERVER DELAY: 1.5 seconds
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      
+
       // Redirect to set-new-password page directly
       router.push('/reset-password');
 
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="w-full rounded-2xl bg-gradient-to-tr from-transparent via-transparent via-[60%] to-[#0D7FF2]/60 p-8 shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-800/40 backdrop-blur-sm">
+    <div className="w-full rounded-2xl bg-gradient-to-tr from-bg-gradient-to-tr from-[#111722] via-[#111722] via-60% to-[#1e40af]/60 p-8 shadow-[0_0_40px_rgba(0,0,0,0.5)]  backdrop-blur-sm">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-white tracking-wide">
           IMPACT TERMINAL
@@ -90,9 +90,8 @@ export default function ForgotPasswordPage() {
             onBlur={() => validateEmail(email)}
             placeholder="name@example.com"
             disabled={isLoading}
-            className={`w-full bg-[#20293a] border ${
-              emailError ? 'border-red-500 focus:ring-red-500' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
-            } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors`}
+            className={`w-full bg-[#20293a] border ${emailError ? 'border-red-500 focus:ring-red-500' : 'border-[#334155] focus:border-[#3b82f6] focus:ring-[#3b82f6]'
+              } rounded-md px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-colors`}
             required
           />
           {emailError && (
@@ -105,7 +104,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-gradient-to-r from-[#2c4e9e] to-[#1e3b7c] hover:from-[#345ab5] hover:to-[#254694] disabled:from-slate-700 disabled:to-slate-800 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-lg transition-all"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-gradient-to-tr from-[#222730] via-[#222730] via-[10%] to-[#0D7FF2]/60 p-8 shadow-[0_0_80px_rgba(0,0,0,0.8)] hover:brightness-125 hover:to-[#254694] disabled:from-slate-700 disabled:to-slate-800 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-lg transition-all"
           >
             {isLoading ? (
               <>

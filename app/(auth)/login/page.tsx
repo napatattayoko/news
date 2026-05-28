@@ -92,7 +92,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full rounded-2xl bg-gradient-to-tr from-transparent via-transparent via-[60%] to-[#0D7FF2]/60 p-8 shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-800/40 backdrop-blur-sm">
+    <div className="w-full rounded-2xl bg-gradient-to-tr from-bg-gradient-to-tr from-[#111722] via-[#111722] via-60% to-[#1e40af]/60 p-8 shadow-[0_0_40px_rgba(0,0,0,0.5)]  backdrop-blur-sm">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-white tracking-wide">
           IMPACT TERMINAL
@@ -105,7 +105,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-1">
         {/* Username / Email */}
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-slate-300 ml-1">
@@ -126,7 +126,7 @@ export default function LoginPage() {
             required
           />
           {emailError && (
-            <p className="text-xs text-red-500 ml-1 font-medium">{emailError}</p>
+            <p className="text-[10px] text-red-500 ml-1 font-medium">{emailError}</p>
           )}
         </div>
 
@@ -136,7 +136,6 @@ export default function LoginPage() {
             <label className="text-xs font-medium text-slate-300">
               Password
             </label>
-            <span className="text-[10px] text-slate-500 italic">พิมพ์ "password" เพื่อจำลองรหัสผ่านผิด</span>
           </div>
           <div className="relative">
             <input
@@ -163,7 +162,7 @@ export default function LoginPage() {
             </button>
           </div>
           {passwordError && (
-            <p className="text-xs text-red-500 ml-1 font-medium">{passwordError}</p>
+            <p className="text-[10px] text-red-500 ml-1 font-medium">{passwordError}</p>
           )}
         </div>
 
@@ -189,8 +188,9 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-gradient-to-r from-[#2c4e9e] to-[#1e3b7c] hover:from-[#345ab5] hover:to-[#254694] disabled:from-slate-700 disabled:to-slate-800 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-lg transition-all"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-gradient-to-tr from-[#222730] via-[#222730] via-[10%] to-[#0D7FF2]/60 p-8 shadow-[0_0_80px_rgba(0,0,0,0.8)] hover:brightness-125 disabled:from-slate-700 disabled:to-slate-800 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-lg transition-all"
           >
+
             {isLoading ? (
               <>
                 <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -207,7 +207,7 @@ export default function LoginPage() {
       </form>
 
       {/* Sign up link */}
-      <div className="text-center mt-4">
+      <div className="text-center mt-2">
         <span className="text-[10px] text-slate-400">
           Don't have an account?{' '}
           <Link href="/register" className="text-white hover:underline font-medium">
@@ -217,7 +217,7 @@ export default function LoginPage() {
       </div>
 
       {/* Divider */}
-      <div className="relative flex items-center py-5">
+      <div className="relative flex items-center py-3">
         <div className="flex-grow border-t border-slate-700/50"></div>
         <span className="flex-shrink-0 mx-4 text-xs font-medium text-slate-400">Or</span>
         <div className="flex-grow border-t border-slate-700/50"></div>
