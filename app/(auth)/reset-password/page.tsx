@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react';
+import { EyeIcon, EyeOffIcon } from '../../../lib/constants';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -120,9 +120,9 @@ export default function ResetPasswordPage() {
               type="button"
               onClick={() => setShowNewPassword(!showNewPassword)}
               disabled={isLoading}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white hover:text-slate-200 transition-colors cursor-pointer"
             >
-              {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showNewPassword ? <EyeOffIcon className="w-[18px] h-[18px]" idSuffix="reset-new" /> : <EyeIcon className="w-[18px] h-[18px]" />}
             </button>
           </div>
           {newPasswordError && (
@@ -154,9 +154,9 @@ export default function ResetPasswordPage() {
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               disabled={isLoading}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white hover:text-slate-200 transition-colors cursor-pointer"
             >
-              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showConfirmPassword ? <EyeOffIcon className="w-[18px] h-[18px]" idSuffix="reset-conf" /> : <EyeIcon className="w-[18px] h-[18px]" />}
             </button>
           </div>
           {confirmPasswordError && (

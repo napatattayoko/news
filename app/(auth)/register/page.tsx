@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react';
+import { EyeIcon, EyeOffIcon } from '../../../lib/constants';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -123,7 +123,7 @@ export default function RegisterPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         {/* Username */}
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-slate-300 ml-1">
@@ -197,9 +197,9 @@ export default function RegisterPage() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               disabled={isLoading}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white hover:text-slate-200 transition-colors cursor-pointer"
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPassword ? <EyeOffIcon className="w-[18px] h-[18px]" idSuffix="reg-pwd" /> : <EyeIcon className="w-[18px] h-[18px]" />}
             </button>
           </div>
           {passwordError && (
@@ -231,9 +231,9 @@ export default function RegisterPage() {
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               disabled={isLoading}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white hover:text-slate-200 transition-colors cursor-pointer"
             >
-              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showConfirmPassword ? <EyeOffIcon className="w-[18px] h-[18px]" idSuffix="reg-conf" /> : <EyeIcon className="w-[18px] h-[18px]" />}
             </button>
           </div>
           {confirmPasswordError && (
