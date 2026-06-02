@@ -44,7 +44,7 @@ export async function GET() {
                 headline: title,
                 body: `Source: ${source} - ${category}`, // ไม่มี body ใน Finviz ข่าว
                 sources: [{ name: source, url: link }],
-                publishedAt: dateStr, // e.g. "2026-05-29 04:04:48"
+                publishedAt: `${dateStr.replace(' ', 'T')}-04:00`, // e.g. "2026-05-29T04:04:48-04:00" (US Eastern Daylight Time offset)
                 regionTag: 'global',
                 countryCode: 'us',
                 category: category.toLowerCase() === 'market' ? 'markets' : 'economy',
@@ -56,10 +56,10 @@ export async function GET() {
             };
         }).filter(item => item !== null);
 
-        return NextResponse.json({ 
-            success: true, 
+        return NextResponse.json({
+            success: true,
             count: formattedNews.length,
-            news: formattedNews 
+            news: formattedNews
         });
     } catch (error) {
         console.error("Error fetching Finviz news:", error);
