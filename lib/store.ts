@@ -137,7 +137,37 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
   news: mockNews,
   notifications: [],
   unreadNotificationCount: 0,
-  setNews: (news) => set({ news }),
+  setNews: (news) => set((state) => {
+    const historicalNotifications: AppNotification[] = [];
+
+    news.forEach(item => {
+      const isWatchlist = item.tickers.some(t => state.trackedTickers.includes(t.symbol.toUpperCase()));
+      const isHighImpact = item.impact === 'high';
+
+      if (isWatchlist || isHighImpact) {
+        const type = isWatchlist && isHighImpact ? 'both' : isHighImpact ? 'high-impact' : 'watchlist';
+
+        historicalNotifications.push({
+          id: `notif-hist-${item.id}`,
+          newsId: item.id,
+          headline: item.headline,
+          impact: item.impact,
+          sentiment: item.sentiment,
+          tickers: item.tickers.map(t => t.symbol),
+          publishedAt: new Date(item.publishedAt),
+          read: true, // Mark as read so it acts as history without annoying unread counters
+          type
+        });
+      }
+    });
+
+    historicalNotifications.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+    return {
+      news,
+      notifications: historicalNotifications
+    };
+  }),
   addNewsItem: (item) => set((state) => {
     const updatedNews = [item, ...state.news];
 
@@ -162,7 +192,7 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
     if (shouldNotify) {
       const type = isWatchlist && isHighImpact ? 'both' : isHighImpact ? 'high-impact' : 'watchlist';
       const notificationId = `notif-${Date.now()}-${item.id}`;
-      
+
       const newNotif: AppNotification = {
         id: notificationId,
         newsId: item.id,
@@ -175,12 +205,12 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
         type
       };
 
-      const title = type === 'both' 
-        ? '🔥 High Impact Watchlist Alert' 
-        : type === 'high-impact' 
-          ? '⚡ High Impact News Alert' 
+      const title = type === 'both'
+        ? '🔥 High Impact Watchlist Alert'
+        : type === 'high-impact'
+          ? '⚡ High Impact News Alert'
           : '🔔 Watchlist News Alert';
-          
+
       const tickerText = item.tickers.map(t => `$${t.symbol}`).join(', ');
       const desc = tickerText ? `[${tickerText}] ${item.headline}` : item.headline;
 
@@ -202,7 +232,7 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
     unreadNotificationCount: 0
   })),
   markNotificationAsRead: (id) => set((state) => {
-    const notifications = state.notifications.map(n => 
+    const notifications = state.notifications.map(n =>
       n.id === id ? { ...n, read: true } : n
     );
     const unreadNotificationCount = notifications.filter(n => !n.read).length;
