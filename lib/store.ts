@@ -134,7 +134,7 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
     sentimentTickerOrder: state.sentimentTickerOrder.filter((t) => t !== symbol),
   })),
   setSentimentTickerOrder: (order) => set({ sentimentTickerOrder: order }),
-  news: mockNews,
+  news: [],
   notifications: [],
   unreadNotificationCount: 0,
   setNews: (news) => set((state) => {

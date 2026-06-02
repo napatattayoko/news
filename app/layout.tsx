@@ -3,7 +3,8 @@ import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
-import PlanToggle from '@/components/dev/PlanToggle';
+import DevControlPanel from '@/components/dev/DevControlPanel';
+import AutoSimulator from '@/components/dev/AutoSimulator';
 import Toaster from '@/components/ui/Toaster';
 import { LayoutProvider } from '@/components/layout/LayoutProvider';
 import PageContent from '@/components/layout/PageContent';
@@ -35,7 +36,8 @@ export default function RootLayout({
               </PageContent>
             </main>
             <MobileBottomNav />
-            <PlanToggle />
+            <DevControlPanel />
+            {/* <AutoSimulator /> */}
           </div>
           <Toaster />
         </LayoutProvider>

@@ -41,12 +41,12 @@ export async function sendTelegramNotification(chatId: string | number, message:
         parse_mode: 'HTML'
       })
     });
-    
+
     if (!res.ok) {
       const errText = await res.text();
       throw new Error(`Telegram API responded with ${res.status}: ${errText}`);
     }
-    
+
     const data = await res.json();
     return { success: true, result: data.result };
   } catch (error) {
