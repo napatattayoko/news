@@ -33,25 +33,76 @@ export async function GET() {
             const link = clean(matches[3]);
             const category = clean(matches[4]);
 
-            // สุ่ม Impact/Sentiment เพราะ Finviz ไม่ได้ให้มา
-            const impacts = ['high', 'medium', 'low'];
-            const sentiments = ['good', 'bad', 'neutral'];
-            const randomImpact = impacts[Math.floor(Math.random() * impacts.length)];
-            const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+            // 1. ตรวจจับคำศัพท์เพื่อหา Sentiment และ Impact
+            const lowerTitle = title.toLowerCase();
+            const goodWords = ['surge', 'jump', 'record high', 'profit', 'beats', 'rally', 'upgrade', 'buy', 'growth', 'gain', 'soar', 'higher', 'firm', 'advance'];
+            const badWords = ['plunge', 'drop', 'lawsuit', 'miss', 'bankruptcy', 'probe', 'downgrade', 'sell', 'loss', 'decline', 'fall', 'lower', 'crash', 'cut', 'slump'];
+            const highImpactWords = ['fed', 'rate', 'inflation', 'cpi', 'war', 'attack', 'crash', 'record', 'plunge', 'surge', 'soar', 'buyout', 'acquisition', 'merger'];
+
+            let goodCount = 0;
+            let badCount = 0;
+            goodWords.forEach(w => { if (lowerTitle.includes(w)) goodCount++; });
+            badWords.forEach(w => { if (lowerTitle.includes(w)) badCount++; });
+
+            let calcSentiment = 'neutral';
+            if (goodCount > badCount) calcSentiment = 'good';
+            else if (badCount > goodCount) calcSentiment = 'bad';
+
+            let isHighImpact = false;
+            highImpactWords.forEach(w => {
+                // ใช้ regex \b เพื่อให้จับคำเป็นคำๆ ไม่ให้ไปซ้ำกับคำอื่น
+                if (new RegExp(`\\b${w}\\b`).test(lowerTitle)) isHighImpact = true;
+            });
+
+            let calcImpact = 'low';
+            if (isHighImpact || goodCount + badCount >= 2) {
+                calcImpact = 'high';
+            } else if (goodCount + badCount === 1) {
+                calcImpact = 'medium';
+            }
+
+            // 2. ตรวจจับชื่อหุ้น (Tickers)
+            const tickerMap: Record<string, string> = {
+                'apple': 'AAPL', 'iphone': 'AAPL', 'macbook': 'AAPL',
+                'tesla': 'TSLA', 'musk': 'TSLA', 'model 3': 'TSLA',
+                'microsoft': 'MSFT', 'windows': 'MSFT', 'xbox': 'MSFT',
+                'google': 'GOOGL', 'alphabet': 'GOOGL', 'youtube': 'GOOGL',
+                'nvidia': 'NVDA', 'gpu': 'NVDA', 'jensen': 'NVDA', 'chip': 'NVDA',
+                'meta': 'META', 'facebook': 'META', 'instagram': 'META', 'zuckerberg': 'META',
+                'amazon': 'AMZN', 'aws': 'AMZN', 'bezos': 'AMZN',
+                'amd': 'AMD',
+                'intel': 'INTC',
+                'netflix': 'NFLX',
+                'disney': 'DIS'
+            };
+
+            const foundTickers: { symbol: string; name: string; sentiment: string; sentimentScore: number }[] = [];
+            const addedSymbols = new Set<string>();
+
+            Object.entries(tickerMap).forEach(([keyword, symbol]) => {
+                if (new RegExp(`\\b${keyword}\\b`).test(lowerTitle) && !addedSymbols.has(symbol)) {
+                    addedSymbols.add(symbol);
+                    foundTickers.push({
+                        symbol: symbol,
+                        name: symbol,
+                        sentiment: calcSentiment === 'good' ? 'up' : calcSentiment === 'bad' ? 'down' : 'flat',
+                        sentimentScore: calcSentiment === 'good' ? 5 : calcSentiment === 'bad' ? -5 : 0
+                    });
+                }
+            });
 
             return {
                 id: `finviz-${index}-${Date.now()}`,
                 headline: title,
-                body: `Source: ${source} - ${category}`, // ไม่มี body ใน Finviz ข่าว
+                body: `Source: ${source} - ${category}`,
                 sources: [{ name: source, url: link }],
-                publishedAt: `${dateStr.replace(' ', 'T')}-04:00`, // e.g. "2026-05-29T04:04:48-04:00" (US Eastern Daylight Time offset)
+                publishedAt: `${dateStr.replace(' ', 'T')}-04:00`,
                 regionTag: 'global',
                 countryCode: 'us',
                 category: category.toLowerCase() === 'market' ? 'markets' : 'economy',
-                impact: randomImpact,
-                sentiment: randomSentiment,
-                tickers: [], // Finviz news API แบบธรรมดาไม่แนบ Ticker ถ้าไม่ได้ Filter หุ้นเฉพาะเจาะจง
-                // สร้างรูปภาพจำลองแบบสุ่มแต่คงที่ด้วย Picsum โดยใช้ title เป็น seed
+                impact: calcImpact,
+                sentiment: calcSentiment,
+                tickers: foundTickers, // สกัด Ticker จากพาดหัวข่าว
                 imageUrl: `https://picsum.photos/seed/${encodeURIComponent(title.substring(0, 15).replace(/\s+/g, ''))}/800/450`
             };
         }).filter(item => item !== null);
