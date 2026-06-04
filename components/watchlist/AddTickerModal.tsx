@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
-import { mockMarketTrends } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { tickerToast } from '@/lib/toast';
 
@@ -23,9 +22,24 @@ export default function AddTickerModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
 
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/finviz?action=market')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const combined = [...data.data.gainers, ...data.data.losers];
+          const unique = Array.from(new Map(combined.map(item => [item.symbol, item])).values());
+          setSuggestions(unique);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   const availableTickers = useMemo(() => 
-    mockMarketTrends.filter((item) => !trackedTickers.includes(item.symbol)),
-    [trackedTickers]
+    suggestions.filter((item) => !trackedTickers.includes(item.symbol)),
+    [suggestions, trackedTickers]
   );
 
   const filtered = useMemo(() => 
@@ -36,6 +50,9 @@ export default function AddTickerModal({
       : availableTickers,
     [search, availableTickers]
   );
+
+  const exactMatch = filtered.find(t => t.symbol.toLowerCase() === search.trim().toLowerCase());
+  const showCustomAdd = search.trim().length > 0 && !exactMatch && !trackedTickers.map(t => t.toLowerCase()).includes(search.trim().toLowerCase());
 
   // Focus input when modal opens
   useEffect(() => {
@@ -80,10 +97,29 @@ export default function AddTickerModal({
           />
         </div>
       </div>
-      <div className="max-h-64 overflow-y-auto">
-        {filtered.length === 0 ? (
+      <div className="max-h-64 overflow-y-auto pb-2">
+        {showCustomAdd && (
+          <button
+            onClick={() => {
+              onAddTicker(search.trim().toUpperCase());
+              tickerToast.added(search.trim().toUpperCase(), 'watchlist');
+              onClose();
+            }}
+            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-white/5 transition-colors text-left border-b border-[#222F44] bg-[#0D7FF2]/5"
+          >
+            <div>
+              <span className="text-white font-semibold text-sm">
+                {search.trim().toUpperCase()}
+              </span>
+              <p className="text-xs text-[#0D7FF2]">Add custom symbol</p>
+            </div>
+            <span className="text-xs font-bold text-[#0D7FF2]">+ Add</span>
+          </button>
+        )}
+
+        {filtered.length === 0 && !showCustomAdd ? (
           <div className="px-3 py-4 text-center text-sm text-slate-500">
-            {search.trim() ? 'No matches' : 'No more tickers available'}
+            {search.trim() ? 'No matches' : suggestions.length === 0 ? 'Loading suggestions...' : 'No more tickers'}
           </div>
         ) : (
           filtered.map((item) => (
@@ -102,7 +138,7 @@ export default function AddTickerModal({
                 <span className="text-white font-semibold text-sm">
                   {item.symbol}
                 </span>
-                <p className="text-xs text-slate-500">{item.mentionCount} mentions</p>
+                <p className="text-xs text-slate-500">{item.change || 'N/A'}</p>
               </div>
               <span className="text-xs text-[#0D7FF2]">+ Add</span>
             </button>

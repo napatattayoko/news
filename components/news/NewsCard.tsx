@@ -23,8 +23,9 @@ export default function NewsCard({ item, compact = false }: NewsCardProps) {
     <article
       id={`news-${item.id}`}
       className={cn(
-        'flex flex-col h-full bg-[#0a1017] border border-[#222F44] rounded-xl p-4 transition-all duration-200 hover:bg-[#111722] group cursor-pointer',
-        item.impact === 'high' ? ' hover:border-red-500/40' : 'hover:border-[#666]',
+        'flex flex-col h-full bg-[#0a1017] border-y border-r border-[#222F44] border-l-4 rounded-xl p-4 transition-all duration-200 hover:bg-[#111722] group cursor-pointer',
+        item.sentiment === 'good' ? 'border-l-green-500/70' : item.sentiment === 'bad' ? 'border-l-red-500/70' : 'border-l-slate-500/50',
+        item.impact === 'high' ? 'hover:border-r-red-500/40' : 'hover:border-r-[#666]',
         compact && 'p-3'
       )}
     >
@@ -63,9 +64,9 @@ export default function NewsCard({ item, compact = false }: NewsCardProps) {
 
       {/* Tickers */}
       <div className="flex flex-wrap gap-1.5 mt-2 mb-4">
-        {item.tickers.map((t) => (
+        {item.tickers.map((t, i) => (
           <TickerChip
-            key={t.symbol}
+            key={`${t.symbol}-${i}`}
             symbol={t.symbol}
             trend={t.sentiment}
             showBookmark

@@ -45,22 +45,45 @@ const fallbackMarketTrends = [
   { symbol: 'TSLA', name: 'Tesla, Inc.', sentiment: 'down', impactLevel: 'high', score: -8.0 }
 ];
 
-async function getMockData() {
+async function getFinvizData() {
   try {
-    const res = await fetch('http://localhost:3000/api/telegram/mock-data', { signal: AbortSignal.timeout(5000) });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success) {
-        return {
-          mockNews: data.mockNews,
-          mockMarketTrends: data.mockMarketTrends
-        };
+    // Fetch News
+    const newsRes = await fetch('http://localhost:3000/api/finviz?action=news', { signal: AbortSignal.timeout(5000) });
+    const marketRes = await fetch('http://localhost:3000/api/finviz?action=market', { signal: AbortSignal.timeout(5000) });
+    
+    let finvizNews = fallbackNews;
+    let finvizTrends = fallbackMarketTrends;
+
+    if (newsRes.ok) {
+      const newsData = await newsRes.json();
+      if (newsData.success && newsData.data.length > 0) {
+        finvizNews = newsData.data.map(n => ({
+          headline: n.title,
+          body: `Time: ${n.time} | Source: ${n.source}`,
+          tickers: []
+        }));
       }
     }
+
+    if (marketRes.ok) {
+      const marketData = await marketRes.json();
+      if (marketData.success && marketData.data) {
+        const { gainers } = marketData.data;
+        finvizTrends = gainers.map(g => ({
+          symbol: g.symbol,
+          name: 'Finviz Top Gainer',
+          sentiment: 'up',
+          impactLevel: 'high',
+          score: parseFloat(g.change) || 5
+        }));
+      }
+    }
+
+    return { finvizNews, finvizTrends };
   } catch (err) {
-    // Silent fallback
+    console.error('Failed to fetch from Finviz API for bot:', err);
   }
-  return { mockNews: fallbackNews, mockMarketTrends: fallbackMarketTrends };
+  return { finvizNews: fallbackNews, finvizTrends: fallbackMarketTrends };
 }
 
 function readDb() {
@@ -128,8 +151,8 @@ async function answerCallbackQuery(callbackQueryId, text = '') {
 }
 
 async function sendNewsMessage(chatId) {
-  const { mockNews } = await getMockData();
-  const topNews = mockNews.slice(0, 3);
+  const { finvizNews } = await getFinvizData();
+  const topNews = finvizNews.slice(0, 3);
   let message = '<b>📰 Latest Top News</b>\n\n';
   
   topNews.forEach((news, index) => {
@@ -148,8 +171,8 @@ async function sendNewsMessage(chatId) {
 }
 
 async function sendMarketMessage(chatId) {
-  const { mockMarketTrends } = await getMockData();
-  const topTrends = mockMarketTrends.slice(0, 5);
+  const { finvizTrends } = await getFinvizData();
+  const topTrends = finvizTrends.slice(0, 5);
   let message = '<b>📊 Top Market Trends</b>\n\n';
   
   topTrends.forEach((trend) => {
@@ -181,7 +204,27 @@ async function handleMessage(message) {
   }
 
   if (text === '/help') {
-    await sendMessage(chatId, `Commands available:\n/start - Get your Chat ID and Menu\n/news - Get latest news\n/market - Get market trends\n/ping - Check if the bot is alive.`);
+    await sendMessage(chatId, `Commands available:\n/start - Get your Chat ID and Menu\n/news - Get latest news\n/market - Get market trends\n/logout - Unlink your account\n/ping - Check if the bot is alive.`);
+    return;
+  }
+
+  if (text === '/logout' || text === '/unlink') {
+    const db = readDb();
+    let found = false;
+    for (const [userId, user] of Object.entries(db.users)) {
+      if (user.telegramChatId === chatId) {
+        delete user.telegramChatId;
+        found = true;
+      }
+    }
+    
+    if (found) {
+      writeDb(db);
+      await sendMessage(chatId, '✅ <b>Successfully unlinked!</b>\nYour Telegram account has been disconnected from the dashboard. You will no longer receive alerts.\n\nUse /link <PIN> to connect again.');
+      console.log(`Unlinked chat ${chatId}`);
+    } else {
+      await sendMessage(chatId, '⚠️ Your account is not currently linked to any dashboard.');
+    }
     return;
   }
 
@@ -289,5 +332,62 @@ async function poll() {
   setTimeout(poll, 1000);
 }
 
+const seenNewsIds = new Set();
+let isFirstNewsPoll = true;
+
+function escapeHTML(str) {
+  return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+}
+
+async function pollNews() {
+  try {
+    const res = await fetch('http://localhost:3000/api/news');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.news) {
+        const db = readDb();
+        const reversedNews = [...data.news].reverse();
+        
+        for (const item of reversedNews) {
+          if (!seenNewsIds.has(item.id)) {
+            seenNewsIds.add(item.id);
+            
+            if (!isFirstNewsPoll) {
+              const isHighImpact = item.impact === 'high';
+              
+              for (const [userId, user] of Object.entries(db.users)) {
+                if (user.telegramChatId) {
+                  const tracked = user.trackedSymbols || [];
+                  const isWatchlist = item.tickers?.some(t => tracked.includes(t.symbol));
+                  
+                  if (isHighImpact || isWatchlist) {
+                    const typeLabel = (isWatchlist && isHighImpact) ? '🔥 High Impact Watchlist Alert' : isHighImpact ? '⚡ High Impact News Alert' : '🔔 Watchlist News Alert';
+                    const tickersText = item.tickers?.length ? `\n<i>Related: ${item.tickers.map(t => `$${t.symbol}`).join(', ')}</i>` : '';
+                    let message = `<b>${typeLabel}</b>\n\n<b>${escapeHTML(item.headline)}</b>${tickersText}`;
+                    if (item.sources && item.sources.length > 0 && item.sources[0].url) {
+                       message += `\n\n<a href="${item.sources[0].url}">Read more</a>`;
+                    }
+                    await sendMessage(user.telegramChatId, message);
+                  }
+                }
+              }
+            }
+          }
+        }
+        isFirstNewsPoll = false;
+      }
+    }
+  } catch (err) {
+    if (err.message && !err.message.includes('fetch failed')) {
+      console.error('Error polling news for bot:', err.message);
+    }
+  }
+  
+  setTimeout(pollNews, 15000); // Check every 15 seconds
+}
+
 console.log('⏳ Starting Stable Telegram Bot polling...');
 poll();
+pollNews(); // Start background news polling

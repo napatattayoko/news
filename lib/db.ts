@@ -14,6 +14,7 @@ export interface Database {
   pendingLinks: {
     [pin: string]: string; // Maps a 6-digit PIN to a userId
   };
+  news?: any[];
 }
 
 // Initialize empty DB if it doesn't exist

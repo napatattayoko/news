@@ -7,6 +7,7 @@ import PlanToggle from '@/components/dev/PlanToggle';
 import Toaster from '@/components/ui/Toaster';
 import { LayoutProvider } from '@/components/layout/LayoutProvider';
 import PageContent from '@/components/layout/PageContent';
+import NewsSync from '@/components/layout/NewsSync';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-poppins' });
@@ -29,7 +30,7 @@ export default function RootLayout({
             {/* Sidebar — overlay on mobile, static on desktop */}
             <Sidebar />
             {/* Main content fills remaining width on desktop; full width on mobile */}
-            <main className="flex-1 relative w-full">
+            <main className="flex-1 relative min-w-0">
               <PageContent>
                 {children}
               </PageContent>
@@ -38,6 +39,7 @@ export default function RootLayout({
             <PlanToggle />
           </div>
           <Toaster />
+          <NewsSync />
         </LayoutProvider>
       </body>
     </html>

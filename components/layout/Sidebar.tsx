@@ -14,6 +14,7 @@ const navItems = [
   { href: '/stock-sentiment', label: 'Stock Sentiment', icon: Rss },
   { href: '/market-trends', label: 'Trending', icon: TrendingUp },
   { href: '/watchlist', label: 'Watchlist', icon: Star },
+  { href: '/setting', label: 'Setting', icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -118,9 +119,9 @@ export default function Sidebar() {
                 <div className="text-xs text-[#808080]">Free Plan</div>
               </div>
             </div>
-            <button className="text-white hover:text-slate-300 transition-colors">
+            <Link href="/setting" className="text-white hover:text-slate-300 transition-colors">
               <Settings size={14} />
-            </button>
+            </Link>
           </div>
         </div>
       </aside>

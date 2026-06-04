@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useTerminalStore } from '@/lib/store';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
@@ -16,30 +16,29 @@ type RankedTicker = { symbol: string; name: string; score: number };
 export default function TickerCloud() {
   const setTicker = useTerminalStore((s) => s.setTicker);
   const activeTicker = useTerminalStore((s) => s.activeTicker);
-  const news = useTerminalStore((s) => s.news);
+  const [tickers, setTickers] = useState<RankedTicker[]>([]);
 
-  const tickers = useMemo(() => {
-    const latestMap = new Map<string, { name: string; score: number; time: number }>();
-
-    for (const item of news) {
-      const time = new Date(item.publishedAt).getTime();
-      for (const ticker of item.tickers) {
-        const existing = latestMap.get(ticker.symbol);
-        if (!existing || time > existing.time) {
-          latestMap.set(ticker.symbol, { name: ticker.name, score: ticker.sentimentScore, time });
+  useEffect(() => {
+    fetch('/api/finviz?action=market')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const { gainers, losers } = data.data;
+          const mapped: RankedTicker[] = [];
+          
+          gainers.slice(0, 3).forEach((g: any) => {
+            mapped.push({ symbol: g.symbol, name: 'Finviz Top Gainer', score: parseFloat(g.change) || 5 });
+          });
+          
+          losers.slice(0, 2).forEach((l: any) => {
+            mapped.push({ symbol: l.symbol, name: 'Finviz Top Loser', score: parseFloat(l.change) || -5 });
+          });
+          
+          setTickers(mapped.sort((a, b) => Math.abs(b.score) - Math.abs(a.score)));
         }
-      }
-    }
-
-    return Array.from(latestMap.entries())
-      .sort((a, b) => {
-        const scoreDiff = Math.abs(b[1].score) - Math.abs(a[1].score);
-        if (scoreDiff !== 0) return scoreDiff;
-        return a[0].localeCompare(b[0]);
       })
-      .slice(0, 5)
-      .map(([symbol, { name, score }]) => ({ symbol, name, score }));
-  }, [news]);
+      .catch(console.error);
+  }, []);
 
   return (
     <div className="bg-[#111722] border border-[#222F44] rounded-xl overflow-hidden">

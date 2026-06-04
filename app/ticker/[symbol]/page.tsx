@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useMemo, useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { mockNews } from '@/lib/api';
 import { useTerminalStore } from '@/lib/store';
@@ -39,6 +39,19 @@ export default function TickerDetailPage() {
   const selectedSymbols = useTerminalStore((s) => s.selectedSymbols);
   const userPlan = useTerminalStore((s) => s.userPlan);
   const mobileSentiment = useTerminalStore((s) => s.mobileSentiment);
+
+  const [finvizData, setFinvizData] = useState<{ quote: Record<string, string>, news: any[] } | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/finviz?action=quote&symbol=${symbol}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setFinvizData(data.data);
+        }
+      })
+      .catch(console.error);
+  }, [symbol]);
 
   // Memoize custom sidebar to prevent recreation on every render
   const customSidebar = useMemo(
@@ -100,8 +113,27 @@ export default function TickerDetailPage() {
 
     // Sort latest first
     items = [...items].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+    // Mix Finviz stock-specific news if available
+    if (finvizData?.news) {
+      const fvNews = finvizData.news.map((n: any, i: number) => ({
+        id: `fv-${i}`,
+        headline: n.title,
+        body: `Time: ${n.time} | Finviz News`,
+        sources: [{ name: n.source, url: n.url }],
+        publishedAt: new Date().toISOString(),
+        regionTag: 'us',
+        countryCode: 'us',
+        category: 'markets',
+        impact: 'medium',
+        sentiment: 'neutral',
+        tickers: [{ symbol, name: symbol, sentiment: 'flat', sentimentScore: 0 }],
+      }));
+      items = [...fvNews, ...items];
+    }
+
     return items;
-  }, [symbol, range, selectedSymbols]);
+  }, [symbol, range, selectedSymbols, finvizData]);
 
   if (userPlan === 'free') {
     return (
@@ -136,6 +168,29 @@ export default function TickerDetailPage() {
             </div>
             <p className="text-[#808080] text-sm mt-1">{tickerName}</p>
           </div>
+
+          {finvizData && finvizData.quote && (
+            <div className="px-6 pb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl border border-[#222F44] bg-[#111722]">
+                <div className="flex flex-col">
+                  <span className="text-xs text-slate-500">Market Cap</span>
+                  <span className="text-sm font-semibold text-white">{finvizData.quote['Market Cap'] || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-slate-500">P/E</span>
+                  <span className="text-sm font-semibold text-white">{finvizData.quote['P/E'] || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-slate-500">Volume</span>
+                  <span className="text-sm font-semibold text-white">{finvizData.quote['Volume'] || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-slate-500">Target Price</span>
+                  <span className="text-sm font-semibold text-white">{finvizData.quote['Target Price'] || '-'}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* News Feed — Mobile */}
           <div className="md:hidden px-4 pb-6">

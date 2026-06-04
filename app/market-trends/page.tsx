@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import RangeDropdown, { RangeOption } from '@/components/filters/RangeDropdown';
 import { TrendingUp } from 'lucide-react';
 import { TrendFilter, TickerAnalysis } from '@/lib/types';
@@ -46,15 +46,50 @@ function filterTrends(
 export default function MarketTrendsPage() {
   const [selectedRange, setSelectedRange] = useState<TimeRange>('24H');
   const [activeFilter, setActiveFilter] = useState<TrendFilter>('all');
+  const [finvizTrends, setFinvizTrends] = useState<TickerAnalysis[]>([]);
+
+  useEffect(() => {
+    fetch('/api/finviz?action=market')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const { gainers, losers } = data.data;
+          const mappedGainers: TickerAnalysis[] = gainers.map((g: any, i: number) => ({
+            symbol: g.symbol,
+            name: `Vol: ${g.volume} | Last: ${g.last}`,
+            impactLevel: 'high',
+            sentiment: 'up',
+            mentionCount: 100 - i,
+            sentimentHistorical: { positive: 80, negative: 10, neutral: 10 },
+            score: parseFloat(g.change.replace('%', '')) || 50,
+          }));
+          const mappedLosers: TickerAnalysis[] = losers.map((l: any, i: number) => ({
+            symbol: l.symbol,
+            name: `Vol: ${l.volume} | Last: ${l.last}`,
+            impactLevel: 'high',
+            sentiment: 'down',
+            mentionCount: 100 - i,
+            sentimentHistorical: { positive: 10, negative: 80, neutral: 10 },
+            score: parseFloat(l.change.replace('%', '')) || -50,
+          }));
+          setFinvizTrends([...mappedGainers, ...mappedLosers]);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  const combinedTrends = useMemo(() => {
+    return [...finvizTrends, ...mockMarketTrends];
+  }, [finvizTrends]);
 
   const filteredTrends = useMemo(() => {
-    return filterTrends(mockMarketTrends, activeFilter);
-  }, [activeFilter]);
+    return filterTrends(combinedTrends, activeFilter);
+  }, [activeFilter, combinedTrends]);
 
   // Top 4 cards: "All" shows most extreme scores (furthest from 0), others follow filter
   const sortedTopStocks = useMemo(() => {
     if (activeFilter === 'all') {
-      return [...mockMarketTrends]
+      return [...combinedTrends]
         .sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
         .slice(0, 4);
     }

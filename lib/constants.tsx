@@ -123,14 +123,15 @@ export const impactConfigCompact: Record<ImpactLevel, { label: string; bg: strin
 
 // ─── Country Flag Component ──────────────────────────────────────────
 
-export function CountryFlag({ code, size = 20 }: { code: Region | 'all'; size?: number }) {
-  if (code === 'all' || code === 'global') {
+export function CountryFlag({ code, size = 20 }: { code?: Region | 'all'; size?: number }) {
+  const normalizedCode = code || 'global';
+  if (normalizedCode === 'all' || normalizedCode === 'global') {
     return <Globe size={size} className="text-white" />;
   }
   return (
     <Image
-      src={`https://flagcdn.com/w40/${code}.png`}
-      alt={code.toUpperCase()}
+      src={`https://flagcdn.com/w40/${normalizedCode}.png`}
+      alt={normalizedCode.toUpperCase()}
       width={size}
       height={size}
       className="w-5 h-5 rounded-full object-cover"

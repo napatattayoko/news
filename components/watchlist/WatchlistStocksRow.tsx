@@ -1,7 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
-import { mockMarketTrends } from '@/lib/api';
+import { useMemo, useEffect, useState } from 'react';
 import { TickerAnalysis } from '@/lib/types';
 import { Star } from 'lucide-react';
 import StockCard from '@/components/market-trends/TopStockCard';
@@ -43,11 +42,50 @@ function StockCardSkeleton() {
   );
 }
 
-export default function WatchlistStocksRow({ trackedSymbols, onRemove, isLoading = false }: WatchlistStocksRowProps) {
-  const trackedStocks = useMemo(() => {
-    return trackedSymbols
-      .map((s) => mockMarketTrends.find((t) => t.symbol === s))
-      .filter(Boolean) as TickerAnalysis[];
+export default function WatchlistStocksRow({ trackedSymbols, onRemove }: WatchlistStocksRowProps) {
+  const [trackedStocks, setTrackedStocks] = useState<TickerAnalysis[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+
+    const fetchAll = async () => {
+      try {
+        const results = await Promise.all(
+          trackedSymbols.map(async (symbol) => {
+            try {
+              const res = await fetch(`/api/finviz?action=quote&symbol=${symbol}`);
+              const data = await res.json();
+              if (data.success && data.data && data.data.quote) {
+                const changeStr = data.data.quote['Change'];
+                const change = parseFloat(changeStr) || 0;
+                return {
+                  symbol,
+                  name: symbol,
+                  sentiment: change > 0 ? 'up' : change < 0 ? 'down' : 'flat',
+                  impactLevel: Math.abs(change) > 2 ? 'high' : Math.abs(change) > 0.5 ? 'medium' : 'low',
+                  score: change
+                } as TickerAnalysis;
+              }
+            } catch (e) {}
+            return { symbol, name: symbol, sentiment: 'flat', impactLevel: 'medium', score: 0 } as any;
+          })
+        );
+        if (isMounted) setTrackedStocks(results);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    
+    if (trackedSymbols.length > 0) {
+      fetchAll();
+    } else {
+      setTrackedStocks([]);
+      setIsLoading(false);
+    }
+
+    return () => { isMounted = false; };
   }, [trackedSymbols]);
 
   if (isLoading) {

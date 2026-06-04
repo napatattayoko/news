@@ -1,8 +1,9 @@
 'use client';
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { RegionTab, Region, ImpactLevel, SortOrder, Category, NewsItem, AppNotification } from './types';
-import { mockNews } from './mock-data';
+
 import { toast } from './toast';
 
 interface TerminalStore {
@@ -50,14 +51,17 @@ interface TerminalStore {
   notifications: AppNotification[];
   unreadNotificationCount: number;
   setNews: (news: NewsItem[]) => void;
-  addNewsItem: (item: NewsItem) => void;
+
+  syncNewsItem: (item: NewsItem) => void;
   markAllNotificationsAsRead: () => void;
   markNotificationAsRead: (id: string) => void;
   clearNotifications: () => void;
 }
 
-export const useTerminalStore = create<TerminalStore>((set) => ({
-  activeRegion: 'global',
+export const useTerminalStore = create<TerminalStore>()(
+  persist(
+    (set) => ({
+      activeRegion: 'global',
   activeCountry: 'all',
   activeCategory: 'all',
   activeTicker: null,
@@ -134,30 +138,18 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
     sentimentTickerOrder: state.sentimentTickerOrder.filter((t) => t !== symbol),
   })),
   setSentimentTickerOrder: (order) => set({ sentimentTickerOrder: order }),
-  news: mockNews,
+  news: [],
   notifications: [],
   unreadNotificationCount: 0,
   setNews: (news) => set({ news }),
-  addNewsItem: (item) => set((state) => {
-    const updatedNews = [item, ...state.news];
 
-    // Check if item contains any ticker in watchlist
-    const isWatchlist = item.tickers.some(t => state.trackedTickers.includes(t.symbol.toUpperCase()));
+  syncNewsItem: (item) => set((state) => {
+    if (state.news.some((n) => n.id === item.id)) return {};
+
+    const updatedNews = [item, ...state.news];
+    const isWatchlist = (item.tickers || []).some(t => state.trackedTickers.includes(t.symbol.toUpperCase()));
     const isHighImpact = item.impact === 'high';
     const shouldNotify = isWatchlist || isHighImpact;
-
-    // Send the news update to the Telegram Bot API so users receive it at the exact same time
-    fetch('/api/telegram/mock-news', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        headline: item.headline,
-        messageBody: item.body,
-        tickers: item.tickers.map(t => t.symbol),
-        sentiment: item.sentiment,
-        impact: item.impact
-      }),
-    }).catch((err) => console.error('Failed to trigger Telegram notification:', err));
 
     if (shouldNotify) {
       const type = isWatchlist && isHighImpact ? 'both' : isHighImpact ? 'high-impact' : 'watchlist';
@@ -170,7 +162,7 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
         impact: item.impact,
         sentiment: item.sentiment,
         tickers: item.tickers.map(t => t.symbol),
-        publishedAt: new Date(),
+        publishedAt: new Date(item.publishedAt),
         read: false,
         type
       };
@@ -212,4 +204,16 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
     notifications: [],
     unreadNotificationCount: 0
   }),
-}));
+    }),
+    {
+      name: 'terminal-storage',
+      partialize: (state) => ({
+        trackedTickers: state.trackedTickers,
+        sentimentTickers: state.sentimentTickers,
+        sentimentTickerOrder: state.sentimentTickerOrder,
+        telegramConnected: state.telegramConnected,
+        userPlan: state.userPlan,
+      }),
+    }
+  )
+);

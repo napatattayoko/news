@@ -1,9 +1,2989 @@
 {
   "users": {
     "user-1": {
-      "trackedSymbols": [],
+      "trackedSymbols": [
+        "TSLA",
+        "MSFT",
+        "NVDA",
+        "AMZN",
+        "MASK",
+        "SPRC",
+        "SOAR"
+      ],
       "telegramChatId": 8715055612
     }
   },
-  "pendingLinks": {}
+  "pendingLinks": {},
+  "news": [
+    {
+      "id": "sim-1780318763152-312",
+      "headline": "Test High Impact Unknown Ticker",
+      "body": "Testing notification",
+      "publishedAt": "2026-06-01T12:59:23.152Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "UNKNOWN",
+          "name": "UNKNOWN",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1780318712114-711",
+      "headline": "Test High Impact",
+      "body": "Testing notification",
+      "publishedAt": "2026-06-01T12:58:32.114Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "MSFT",
+          "name": "MSFT",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848716203-759",
+      "headline": "[Live Mock 100 Batch - 100/100] Update regarding MSFT, AAPL",
+      "body": "This is an auto-generated mock news body for item 100. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:25:16.203Z",
+      "sentiment": "neutral",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "MSFT",
+          "name": "MSFT",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848715682-132",
+      "headline": "[Live Mock 100 Batch - 99/100] Update regarding AAPL",
+      "body": "This is an auto-generated mock news body for item 99. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:15.682Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848715148-145",
+      "headline": "[Live Mock 100 Batch - 98/100] Update regarding JPM",
+      "body": "This is an auto-generated mock news body for item 98. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:15.148Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "JPM",
+          "name": "JPM",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848714138-188",
+      "headline": "[Live Mock 100 Batch - 97/100] Update regarding TSLA, DIS, HD",
+      "body": "This is an auto-generated mock news body for item 97. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:25:14.138Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "TSLA",
+          "name": "TSLA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848713179-82",
+      "headline": "[Live Mock 100 Batch - 96/100] Update regarding AMZN",
+      "body": "This is an auto-generated mock news body for item 96. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:25:13.179Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848712647-872",
+      "headline": "[Live Mock 100 Batch - 95/100] Update regarding PYPL",
+      "body": "This is an auto-generated mock news body for item 95. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:25:12.647Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "PYPL",
+          "name": "PYPL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848712123-599",
+      "headline": "[Live Mock 100 Batch - 94/100] Update regarding DIS",
+      "body": "This is an auto-generated mock news body for item 94. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:12.123Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848711598-801",
+      "headline": "[Live Mock 100 Batch - 93/100] Update regarding NFLX, AAPL",
+      "body": "This is an auto-generated mock news body for item 93. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:25:11.598Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848711070-643",
+      "headline": "[Live Mock 100 Batch - 92/100] Update regarding AAPL",
+      "body": "This is an auto-generated mock news body for item 92. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:11.070Z",
+      "sentiment": "good",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848710065-715",
+      "headline": "[Live Mock 100 Batch - 91/100] Update regarding NVDA, V, HD",
+      "body": "This is an auto-generated mock news body for item 91. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:25:10.065Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "NVDA",
+          "name": "NVDA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848709537-538",
+      "headline": "[Live Mock 100 Batch - 90/100] Update regarding BAC, V",
+      "body": "This is an auto-generated mock news body for item 90. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:09.537Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848708583-809",
+      "headline": "[Live Mock 100 Batch - 89/100] Update regarding UNH, NVDA, GOOGL",
+      "body": "This is an auto-generated mock news body for item 89. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:08.583Z",
+      "sentiment": "good",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "UNH",
+          "name": "UNH",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "NVDA",
+          "name": "NVDA",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848708058-65",
+      "headline": "[Live Mock 100 Batch - 88/100] Update regarding JPM, META",
+      "body": "This is an auto-generated mock news body for item 88. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:25:08.058Z",
+      "sentiment": "bad",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "JPM",
+          "name": "JPM",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "META",
+          "name": "META",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848707531-121",
+      "headline": "[Live Mock 100 Batch - 87/100] Update regarding PG, V, WMT",
+      "body": "This is an auto-generated mock news body for item 87. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:25:07.531Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "PG",
+          "name": "PG",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848707001-323",
+      "headline": "[Live Mock 100 Batch - 86/100] Update regarding BAC",
+      "body": "This is an auto-generated mock news body for item 86. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:07.001Z",
+      "sentiment": "good",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848706481-652",
+      "headline": "[Live Mock 100 Batch - 85/100] Update regarding NFLX, V, WMT",
+      "body": "This is an auto-generated mock news body for item 85. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:06.481Z",
+      "sentiment": "good",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848705956-340",
+      "headline": "[Live Mock 100 Batch - 84/100] Update regarding JPM, AAPL",
+      "body": "This is an auto-generated mock news body for item 84. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:05.956Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "JPM",
+          "name": "JPM",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848705425-572",
+      "headline": "[Live Mock 100 Batch - 83/100] Update regarding META, INTC",
+      "body": "This is an auto-generated mock news body for item 83. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:25:05.425Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "META",
+          "name": "META",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848704425-378",
+      "headline": "[Live Mock 100 Batch - 82/100] Update regarding TSLA, BAC",
+      "body": "This is an auto-generated mock news body for item 82. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:04.425Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "TSLA",
+          "name": "TSLA",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848703478-704",
+      "headline": "[Live Mock 100 Batch - 81/100] Update regarding PYPL, GOOGL, AMZN",
+      "body": "This is an auto-generated mock news body for item 81. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:25:03.478Z",
+      "sentiment": "neutral",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "PYPL",
+          "name": "PYPL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848702958-522",
+      "headline": "[Live Mock 100 Batch - 80/100] Update regarding WMT, UNH",
+      "body": "This is an auto-generated mock news body for item 80. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:02.958Z",
+      "sentiment": "good",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "UNH",
+          "name": "UNH",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848702428-31",
+      "headline": "[Live Mock 100 Batch - 79/100] Update regarding DIS, INTC, PG",
+      "body": "This is an auto-generated mock news body for item 79. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:25:02.428Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "PG",
+          "name": "PG",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848701902-928",
+      "headline": "[Live Mock 100 Batch - 78/100] Update regarding JPM, V, NFLX",
+      "body": "This is an auto-generated mock news body for item 78. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:01.902Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "JPM",
+          "name": "JPM",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848701377-373",
+      "headline": "[Live Mock 100 Batch - 77/100] Update regarding BAC, PG",
+      "body": "This is an auto-generated mock news body for item 77. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:25:01.377Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "PG",
+          "name": "PG",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848700381-541",
+      "headline": "[Live Mock 100 Batch - 76/100] Update regarding MSFT",
+      "body": "This is an auto-generated mock news body for item 76. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:25:00.381Z",
+      "sentiment": "good",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "MSFT",
+          "name": "MSFT",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848699856-752",
+      "headline": "[Live Mock 100 Batch - 75/100] Update regarding HD",
+      "body": "This is an auto-generated mock news body for item 75. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:59.856Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848699329-165",
+      "headline": "[Live Mock 100 Batch - 74/100] Update regarding V",
+      "body": "This is an auto-generated mock news body for item 74. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:59.329Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848698798-863",
+      "headline": "[Live Mock 100 Batch - 73/100] Update regarding BAC, WMT",
+      "body": "This is an auto-generated mock news body for item 73. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:58.798Z",
+      "sentiment": "good",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848698280-364",
+      "headline": "[Live Mock 100 Batch - 72/100] Update regarding PYPL, HD, JNJ",
+      "body": "This is an auto-generated mock news body for item 72. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:58.280Z",
+      "sentiment": "neutral",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "PYPL",
+          "name": "PYPL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "JNJ",
+          "name": "JNJ",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848697244-904",
+      "headline": "[Live Mock 100 Batch - 71/100] Update regarding UNH, TSLA",
+      "body": "This is an auto-generated mock news body for item 71. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:57.244Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "UNH",
+          "name": "UNH",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "TSLA",
+          "name": "TSLA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848696241-344",
+      "headline": "[Live Mock 100 Batch - 70/100] Update regarding HD, NFLX, GOOGL",
+      "body": "This is an auto-generated mock news body for item 70. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:56.241Z",
+      "sentiment": "bad",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848695715-192",
+      "headline": "[Live Mock 100 Batch - 69/100] Update regarding V, DIS",
+      "body": "This is an auto-generated mock news body for item 69. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:55.715Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848694623-518",
+      "headline": "[Live Mock 100 Batch - 68/100] Update regarding AMZN, NVDA, BAC",
+      "body": "This is an auto-generated mock news body for item 68. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:54.623Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "NVDA",
+          "name": "NVDA",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848694100-865",
+      "headline": "[Live Mock 100 Batch - 67/100] Update regarding JNJ",
+      "body": "This is an auto-generated mock news body for item 67. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:54.100Z",
+      "sentiment": "good",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "JNJ",
+          "name": "JNJ",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848693155-8",
+      "headline": "[Live Mock 100 Batch - 66/100] Update regarding NFLX, NVDA",
+      "body": "This is an auto-generated mock news body for item 66. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:53.155Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "NVDA",
+          "name": "NVDA",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848692635-797",
+      "headline": "[Live Mock 100 Batch - 65/100] Update regarding JPM, MA, WMT",
+      "body": "This is an auto-generated mock news body for item 65. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:52.635Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "JPM",
+          "name": "JPM",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "MA",
+          "name": "MA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848692110-306",
+      "headline": "[Live Mock 100 Batch - 64/100] Update regarding NFLX, JPM, DIS",
+      "body": "This is an auto-generated mock news body for item 64. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:52.110Z",
+      "sentiment": "good",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "JPM",
+          "name": "JPM",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848691575-840",
+      "headline": "[Live Mock 100 Batch - 63/100] Update regarding BAC",
+      "body": "This is an auto-generated mock news body for item 63. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:51.575Z",
+      "sentiment": "good",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848690583-317",
+      "headline": "[Live Mock 100 Batch - 62/100] Update regarding AMZN, AAPL, JNJ",
+      "body": "This is an auto-generated mock news body for item 62. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:50.583Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "JNJ",
+          "name": "JNJ",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848689624-450",
+      "headline": "[Live Mock 100 Batch - 61/100] Update regarding AMZN, JPM",
+      "body": "This is an auto-generated mock news body for item 61. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:49.624Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "JPM",
+          "name": "JPM",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848689102-193",
+      "headline": "[Live Mock 100 Batch - 60/100] Update regarding BAC, INTC",
+      "body": "This is an auto-generated mock news body for item 60. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:49.102Z",
+      "sentiment": "neutral",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848688069-85",
+      "headline": "[Live Mock 100 Batch - 59/100] Update regarding NFLX, TSLA",
+      "body": "This is an auto-generated mock news body for item 59. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:48.069Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "TSLA",
+          "name": "TSLA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848687545-607",
+      "headline": "[Live Mock 100 Batch - 58/100] Update regarding HD",
+      "body": "This is an auto-generated mock news body for item 58. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:47.545Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848687014-297",
+      "headline": "[Live Mock 100 Batch - 57/100] Update regarding BAC",
+      "body": "This is an auto-generated mock news body for item 57. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:47.014Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848686496-948",
+      "headline": "[Live Mock 100 Batch - 56/100] Update regarding DIS, V",
+      "body": "This is an auto-generated mock news body for item 56. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:46.496Z",
+      "sentiment": "good",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848685429-529",
+      "headline": "[Live Mock 100 Batch - 55/100] Update regarding HD, V, TSLA",
+      "body": "This is an auto-generated mock news body for item 55. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:45.429Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "TSLA",
+          "name": "TSLA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848684901-971",
+      "headline": "[Live Mock 100 Batch - 54/100] Update regarding HD",
+      "body": "This is an auto-generated mock news body for item 54. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:44.901Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848684375-159",
+      "headline": "[Live Mock 100 Batch - 53/100] Update regarding V",
+      "body": "This is an auto-generated mock news body for item 53. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:44.375Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848683849-255",
+      "headline": "[Live Mock 100 Batch - 52/100] Update regarding V, JPM",
+      "body": "This is an auto-generated mock news body for item 52. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:43.849Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "JPM",
+          "name": "JPM",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848683323-413",
+      "headline": "[Live Mock 100 Batch - 51/100] Update regarding AAPL, BAC",
+      "body": "This is an auto-generated mock news body for item 51. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:43.323Z",
+      "sentiment": "bad",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848682301-489",
+      "headline": "[Live Mock 100 Batch - 50/100] Update regarding MSFT, AMZN",
+      "body": "This is an auto-generated mock news body for item 50. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:42.301Z",
+      "sentiment": "neutral",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "MSFT",
+          "name": "MSFT",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848681778-437",
+      "headline": "[Live Mock 100 Batch - 49/100] Update regarding DIS, JNJ",
+      "body": "This is an auto-generated mock news body for item 49. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:41.778Z",
+      "sentiment": "bad",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "JNJ",
+          "name": "JNJ",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848680801-875",
+      "headline": "[Live Mock 100 Batch - 48/100] Update regarding WMT, GOOGL, DIS",
+      "body": "This is an auto-generated mock news body for item 48. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:40.801Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848680256-173",
+      "headline": "[Live Mock 100 Batch - 47/100] Update regarding UNH",
+      "body": "This is an auto-generated mock news body for item 47. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:40.256Z",
+      "sentiment": "good",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "UNH",
+          "name": "UNH",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848679727-702",
+      "headline": "[Live Mock 100 Batch - 46/100] Update regarding V, INTC",
+      "body": "This is an auto-generated mock news body for item 46. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:39.727Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848678735-321",
+      "headline": "[Live Mock 100 Batch - 45/100] Update regarding INTC, MSFT",
+      "body": "This is an auto-generated mock news body for item 45. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:38.735Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "MSFT",
+          "name": "MSFT",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848678209-957",
+      "headline": "[Live Mock 100 Batch - 44/100] Update regarding JNJ",
+      "body": "This is an auto-generated mock news body for item 44. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:38.209Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "JNJ",
+          "name": "JNJ",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848677680-121",
+      "headline": "[Live Mock 100 Batch - 43/100] Update regarding AAPL, NFLX, BAC",
+      "body": "This is an auto-generated mock news body for item 43. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:37.680Z",
+      "sentiment": "bad",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848676658-337",
+      "headline": "[Live Mock 100 Batch - 42/100] Update regarding GOOGL, INTC",
+      "body": "This is an auto-generated mock news body for item 42. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:36.658Z",
+      "sentiment": "good",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848675638-804",
+      "headline": "[Live Mock 100 Batch - 41/100] Update regarding AMZN, PG",
+      "body": "This is an auto-generated mock news body for item 41. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:35.638Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "PG",
+          "name": "PG",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848674641-85",
+      "headline": "[Live Mock 100 Batch - 40/100] Update regarding BAC, MSFT",
+      "body": "This is an auto-generated mock news body for item 40. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:34.641Z",
+      "sentiment": "neutral",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "MSFT",
+          "name": "MSFT",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848674113-959",
+      "headline": "[Live Mock 100 Batch - 39/100] Update regarding MA",
+      "body": "This is an auto-generated mock news body for item 39. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:34.113Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "MA",
+          "name": "MA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848673588-432",
+      "headline": "[Live Mock 100 Batch - 38/100] Update regarding BAC",
+      "body": "This is an auto-generated mock news body for item 38. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:33.588Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848672565-771",
+      "headline": "[Live Mock 100 Batch - 37/100] Update regarding AMZN, BAC, JNJ",
+      "body": "This is an auto-generated mock news body for item 37. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:32.565Z",
+      "sentiment": "good",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "JNJ",
+          "name": "JNJ",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848671540-524",
+      "headline": "[Live Mock 100 Batch - 36/100] Update regarding TSLA",
+      "body": "This is an auto-generated mock news body for item 36. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:31.540Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "TSLA",
+          "name": "TSLA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848670544-251",
+      "headline": "[Live Mock 100 Batch - 35/100] Update regarding AMZN, BAC",
+      "body": "This is an auto-generated mock news body for item 35. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:30.544Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848670016-799",
+      "headline": "[Live Mock 100 Batch - 34/100] Update regarding DIS, AAPL, INTC",
+      "body": "This is an auto-generated mock news body for item 34. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:30.016Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848669490-543",
+      "headline": "[Live Mock 100 Batch - 33/100] Update regarding INTC",
+      "body": "This is an auto-generated mock news body for item 33. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:29.490Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848668470-440",
+      "headline": "[Live Mock 100 Batch - 32/100] Update regarding META, HD, AMZN",
+      "body": "This is an auto-generated mock news body for item 32. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:28.470Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "META",
+          "name": "META",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848667948-953",
+      "headline": "[Live Mock 100 Batch - 31/100] Update regarding WMT",
+      "body": "This is an auto-generated mock news body for item 31. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:27.948Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848666832-942",
+      "headline": "[Live Mock 100 Batch - 30/100] Update regarding NVDA, PG",
+      "body": "This is an auto-generated mock news body for item 30. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:26.832Z",
+      "sentiment": "neutral",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "NVDA",
+          "name": "NVDA",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "PG",
+          "name": "PG",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848665804-490",
+      "headline": "[Live Mock 100 Batch - 29/100] Update regarding AAPL, TSLA, DIS",
+      "body": "This is an auto-generated mock news body for item 29. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:25.804Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "TSLA",
+          "name": "TSLA",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848664783-145",
+      "headline": "[Live Mock 100 Batch - 28/100] Update regarding PYPL, MSFT, AMZN",
+      "body": "This is an auto-generated mock news body for item 28. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:24.783Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "PYPL",
+          "name": "PYPL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "MSFT",
+          "name": "MSFT",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848663770-180",
+      "headline": "[Live Mock 100 Batch - 27/100] Update regarding GOOGL",
+      "body": "This is an auto-generated mock news body for item 27. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:23.770Z",
+      "sentiment": "neutral",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848663242-836",
+      "headline": "[Live Mock 100 Batch - 26/100] Update regarding PG, HD, AAPL",
+      "body": "This is an auto-generated mock news body for item 26. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:23.242Z",
+      "sentiment": "good",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "PG",
+          "name": "PG",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "HD",
+          "name": "HD",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848662714-842",
+      "headline": "[Live Mock 100 Batch - 25/100] Update regarding NFLX",
+      "body": "This is an auto-generated mock news body for item 25. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:22.714Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848662191-964",
+      "headline": "[Live Mock 100 Batch - 24/100] Update regarding PG, MA",
+      "body": "This is an auto-generated mock news body for item 24. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:22.191Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "PG",
+          "name": "PG",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "MA",
+          "name": "MA",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848661207-467",
+      "headline": "[Live Mock 100 Batch - 23/100] Update regarding GOOGL, V, UNH",
+      "body": "This is an auto-generated mock news body for item 23. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:21.207Z",
+      "sentiment": "neutral",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "UNH",
+          "name": "UNH",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848660679-166",
+      "headline": "[Live Mock 100 Batch - 22/100] Update regarding BAC, PYPL, V",
+      "body": "This is an auto-generated mock news body for item 22. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:20.679Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "PYPL",
+          "name": "PYPL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "V",
+          "name": "V",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848659569-31",
+      "headline": "[Live Mock 100 Batch - 21/100] Update regarding GOOGL, WMT",
+      "body": "This is an auto-generated mock news body for item 21. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:19.569Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848658359-460",
+      "headline": "[Live Mock 100 Batch - 20/100] Update regarding GOOGL, PG, INTC",
+      "body": "This is an auto-generated mock news body for item 20. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:18.359Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "PG",
+          "name": "PG",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848657832-421",
+      "headline": "[Live Mock 100 Batch - 19/100] Update regarding INTC, WMT",
+      "body": "This is an auto-generated mock news body for item 19. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:17.832Z",
+      "sentiment": "neutral",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848657304-708",
+      "headline": "[Live Mock 100 Batch - 18/100] Update regarding META, PYPL",
+      "body": "This is an auto-generated mock news body for item 18. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: neutral.",
+      "publishedAt": "2026-05-27T02:24:17.304Z",
+      "sentiment": "neutral",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "META",
+          "name": "META",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        },
+        {
+          "symbol": "PYPL",
+          "name": "PYPL",
+          "sentiment": "flat",
+          "sentimentScore": 0
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848656206-333",
+      "headline": "[Live Mock 100 Batch - 17/100] Update regarding GOOGL",
+      "body": "This is an auto-generated mock news body for item 17. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:16.206Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848655677-505",
+      "headline": "[Live Mock 100 Batch - 16/100] Update regarding META",
+      "body": "This is an auto-generated mock news body for item 16. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:15.677Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "META",
+          "name": "META",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848654626-132",
+      "headline": "[Live Mock 100 Batch - 15/100] Update regarding AMZN, AAPL",
+      "body": "This is an auto-generated mock news body for item 15. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:14.626Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848654101-948",
+      "headline": "[Live Mock 100 Batch - 14/100] Update regarding MA",
+      "body": "This is an auto-generated mock news body for item 14. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:14.101Z",
+      "sentiment": "good",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "MA",
+          "name": "MA",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848653577-842",
+      "headline": "[Live Mock 100 Batch - 13/100] Update regarding DIS",
+      "body": "This is an auto-generated mock news body for item 13. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:13.577Z",
+      "sentiment": "good",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848652631-439",
+      "headline": "[Live Mock 100 Batch - 12/100] Update regarding GOOGL, BAC",
+      "body": "This is an auto-generated mock news body for item 12. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:12.631Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "BAC",
+          "name": "BAC",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848651671-823",
+      "headline": "[Live Mock 100 Batch - 11/100] Update regarding TSLA, GOOGL",
+      "body": "This is an auto-generated mock news body for item 11. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:11.671Z",
+      "sentiment": "bad",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "TSLA",
+          "name": "TSLA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848650664-317",
+      "headline": "[Live Mock 100 Batch - 10/100] Update regarding AAPL, MA, AMZN",
+      "body": "This is an auto-generated mock news body for item 10. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:10.664Z",
+      "sentiment": "good",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AAPL",
+          "name": "AAPL",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "MA",
+          "name": "MA",
+          "sentiment": "up",
+          "sentimentScore": 5
+        },
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848650143-211",
+      "headline": "[Live Mock 100 Batch - 9/100] Update regarding DIS, JPM",
+      "body": "This is an auto-generated mock news body for item 9. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:10.143Z",
+      "sentiment": "bad",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "DIS",
+          "name": "DIS",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "JPM",
+          "name": "JPM",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848649171-367",
+      "headline": "[Live Mock 100 Batch - 8/100] Update regarding MSFT, PYPL, GOOGL",
+      "body": "This is an auto-generated mock news body for item 8. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:09.171Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "MSFT",
+          "name": "MSFT",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "PYPL",
+          "name": "PYPL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848648122-865",
+      "headline": "[Live Mock 100 Batch - 7/100] Update regarding AMZN, MA",
+      "body": "This is an auto-generated mock news body for item 7. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:08.122Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "AMZN",
+          "name": "AMZN",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "MA",
+          "name": "MA",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848647594-622",
+      "headline": "[Live Mock 100 Batch - 6/100] Update regarding NFLX",
+      "body": "This is an auto-generated mock news body for item 6. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: high. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:07.594Z",
+      "sentiment": "bad",
+      "impact": "high",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "NFLX",
+          "name": "NFLX",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848646599-26",
+      "headline": "[Live Mock 100 Batch - 5/100] Update regarding GOOGL, PG, INTC",
+      "body": "This is an auto-generated mock news body for item 5. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:06.599Z",
+      "sentiment": "bad",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "GOOGL",
+          "name": "GOOGL",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "PG",
+          "name": "PG",
+          "sentiment": "down",
+          "sentimentScore": -5
+        },
+        {
+          "symbol": "INTC",
+          "name": "INTC",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848646071-564",
+      "headline": "[Live Mock 100 Batch - 4/100] Update regarding MA",
+      "body": "This is an auto-generated mock news body for item 4. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: low. Sentiment: good.",
+      "publishedAt": "2026-05-27T02:24:06.071Z",
+      "sentiment": "good",
+      "impact": "low",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "MA",
+          "name": "MA",
+          "sentiment": "up",
+          "sentimentScore": 5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    },
+    {
+      "id": "sim-1779848645545-255",
+      "headline": "[Live Mock 100 Batch - 3/100] Update regarding WMT",
+      "body": "This is an auto-generated mock news body for item 3. It is designed to test both the website notifications and the Telegram bot forwarding mechanism. Impact: medium. Sentiment: bad.",
+      "publishedAt": "2026-05-27T02:24:05.545Z",
+      "sentiment": "bad",
+      "impact": "medium",
+      "countryCode": "global",
+      "regionTag": "global",
+      "tickers": [
+        {
+          "symbol": "WMT",
+          "name": "WMT",
+          "sentiment": "down",
+          "sentimentScore": -5
+        }
+      ],
+      "sources": [
+        {
+          "name": "SYSTEM",
+          "url": "http://localhost:3000"
+        }
+      ]
+    }
+  ]
 }

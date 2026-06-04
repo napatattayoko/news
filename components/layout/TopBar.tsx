@@ -6,6 +6,7 @@ import { Search, Bell, Menu, X, ArrowLeft } from 'lucide-react';
 import { useTerminalStore } from '@/lib/store';
 import SearchOverlay from '@/components/search/SearchOverlay';
 import NotificationDropdown from './NotificationDropdown';
+import FinvizMarquee from '@/components/tickers/FinvizMarquee';
 
 const DETAIL_PAGE_PATTERNS = [
   /^\/stock-sentiment\/.+/,
@@ -107,7 +108,7 @@ export default function TopBar() {
           {/* Bell */}
           <div className="relative">
             <button
-              onClick={() => setNotificationOpen(!notificationOpen)}
+              onClick={(e) => { e.stopPropagation(); setNotificationOpen(!notificationOpen); }}
               className="relative p-2 rounded-lg bg-[#111722] hover:bg-[#1C2635] transition-colors text-white flex items-center justify-center border border-white/5 hover:border-white/10"
               aria-label="Notifications"
             >
@@ -125,6 +126,9 @@ export default function TopBar() {
           </div>
         </div>
       </div>
+      
+      {/* Real-time Finviz Stock Marquee */}
+      <FinvizMarquee />
 
       {/* Search Overlay — portal-style, rendered at top level */}
       {searchOverlayOpen && <SearchOverlay />}

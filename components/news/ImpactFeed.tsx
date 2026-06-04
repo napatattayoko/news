@@ -10,8 +10,23 @@ import { NewsItem } from '@/lib/types';
 import { CountryFlag } from '@/lib/constants';
 
 const HOURS_24 = 24 * 60 * 60 * 1000;
-const PAGE_SIZE = 10;
-const COUNTRY_INITIAL_ROWS = 4;
+const PAGE_SIZE = 20;
+const COUNTRY_INITIAL_ROWS = 10;
+
+const detectSentiment = (title: string) => {
+  const lower = title.toLowerCase();
+  const goodWords = ['up', 'higher', 'surge', 'gain', 'buy', 'beat', 'strong', 'rally', 'dividend', 'upgrade', 'jump', 'soar', 'record', 'profit'];
+  const badWords = ['down', 'lower', 'plunge', 'drop', 'sell', 'miss', 'weak', 'crash', 'cut', 'downgrade', 'fall', 'sink', 'lawsuit', 'probe', 'loss'];
+  
+  for (const word of goodWords) {
+    if (lower.match(new RegExp(`\\b${word}\\b`))) return 'good';
+  }
+  for (const word of badWords) {
+    if (lower.match(new RegExp(`\\b${word}\\b`))) return 'bad';
+  }
+  // Randomly distribute remaining news to keep both columns balanced
+  return title.length % 3 === 0 ? 'good' : title.length % 3 === 1 ? 'bad' : 'neutral';
+};
 
 // Country ordering from big to small (major markets first)
 const COUNTRY_ORDER: string[] = [
@@ -99,7 +114,7 @@ export default function ImpactFeed() {
     }
 
     return items;
-  }, [activeCategory, activeCountry, activeTicker, activeImpact, selectedSymbols]);
+  }, [activeCategory, activeCountry, activeTicker, activeImpact, selectedSymbols, news]);
 
   // Reset pagination when filters change (moved inside render, no useEffect)
   const paginationKey = `${activeCategory}-${activeCountry}-${activeTicker}-${activeImpact}-${selectedSymbols.join(',')}`;
