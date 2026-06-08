@@ -112,7 +112,7 @@ export default function BreakingNews() {
     items.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
     return items.slice(0, 3);
-  }, [activeCategory]);
+  }, [activeCategory, news]);
 
   if (breakingItems.length === 0) return null;
 
