@@ -81,8 +81,11 @@ export default function LoginPage() {
         throw new Error('รหัสผ่านผิด');
       }
 
-      // Redirect to main Dashboard immediately upon successful simulated login
-      router.push('/');
+      // Set mock cookie
+      document.cookie = 'auth_token=mock-logged-in-token; path=/; max-age=86400; SameSite=Lax';
+
+      // Redirect to main Dashboard and refresh the window so Middleware works
+      window.location.href = '/';
 
     } catch (error: any) {
       setSubmitError(error.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
