@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
     
     const news: NewsItem[] = [];
     $('table.styled-table-new tr').each((i, row) => {
-      const time = $(row).find('td:first-child').text().trim();
+      const time = $(row).find('td.news_date-cell').text().trim();
       const linkEl = $(row).find('a.nn-tab-link');
       const title = linkEl.text().trim();
       const url = linkEl.attr('href');
