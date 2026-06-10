@@ -10,10 +10,12 @@
         "SPRC",
         "SOAR"
       ],
-      "telegramChatId": 8715055612
+      "telegramChatId": 7718095579
     }
   },
-  "pendingLinks": {},
+  "pendingLinks": {
+    "942929": "user-1"
+  },
   "news": [
     {
       "id": "sim-1780318763152-312",

@@ -103,9 +103,14 @@ const calculateImpact = (title: string) => {
   return 'low';
 };
 
+export const revalidate = 60; // Cache for 60 seconds
+
 export async function GET(req: NextRequest) {
   try {
-    const response = await fetch('https://finviz.com/news', { headers: HEADERS, next: { revalidate: 60 } });
+    const response = await fetch('https://finviz.com/news.ashx', { 
+      headers: HEADERS, 
+      next: { revalidate: 60 } 
+    });
     if (!response.ok) throw new Error('Failed to fetch news');
     const html = await response.text();
     const $ = cheerio.load(html);
