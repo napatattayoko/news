@@ -124,10 +124,11 @@ export async function GET(req: NextRequest) {
       
       if (title && url) {
         news.push({
-          id: `fv-news-${i}-${title.replace(/\\W/g, '').substring(0, 10)}`,
+          id: `fv-news-${i}-${title.replace(/\W/g, '').substring(0, 10)}`,
           headline: title,
           body: `Published at: ${time}. Sourced from Finviz.`,
-          publishedAt: new Date().toISOString(),
+          // Subtract i seconds so the first item on the page has the newest timestamp
+          publishedAt: new Date(Date.now() - i * 1000).toISOString(),
           sentiment: detectSentiment(title),
           impact: calculateImpact(title),
           countryCode: 'global',
