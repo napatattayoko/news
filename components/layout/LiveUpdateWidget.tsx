@@ -10,10 +10,16 @@ export default function LiveUpdateWidget() {
   if (!visible) return null;
 
   return (
-    <div className="bg-[#0F1924] border border-[#222F44] rounded-2xl p-4 relative">
+    <div
+      className="bg-[#0F1924] border border-[#222F44] rounded-2xl p-4 relative cursor-pointer"
+      onClick={() => window.open('https://www.bloomberg.com/live/us', '_blank', 'noopener,noreferrer')}
+    >
       <button
-        onClick={() => setVisible(false)}
-        className="absolute top-3 right-3 text-[#B3B3B3] hover:text-white transition-colors"
+        onClick={(e) => {
+          e.stopPropagation();
+          setVisible(false);
+        }}
+        className="absolute top-3 right-3 text-[#B3B3B3] hover:text-white transition-colors z-10"
       >
         <X size={16} />
       </button>
