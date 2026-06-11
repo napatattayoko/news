@@ -37,7 +37,7 @@ const COMPANY_TO_TICKER: Record<string, string> = {
 const extractTickers = (title: string) => {
   const words = title.split(/[\s,.'"-]+/);
   const possibleTickers = words.filter(w => w === w.toUpperCase() && w.length >= 2 && w.length <= 5 && !['THE', 'FOR', 'AND', 'WITH', 'FROM'].includes(w));
-  
+
   // Map common names
   const lowerTitle = title.toLowerCase();
   for (const [company, ticker] of Object.entries(COMPANY_TO_TICKER)) {
@@ -52,7 +52,7 @@ const extractTickers = (title: string) => {
     // Deterministic pseudo-random based on title length and first char code
     const charCode = title.length > 0 ? title.charCodeAt(0) : 0;
     const deterministicIndex = (title.length + charCode) % popular.length;
-    
+
     // Only assign a fallback ~50% of the time to keep some news generic
     if ((title.length + charCode) % 2 === 0) {
       possibleTickers.push(popular[deterministicIndex]);
@@ -68,7 +68,7 @@ const extractTickers = (title: string) => {
 };
 
 const HIGH_IMPACT_KEYWORDS = [
-  'bankrupt', 'bankruptcy', 'crash', 'plunge', 'soar', 'surge', 
+  'bankrupt', 'bankruptcy', 'crash', 'plunge', 'soar', 'surge',
   'fed', 'fomc', 'rate cut', 'rate hike', 'inflation', 'cpi',
   'resigns', 'steps down', 'fired', 'layoffs',
   'merger', 'acquires', 'buyout', 'acquisition',
@@ -86,17 +86,17 @@ const MEDIUM_IMPACT_KEYWORDS = [
 
 const calculateImpact = (title: string) => {
   const lowerTitle = title.toLowerCase();
-  
+
   // 1. High Impact Keyword check
   for (const keyword of HIGH_IMPACT_KEYWORDS) {
     if (lowerTitle.includes(keyword)) return 'high';
   }
-  
+
   // 2. Medium Impact Keyword check
   for (const keyword of MEDIUM_IMPACT_KEYWORDS) {
     if (lowerTitle.includes(keyword)) return 'medium';
   }
-  
+
   // 3. Fallback to length heuristics for remaining news
   if (title.length > 80) return 'high';
   if (title.length > 40) return 'medium';
@@ -107,24 +107,26 @@ export const revalidate = 60; // Cache for 60 seconds
 
 export async function GET(req: NextRequest) {
   try {
-    const response = await fetch('https://finviz.com/news.ashx', { 
-      headers: HEADERS, 
-      next: { revalidate: 60 } 
+    const response = await fetch('https://finviz.com/news.ashx', {
+      headers: HEADERS,
+      next: { revalidate: 60 }
     });
     if (!response.ok) throw new Error('Failed to fetch news');
     const html = await response.text();
     const $ = cheerio.load(html);
-    
+
     const news: NewsItem[] = [];
     $('table.styled-table-new tr').each((i, row) => {
       const time = $(row).find('td.news_date-cell').text().trim();
       const linkEl = $(row).find('a.nn-tab-link');
       const title = linkEl.text().trim();
       const url = linkEl.attr('href');
-      
+
       if (title && url) {
+        // Base the ID solely on the title to prevent duplicate alerts when indices shift
+        const uniqueId = Buffer.from(title).toString('base64').replace(/\W/g, '').substring(0, 30);
         news.push({
-          id: `fv-news-${i}-${title.replace(/\W/g, '').substring(0, 10)}`,
+          id: `fv-news-${uniqueId}`,
           headline: title,
           body: `Published at: ${time}. Sourced from Finviz.`,
           // Subtract i seconds so the first item on the page has the newest timestamp
@@ -139,7 +141,7 @@ export async function GET(req: NextRequest) {
         });
       }
     });
-    
+
     return NextResponse.json({ success: true, news: news.slice(0, 50) });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

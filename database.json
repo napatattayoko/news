@@ -16,252 +16,252 @@
         {
           "symbol": "CPI",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:35:35.120Z"
-        },
-        {
-          "symbol": "8%",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:34.749Z"
-        },
-        {
-          "symbol": "IPO",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:34.749Z"
-        },
-        {
-          "symbol": "WH",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:34.263Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:33.882Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:33.516Z"
-        },
-        {
-          "symbol": "100",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:32.748Z"
-        },
-        {
-          "symbol": "AMFI",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:32.369Z"
-        },
-        {
-          "symbol": "AI",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:31.975Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:31.521Z"
-        },
-        {
-          "symbol": "FX",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:31.154Z"
-        },
-        {
-          "symbol": "2%",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:31.154Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:30.772Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:30.394Z"
-        },
-        {
-          "symbol": "AAPL",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:29.896Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:29.503Z"
-        },
-        {
-          "symbol": "AMZN",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:29.084Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:28.713Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:28.345Z"
-        },
-        {
-          "symbol": "$7",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:27.974Z"
-        },
-        {
-          "symbol": "AAPL",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:27.531Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:35:26.705Z"
-        },
-        {
-          "symbol": "8%",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:29:17.786Z"
-        },
-        {
-          "symbol": "IPO",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:29:17.786Z"
-        },
-        {
-          "symbol": "WH",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:29:17.287Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:29:16.904Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:29:15.920Z"
-        },
-        {
-          "symbol": "100",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:29:15.215Z"
-        },
-        {
-          "symbol": "8%",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:19:00.711Z"
-        },
-        {
-          "symbol": "IPO",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:19:00.711Z"
-        },
-        {
-          "symbol": "WH",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:19:00.352Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:18:59.974Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:18:59.616Z"
-        },
-        {
-          "symbol": "100",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:18:59.196Z"
+          "timestamp": "2026-06-10T08:53:17.510Z"
         },
         {
           "symbol": "US",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:58.785Z"
+          "timestamp": "2026-06-10T08:53:17.101Z"
         },
         {
-          "symbol": "AMFI",
+          "symbol": "8%",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:58.374Z"
+          "timestamp": "2026-06-10T08:53:16.726Z"
         },
         {
-          "symbol": "AI",
+          "symbol": "IPO",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:57.925Z"
+          "timestamp": "2026-06-10T08:53:16.726Z"
         },
         {
-          "symbol": "NEWS",
+          "symbol": "WH",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:57.536Z"
-        },
-        {
-          "symbol": "FX",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:18:57.164Z"
-        },
-        {
-          "symbol": "2%",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:18:57.164Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:18:56.760Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:18:56.399Z"
-        },
-        {
-          "symbol": "AAPL",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:18:55.996Z"
-        },
-        {
-          "symbol": "NEWS",
-          "status": "SENT",
-          "timestamp": "2026-06-10T08:18:55.553Z"
+          "timestamp": "2026-06-10T08:53:16.356Z"
         },
         {
           "symbol": "AMZN",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:55.084Z"
+          "timestamp": "2026-06-10T08:53:15.949Z"
         },
         {
           "symbol": "NEWS",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:54.703Z"
+          "timestamp": "2026-06-10T08:53:15.469Z"
         },
         {
           "symbol": "NEWS",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:53.832Z"
+          "timestamp": "2026-06-10T08:53:14.547Z"
         },
         {
-          "symbol": "$7",
+          "symbol": "100",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:53.471Z"
+          "timestamp": "2026-06-10T08:53:14.091Z"
+        },
+        {
+          "symbol": "AMFI",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:13.678Z"
+        },
+        {
+          "symbol": "AI",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:13.232Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:12.812Z"
+        },
+        {
+          "symbol": "FX",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:12.409Z"
+        },
+        {
+          "symbol": "2%",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:12.409Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:12.010Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:11.645Z"
         },
         {
           "symbol": "AAPL",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:53.105Z"
+          "timestamp": "2026-06-10T08:53:11.259Z"
         },
         {
           "symbol": "NEWS",
           "status": "SENT",
-          "timestamp": "2026-06-10T08:18:52.706Z"
+          "timestamp": "2026-06-10T08:53:10.802Z"
+        },
+        {
+          "symbol": "AMZN",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:10.436Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:10.035Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:09.666Z"
+        },
+        {
+          "symbol": "$7",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:53:08.890Z"
+        },
+        {
+          "symbol": "AMZN",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:35.112Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:34.732Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:34.368Z"
+        },
+        {
+          "symbol": "100",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:33.958Z"
+        },
+        {
+          "symbol": "AMFI",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:33.547Z"
+        },
+        {
+          "symbol": "AI",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:33.135Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:32.748Z"
+        },
+        {
+          "symbol": "FX",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:32.370Z"
+        },
+        {
+          "symbol": "2%",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:32.370Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:31.988Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:31.612Z"
+        },
+        {
+          "symbol": "AAPL",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:31.244Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:30.832Z"
+        },
+        {
+          "symbol": "AMZN",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:30.431Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:30.032Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:29.599Z"
+        },
+        {
+          "symbol": "$7",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:51:28.750Z"
+        },
+        {
+          "symbol": "WH",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:04.126Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:03.707Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:03.253Z"
+        },
+        {
+          "symbol": "100",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:02.884Z"
+        },
+        {
+          "symbol": "AMFI",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:02.471Z"
+        },
+        {
+          "symbol": "AI",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:02.054Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:01.677Z"
+        },
+        {
+          "symbol": "FX",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:01.270Z"
+        },
+        {
+          "symbol": "2%",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:01.270Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:00.908Z"
+        },
+        {
+          "symbol": "NEWS",
+          "status": "SENT",
+          "timestamp": "2026-06-10T08:46:00.515Z"
         }
       ]
     }
