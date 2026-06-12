@@ -138,7 +138,7 @@ function parseFinvizTime(timeStr: string, lastDateObj: { year: number, month: nu
       }
     }
     const dateAsUTC = new Date(Date.UTC(year, month, day, hours, mins, 0));
-    const actualUTC = new Date(dateAsUTC.getTime() + 4 * 60 * 60 * 1000); // EDT to UTC
+    const actualUTC = new Date(dateAsUTC.getTime() + 5 * 60 * 60 * 1000); // EST to UTC
     let isoString = actualUTC.toISOString();
     if (actualUTC.getTime() > Date.now()) { isoString = new Date().toISOString(); }
     return { isoString, newDateObj: { year, month, day } };
