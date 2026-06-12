@@ -14,6 +14,12 @@ interface TickerChipProps {
 
 export default function TickerChip({ symbol, showBookmark = true, trend = 'flat', size = 'sm' }: TickerChipProps) {
   const { activeTicker, setTicker, trackedTickers, addTicker, removeTicker } = useTerminalStore();
+
+  // ป้องกันบักที่ระบบดึงตัวเลขมาเป็น ticker (เช่น 548, 000) โดยยอมรับเฉพาะตัวอักษรเท่านั้น
+  if (!/^[A-Za-z]+$/.test(symbol)) {
+    return null;
+  }
+
   const active = activeTicker === symbol;
   const isTracked = trackedTickers.includes(symbol);
 
