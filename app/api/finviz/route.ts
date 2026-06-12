@@ -309,9 +309,7 @@ async function fetchQuote(symbol: string) {
   return { quote: quoteData, news: stockNews.slice(0, 10) };
 }
 
-// ==========================================
 // 🚀 Main API Router
-// ==========================================
 
 /**
  * Handles incoming GET requests and routes to the appropriate scraper function.
