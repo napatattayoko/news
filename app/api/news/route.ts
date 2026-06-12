@@ -103,6 +103,50 @@ const calculateImpact = (title: string) => {
   return 'low';
 };
 
+function parseFinvizTime(timeStr: string, lastDateObj: { year: number, month: number, day: number }) {
+  try {
+    const parts = timeStr.trim().split(' ');
+    let datePart = '';
+    let timePart = '';
+    if (parts.length >= 2) {
+      if (parts[0].toLowerCase() === 'today') { timePart = parts[1]; }
+      else { datePart = parts[0]; timePart = parts[1]; }
+    } else {
+      timePart = parts[0];
+    }
+    
+    let year = lastDateObj.year; let month = lastDateObj.month; let day = lastDateObj.day;
+    if (datePart) {
+      const dateSplit = datePart.split('-');
+      if (dateSplit.length === 3) {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        month = monthNames.findIndex(m => m.toLowerCase() === dateSplit[0].toLowerCase());
+        day = parseInt(dateSplit[1], 10);
+        year = parseInt(dateSplit[2], 10);
+        if (year < 100) year += 2000;
+      }
+    }
+    
+    let hours = 0; let mins = 0;
+    if (timePart) {
+      const match = timePart.match(/(\d+):(\d+)(AM|PM)/i);
+      if (match) {
+        hours = parseInt(match[1], 10); mins = parseInt(match[2], 10);
+        const ampm = match[3].toUpperCase();
+        if (ampm === 'PM' && hours < 12) hours += 12;
+        if (ampm === 'AM' && hours === 12) hours = 0;
+      }
+    }
+    const dateAsUTC = new Date(Date.UTC(year, month, day, hours, mins, 0));
+    const actualUTC = new Date(dateAsUTC.getTime() + 4 * 60 * 60 * 1000); // EDT to UTC
+    let isoString = actualUTC.toISOString();
+    if (actualUTC.getTime() > Date.now()) { isoString = new Date().toISOString(); }
+    return { isoString, newDateObj: { year, month, day } };
+  } catch (e) {
+    return { isoString: new Date().toISOString(), newDateObj: lastDateObj };
+  }
+}
+
 export const revalidate = 60; // Cache for 60 seconds
 
 export async function GET(req: NextRequest) {
@@ -115,6 +159,10 @@ export async function GET(req: NextRequest) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
+    const nyDateStr = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+    const nyDate = new Date(nyDateStr);
+    let currentDateObj = { year: nyDate.getFullYear(), month: nyDate.getMonth(), day: nyDate.getDate() };
+
     const news: NewsItem[] = [];
     $('table.styled-table-new tr').each((i, row) => {
       const time = $(row).find('td.news_date-cell').text().trim();
@@ -123,14 +171,15 @@ export async function GET(req: NextRequest) {
       const url = linkEl.attr('href');
 
       if (title && url) {
-        // Base the ID solely on the title to prevent duplicate alerts when indices shift
         const uniqueId = Buffer.from(title).toString('base64').replace(/\W/g, '').substring(0, 30);
+        const parsedTime = parseFinvizTime(time, currentDateObj);
+        currentDateObj = parsedTime.newDateObj;
+
         news.push({
           id: `fv-news-${uniqueId}`,
           headline: title,
           body: `Published at: ${time}. Sourced from Finviz.`,
-          // Subtract i seconds so the first item on the page has the newest timestamp
-          publishedAt: new Date(Date.now() - i * 1000).toISOString(),
+          publishedAt: parsedTime.isoString,
           sentiment: detectSentiment(title),
           impact: calculateImpact(title),
           countryCode: 'global',
