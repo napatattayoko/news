@@ -43,9 +43,9 @@ function BreakingCard({ item, large = false }: { item: NewsItem; large?: boolean
         {item.headline}
       </h3>
 
-      {/* Body preview (only on large card to prevent stretching) */}
-      {large && item.body && (
-        <p className="text-sm text-slate-400 leading-relaxed mb-3 line-clamp-3 flex-1">
+      {/* Body preview */}
+      {item.body && (
+        <p className={`text-sm text-slate-400 leading-relaxed mb-3 flex-1 ${large ? 'line-clamp-3' : 'line-clamp-2'}`}>
           {item.body}
         </p>
       )}
