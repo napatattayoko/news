@@ -115,21 +115,8 @@ export default function TickerDetailPage() {
     items = [...items].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
     // Mix Finviz stock-specific news if available
-    if (finvizData?.news) {
-      const fvNews = finvizData.news.map((n: any, i: number) => ({
-        id: `fv-${i}`,
-        headline: n.title,
-        body: `Time: ${n.time} | Finviz News`,
-        sources: [{ name: n.source, url: n.url }],
-        publishedAt: new Date().toISOString(),
-        regionTag: 'us',
-        countryCode: 'us',
-        category: 'markets',
-        impact: 'medium',
-        sentiment: 'neutral',
-        tickers: [{ symbol, name: symbol, sentiment: 'flat', sentimentScore: 0 }],
-      }));
-      items = [...fvNews, ...items];
+    if (finvizData?.news && Array.isArray(finvizData.news)) {
+      items = [...finvizData.news, ...items];
     }
 
     return items;
