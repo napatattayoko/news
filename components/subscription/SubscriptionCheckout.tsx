@@ -52,7 +52,7 @@ export function SubscriptionCheckout() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-8">
+    <div className="w-full max-w-5xl mx-auto space-y-4">
       {/* Title */}
       <div>
         <h1 className="text-lg font-extrabold text-white uppercase tracking-wide mb-1">SUBSCRIPTION & CHECKOUT</h1>
@@ -60,7 +60,7 @@ export function SubscriptionCheckout() {
       </div>
 
       {/* Plan Selection Card */}
-      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-6">
+      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-5">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Left Column: Plan Details */}
           <div className="flex-1 space-y-6">
@@ -111,12 +111,12 @@ export function SubscriptionCheckout() {
       </div>
 
       {/* Payment Method */}
-      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-6 mt-6">
-        <h3 className="text-base font-bold mb-4 text-white">Payment Method</h3>
+      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-5">
+        <h3 className="text-base font-bold mb-3 text-white">Payment Method</h3>
         <div className="flex gap-4">
           <button 
             onClick={() => setPaymentMethod('bank')}
-            className={`flex-1 rounded-xl py-6 flex flex-col items-center justify-center gap-3 transition-all ${
+            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${
               paymentMethod === 'bank' 
                 ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]' 
                 : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
@@ -127,7 +127,7 @@ export function SubscriptionCheckout() {
           </button>
           <button 
             onClick={() => setPaymentMethod('promptpay')}
-            className={`flex-1 rounded-xl py-6 flex flex-col items-center justify-center gap-3 transition-all ${
+            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${
               paymentMethod === 'promptpay' 
                 ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]' 
                 : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
@@ -140,26 +140,26 @@ export function SubscriptionCheckout() {
       </div>
 
       {/* Order Summary */}
-      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-6 mt-6">
-        <div className="flex justify-between items-center mb-8">
+      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-5">
+        <div className="flex justify-between items-center mb-4">
           <h3 className="text-base font-bold text-white">Order Summary</h3>
           <button className="text-[#808080] hover:text-white transition-colors">
             <PenLine className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex justify-between items-center text-sm mb-3">
+        <div className="flex justify-between items-center text-sm mb-2">
           <span className="text-[#808080] font-medium">{plan === 'monthly' ? 'Monthly' : 'Yearly'}</span>
           <span className="text-[#B3B3B3] font-medium">1 Tools</span>
         </div>
-        <div className="flex justify-between items-center text-sm mb-6">
+        <div className="flex justify-between items-center text-sm mb-3">
           <span className="text-white font-medium">หมอดูหุ้น</span>
           <span className="text-white font-medium tracking-wide">{selectedPlan.price.toLocaleString()} ฿</span>
         </div>
 
-        <hr className="border-[#222F44] my-6" />
+        <hr className="border-[#222F44] my-4" />
 
-        <div className="flex justify-between items-end mb-8">
+        <div className="flex justify-between items-end mb-4">
           <div>
             <div className="text-xs text-[#808080] font-bold mb-2 uppercase tracking-widest">TOTAL AMOUNT</div>
             <div className="text-4xl font-bold text-[#0D7FF2] tracking-tight">{selectedPlan.price.toLocaleString()}฿</div>
@@ -170,10 +170,10 @@ export function SubscriptionCheckout() {
           </div>
         </div>
 
-        <div className="space-y-4 mt-8">
+        <div className="space-y-3 mt-4">
           <button 
             onClick={handleCompletePurchase} 
-            className="w-full bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white font-semibold py-4 rounded-xl transition-colors"
+            className="w-full bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white font-semibold py-3.5 rounded-xl transition-colors"
           >
             Complete Purchase
           </button>
