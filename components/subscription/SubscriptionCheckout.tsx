@@ -55,8 +55,8 @@ export function SubscriptionCheckout() {
     <div className="w-full max-w-5xl mx-auto space-y-8">
       {/* Title */}
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Subscription & Checkout</h1>
-        <p className="text-gray-400">เลือกแพ็กเกจและวิธีการชำระเงินเพื่อเข้าถึงฟีเจอร์พรีเมียม</p>
+        <h1 className="text-lg font-extrabold text-white uppercase tracking-wide mb-1">SUBSCRIPTION & CHECKOUT</h1>
+        <p className="text-[#808080] text-sm">เลือกแพ็กเกจและวิธีการชำระเงินเพื่อเข้าถึงฟีเจอร์พรีเมียม</p>
       </div>
 
       {/* Plan Selection Card */}
