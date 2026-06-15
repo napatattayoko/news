@@ -60,15 +60,15 @@ export function SubscriptionCheckout() {
       </div>
 
       {/* Plan Selection Card */}
-      <div className="bg-[#1e293b] rounded-2xl p-6 md:p-8 border border-white/5 shadow-lg">
+      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-6">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Left Column: Plan Details */}
           <div className="flex-1 space-y-6">
-            <div className="flex items-center gap-4 bg-[#0f172a] p-1 rounded-xl w-fit">
+            <div className="flex items-center gap-2 bg-[#1A1A1A] border border-[#222F44] p-1 rounded-xl w-fit">
               <button
                 onClick={() => setPlan("monthly")}
                 className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
-                  plan === "monthly" ? "bg-cyan-500 text-white shadow-md" : "text-gray-400 hover:text-white"
+                  plan === "monthly" ? "bg-[#0D7FF2] text-white" : "text-[#808080] hover:text-white"
                 }`}
               >
                 รายเดือน
@@ -76,7 +76,7 @@ export function SubscriptionCheckout() {
               <button
                 onClick={() => setPlan("yearly")}
                 className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
-                  plan === "yearly" ? "bg-cyan-500 text-white shadow-md" : "text-gray-400 hover:text-white"
+                  plan === "yearly" ? "bg-[#0D7FF2] text-white" : "text-[#808080] hover:text-white"
                 }`}
               >
                 รายปี
@@ -84,25 +84,25 @@ export function SubscriptionCheckout() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-semibold text-white mb-2">{selectedPlan.name} Premium</h2>
+              <h2 className="text-xl font-bold text-white mb-2">{selectedPlan.name} Premium</h2>
               <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-5xl font-bold text-cyan-400">{selectedPlan.price.toLocaleString()}฿</span>
-                <span className="text-gray-400">/ {plan === "monthly" ? "เดือน" : "ปี"}</span>
+                <span className="text-4xl font-bold text-[#0D7FF2]">{selectedPlan.price.toLocaleString()}฿</span>
+                <span className="text-[#808080]">/ {plan === "monthly" ? "เดือน" : "ปี"}</span>
               </div>
-              <p className="text-gray-400 leading-relaxed">
+              <p className="text-[#808080] text-sm leading-relaxed">
                 {selectedPlan.description}
               </p>
             </div>
           </div>
 
           {/* Right Column: Features */}
-          <div className="flex-1 bg-[#0f172a] rounded-xl p-6 border border-white/5">
-            <h3 className="text-lg font-medium text-white mb-4">สิ่งที่คุณจะได้รับ (What&apos;s included)</h3>
+          <div className="flex-1 bg-[#1A1A1A] rounded-xl p-6 border border-[#222F44]">
+            <h3 className="text-base font-bold text-white mb-4">สิ่งที่คุณจะได้รับ (What&apos;s included)</h3>
             <ul className="space-y-4">
               {FEATURES.map((feature, idx) => (
                 <li key={idx} className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-                  <span className="text-gray-300">{feature}</span>
+                  <CheckCircle2 className="w-5 h-5 text-[#0D7FF2] shrink-0 mt-0.5" />
+                  <span className="text-[#B3B3B3] text-sm">{feature}</span>
                 </li>
               ))}
             </ul>
@@ -111,38 +111,38 @@ export function SubscriptionCheckout() {
       </div>
 
       {/* Payment Method */}
-      <div className="bg-[#131D2A] border border-[#222F44] rounded-xl p-6 mt-8">
-        <h3 className="text-lg font-bold mb-4 text-white">Payment Method</h3>
+      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-6 mt-6">
+        <h3 className="text-base font-bold mb-4 text-white">Payment Method</h3>
         <div className="flex gap-4">
           <button 
             onClick={() => setPaymentMethod('bank')}
             className={`flex-1 rounded-xl py-6 flex flex-col items-center justify-center gap-3 transition-all ${
               paymentMethod === 'bank' 
-                ? 'bg-[#E5E7EB] text-black ring-2 ring-white ring-offset-2 ring-offset-[#131D2A]' 
-                : 'bg-[#1C283B] text-gray-400 hover:bg-[#223047]'
+                ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]' 
+                : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
             }`}
           >
-            <ArrowRightLeft className="w-7 h-7" />
+            <ArrowRightLeft className="w-6 h-6" />
             <span className="text-sm font-bold">Bank Transfer</span>
           </button>
           <button 
             onClick={() => setPaymentMethod('promptpay')}
             className={`flex-1 rounded-xl py-6 flex flex-col items-center justify-center gap-3 transition-all ${
               paymentMethod === 'promptpay' 
-                ? 'bg-[#E5E7EB] text-black ring-2 ring-white ring-offset-2 ring-offset-[#131D2A]' 
-                : 'bg-[#1C283B] text-gray-400 hover:bg-[#223047]'
+                ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]' 
+                : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
             }`}
           >
-            <QrCode className="w-7 h-7" />
+            <QrCode className="w-6 h-6" />
             <span className="text-sm font-bold">PromptPay</span>
           </button>
         </div>
       </div>
 
       {/* Order Summary */}
-      <div className="bg-[#131D2A] border border-[#222F44] rounded-xl p-6 mt-6">
+      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-6 mt-6">
         <div className="flex justify-between items-center mb-8">
-          <h3 className="text-lg font-bold text-white">Order Summary</h3>
+          <h3 className="text-base font-bold text-white">Order Summary</h3>
           <button className="text-[#808080] hover:text-white transition-colors">
             <PenLine className="w-5 h-5" />
           </button>
@@ -173,7 +173,7 @@ export function SubscriptionCheckout() {
         <div className="space-y-4 mt-8">
           <button 
             onClick={handleCompletePurchase} 
-            className="w-full bg-[#23344D] hover:bg-[#2D4363] text-white font-semibold py-4 rounded-xl transition-colors"
+            className="w-full bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white font-semibold py-4 rounded-xl transition-colors"
           >
             Complete Purchase
           </button>
