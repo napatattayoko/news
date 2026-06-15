@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, ArrowRightLeft, QrCode, Copy, Upload, Check } from "lucide-react";
+import { CheckCircle2, ArrowRightLeft, QrCode, Copy, Upload, Check, PenLine } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 
 type PlanType = "monthly" | "yearly";
@@ -110,68 +110,75 @@ export function SubscriptionCheckout() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Payment Method */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium text-white">Payment Method</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => setPaymentMethod("bank")}
-              className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
-                paymentMethod === "bank"
-                  ? "border-cyan-500 bg-cyan-500/10"
-                  : "border-white/5 bg-[#1e293b] hover:border-white/20"
-              }`}
-            >
-              <ArrowRightLeft className={`w-8 h-8 mb-3 ${paymentMethod === "bank" ? "text-cyan-400" : "text-gray-400"}`} />
-              <span className={`font-medium ${paymentMethod === "bank" ? "text-cyan-400" : "text-gray-400"}`}>Bank Transfer</span>
-            </button>
-            
-            <button
-              onClick={() => setPaymentMethod("promptpay")}
-              className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
-                paymentMethod === "promptpay"
-                  ? "border-cyan-500 bg-cyan-500/10"
-                  : "border-white/5 bg-[#1e293b] hover:border-white/20"
-              }`}
-            >
-              <QrCode className={`w-8 h-8 mb-3 ${paymentMethod === "promptpay" ? "text-cyan-400" : "text-gray-400"}`} />
-              <span className={`font-medium ${paymentMethod === "promptpay" ? "text-cyan-400" : "text-gray-400"}`}>PromptPay</span>
-            </button>
+      {/* Payment Method */}
+      <div className="bg-[#131D2A] border border-[#222F44] rounded-xl p-6 mt-8">
+        <h3 className="text-lg font-bold mb-4 text-white">Payment Method</h3>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => setPaymentMethod('bank')}
+            className={`flex-1 rounded-xl py-6 flex flex-col items-center justify-center gap-3 transition-all ${
+              paymentMethod === 'bank' 
+                ? 'bg-[#E5E7EB] text-black ring-2 ring-white ring-offset-2 ring-offset-[#131D2A]' 
+                : 'bg-[#1C283B] text-gray-400 hover:bg-[#223047]'
+            }`}
+          >
+            <ArrowRightLeft className="w-7 h-7" />
+            <span className="text-sm font-bold">Bank Transfer</span>
+          </button>
+          <button 
+            onClick={() => setPaymentMethod('promptpay')}
+            className={`flex-1 rounded-xl py-6 flex flex-col items-center justify-center gap-3 transition-all ${
+              paymentMethod === 'promptpay' 
+                ? 'bg-[#E5E7EB] text-black ring-2 ring-white ring-offset-2 ring-offset-[#131D2A]' 
+                : 'bg-[#1C283B] text-gray-400 hover:bg-[#223047]'
+            }`}
+          >
+            <QrCode className="w-7 h-7" />
+            <span className="text-sm font-bold">PromptPay</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Order Summary */}
+      <div className="bg-[#131D2A] border border-[#222F44] rounded-xl p-6 mt-6">
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="text-lg font-bold text-white">Order Summary</h3>
+          <button className="text-[#808080] hover:text-white transition-colors">
+            <PenLine className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex justify-between items-center text-sm mb-3">
+          <span className="text-[#808080] font-medium">{plan === 'monthly' ? 'Monthly' : 'Yearly'}</span>
+          <span className="text-[#B3B3B3] font-medium">1 Tools</span>
+        </div>
+        <div className="flex justify-between items-center text-sm mb-6">
+          <span className="text-white font-medium">หมอดูหุ้น</span>
+          <span className="text-white font-medium tracking-wide">{selectedPlan.price.toLocaleString()} ฿</span>
+        </div>
+
+        <hr className="border-[#222F44] my-6" />
+
+        <div className="flex justify-between items-end mb-8">
+          <div>
+            <div className="text-xs text-[#808080] font-bold mb-2 uppercase tracking-widest">TOTAL AMOUNT</div>
+            <div className="text-4xl font-bold text-[#0D7FF2] tracking-tight">{selectedPlan.price.toLocaleString()}฿</div>
+          </div>
+          <div className="text-right text-xs text-[#808080] font-medium leading-relaxed">
+            <div>Charged {plan === 'monthly' ? 'monthly' : 'annually'}</div>
+            <div>Cancel anytime</div>
           </div>
         </div>
 
-        {/* Order Summary */}
-        <div className="bg-[#1e293b] rounded-xl p-6 border border-white/5 flex flex-col justify-between">
-          <div>
-            <h3 className="text-lg font-medium text-white mb-6">Order Summary</h3>
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <p className="text-white font-medium">Premium Subscription</p>
-                <p className="text-sm text-gray-400">{plan === "monthly" ? "รายเดือน" : "รายปี"}</p>
-              </div>
-              <p className="text-white font-medium">{selectedPlan.price.toLocaleString()} ฿</p>
-            </div>
-            
-            <div className="h-px bg-white/10 my-4" />
-            
-            <div className="flex justify-between items-end mb-8">
-              <div>
-                <p className="text-sm text-gray-400 mb-1">TOTAL AMOUNT</p>
-                <p className="text-3xl font-bold text-cyan-400">{selectedPlan.price.toLocaleString()}฿</p>
-              </div>
-              <div className="text-right text-xs text-gray-400">
-                <p>Charged {plan === "monthly" ? "monthly" : "annually"}</p>
-                <p>Cancel anytime</p>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleCompletePurchase}
-            className="w-full py-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-lg transition-colors"
+        <div className="space-y-4 mt-8">
+          <button 
+            onClick={handleCompletePurchase} 
+            className="w-full bg-[#23344D] hover:bg-[#2D4363] text-white font-semibold py-4 rounded-xl transition-colors"
           >
             Complete Purchase
+          </button>
+          <button className="w-full text-[#808080] hover:text-white text-sm py-2 font-medium transition-colors">
+            Cancel
           </button>
         </div>
       </div>
