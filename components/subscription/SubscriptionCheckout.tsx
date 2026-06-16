@@ -56,13 +56,13 @@ function BankTransferModalContent({ onClose }: { onClose: () => void }) {
 
       {/* Hidden file input */}
       <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
-      
+
       {slipImage ? (
         <div className="w-full mb-4 relative rounded-xl border border-[#222F44] bg-[#0a1017] overflow-hidden group">
           <img src={slipImage} alt="Uploaded Slip" className="w-full h-48 object-contain" />
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-            <button 
-              onClick={() => fileInputRef.current?.click()} 
+            <button
+              onClick={() => fileInputRef.current?.click()}
               className="text-white text-sm font-bold bg-[#222F44] px-4 py-2 rounded-lg hover:bg-[#334155] transition-colors"
             >
               Change Slip
@@ -70,7 +70,7 @@ function BankTransferModalContent({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       ) : (
-        <button 
+        <button
           onClick={() => fileInputRef.current?.click()}
           className="w-full py-3.5 rounded-xl bg-[#F1F5F9] text-[#0f172a] hover:bg-white font-bold text-sm mb-4 transition-colors flex items-center justify-center gap-2"
         >
@@ -78,26 +78,25 @@ function BankTransferModalContent({ onClose }: { onClose: () => void }) {
           Upload Slip
         </button>
       )}
-      
+
       <div className="flex gap-4">
-        <button 
+        <button
           onClick={onClose}
           className="flex-1 py-3.5 rounded-xl bg-[#23344D] text-white hover:bg-[#2A3F5C] font-medium text-sm transition-colors"
         >
           Cancel
         </button>
-        <button 
+        <button
           onClick={() => {
             if (!slipImage) {
-              alert("กรุณาอัปโหลดสลิปก่อนยืนยัน");
+              alert("Please upload the payment slip before confirming.");
               return;
             }
             alert("Confirm Clicked with Slip!");
             onClose();
           }}
-          className={`flex-1 py-3.5 rounded-xl font-medium text-sm transition-colors ${
-            slipImage ? "bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white" : "bg-[#222F44] text-[#808080] cursor-not-allowed"
-          }`}
+          className={`flex-1 py-3.5 rounded-xl font-medium text-sm transition-colors ${slipImage ? "bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white" : "bg-[#222F44] text-[#808080] cursor-not-allowed"
+            }`}
         >
           Confirm
         </button>
@@ -161,20 +160,20 @@ const PLAN_DETAILS = {
     id: "monthly",
     name: "Monthly",
     price: 299,
-    description: "แพ็กเกจรายเดือน สำหรับผู้ที่ต้องการติดตามข่าวสารระยะสั้น",
+    description: "Monthly package for those who want to follow short-term news updates.",
   },
   yearly: {
     id: "yearly",
     name: "Yearly",
     price: 1899,
-    description: "แพ็กเกจรายปี สุดคุ้ม ประหยัดกว่าสำหรับนักลงทุนระยะยาว",
+    description: "The most cost-effective annual package is a great value for long-term investors.",
   }
 };
 
 const FEATURES = [
-  "ใช้งานฟีเจอร์ Wishlist เพิ่มหุ้นที่สนใจ",
-  "ติดตามความเคลื่อนไหวหุ้นต่างๆ",
-  "บทวิเคราะห์เชิงลึก",
+  "Use the Wishlist feature to add stocks you are interested in.",
+  "Follow the movements of various stocks",
+  "In-depth analysis",
 ];
 
 export function SubscriptionCheckout() {
@@ -197,12 +196,13 @@ export function SubscriptionCheckout() {
       {/* Title */}
       <div>
         <h1 className="text-lg font-extrabold text-white uppercase tracking-wide mb-1">SUBSCRIPTION & CHECKOUT</h1>
-        <p className="text-[#808080] text-sm">เลือกแพ็กเกจและวิธีการชำระเงินเพื่อเข้าถึงฟีเจอร์พรีเมียม</p>
+        <p className="text-[#808080] text-sm">Choose a package and payment method to access premium features.</p>
       </div>
 
       {/* Plan Selection Card */}
-      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-5">
-        <div className="flex flex-col md:flex-row gap-8">
+      <div className="relative bg-[#111722] border border-[#222F44] rounded-xl overflow-hidden p-5">
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-[#0D7FF2]/60 pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row gap-8">
           {/* Left Column: Plan Details */}
           <div className="flex-1 space-y-6">
             <div className="flex items-center gap-2 bg-[#1A1A1A] border border-[#222F44] p-1 rounded-xl w-fit">
@@ -211,14 +211,14 @@ export function SubscriptionCheckout() {
                 className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${plan === "monthly" ? "bg-[#0D7FF2] text-white" : "text-[#808080] hover:text-white"
                   }`}
               >
-                รายเดือน
+                Monthly
               </button>
               <button
                 onClick={() => setPlan("yearly")}
                 className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${plan === "yearly" ? "bg-[#0D7FF2] text-white" : "text-[#808080] hover:text-white"
                   }`}
               >
-                รายปี
+                yearly
               </button>
             </div>
 
@@ -226,7 +226,7 @@ export function SubscriptionCheckout() {
               <h2 className="text-xl font-bold text-white mb-2">{selectedPlan.name} Premium</h2>
               <div className="flex items-baseline gap-2 mb-4">
                 <span className="text-4xl font-bold text-[#0D7FF2]">{selectedPlan.price.toLocaleString()}฿</span>
-                <span className="text-[#808080]">/ {plan === "monthly" ? "เดือน" : "ปี"}</span>
+                <span className="text-[#808080]">/ {plan === "monthly" ? "Monthly" : "Yearly"}</span>
               </div>
               <p className="text-[#808080] text-sm leading-relaxed">
                 {selectedPlan.description}
@@ -235,8 +235,8 @@ export function SubscriptionCheckout() {
           </div>
 
           {/* Right Column: Features */}
-          <div className="flex-1 bg-[#1A1A1A] rounded-xl p-6 border border-[#222F44]">
-            <h3 className="text-base font-bold text-white mb-4">สิ่งที่คุณจะได้รับ (What&apos;s included)</h3>
+          <div className="flex-1 bg-black/30 backdrop-blur-md rounded-xl p-6 border border-white/10">
+            <h3 className="text-base font-bold text-white mb-4">What you will get</h3>
             <ul className="space-y-4">
               {FEATURES.map((feature, idx) => (
                 <li key={idx} className="flex items-start gap-3">
@@ -253,24 +253,31 @@ export function SubscriptionCheckout() {
       <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-5">
         <h3 className="text-base font-bold mb-3 text-white">Payment Method</h3>
         <div className="flex gap-4">
-          <button 
+          <button
             onClick={() => setPaymentMethod('bank')}
-            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'bank'
-              ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]'
-              : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
+            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'bank'
+              ? 'bg-[#0D7FF2] border border-[#0D7FF2] text-white shadow-[0_0_20px_rgba(13,127,242,0.3)]'
+              : 'bg-white border border-transparent text-slate-900 hover:bg-slate-200'
               }`}
           >
-            <ArrowRightLeft className="w-6 h-6" />
+            <ArrowRightLeft className="w-10 h-10 mb-1" />
             <span className="text-sm font-bold">Bank Transfer</span>
           </button>
-          <button 
+          <button
             onClick={() => setPaymentMethod('promptpay')}
-            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'promptpay'
-              ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]'
-              : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
+            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'promptpay'
+              ? 'bg-[#0D7FF2] border border-[#0D7FF2] text-white shadow-[0_0_20px_rgba(13,127,242,0.3)]'
+              : 'bg-white border border-transparent text-slate-900 hover:bg-slate-200'
               }`}
           >
-            <QrCode className="w-6 h-6" />
+            <div className="w-10 h-10 relative mb-1">
+              <Image
+                src="/images/promptpay-logo-bw.png"
+                alt="PromptPay Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
             <span className="text-sm font-bold">PromptPay</span>
           </button>
         </div>
@@ -285,7 +292,6 @@ export function SubscriptionCheckout() {
 
         <div className="flex justify-between items-center text-sm mb-2">
           <span className="text-[#808080] font-medium">{plan === 'monthly' ? 'Monthly' : 'Yearly'}</span>
-          <span className="text-[#B3B3B3] font-medium">1 Tools</span>
         </div>
 
 
@@ -299,14 +305,13 @@ export function SubscriptionCheckout() {
         </div>
 
         <div className="space-y-3 mt-4">
-          <button 
-            onClick={handleCompletePurchase} 
+          <button
+            onClick={handleCompletePurchase}
             disabled={!paymentMethod}
-            className={`w-full font-semibold py-3.5 rounded-xl transition-all duration-300 ${
-              paymentMethod
-                ? "bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white"
-                : "bg-[#222F44]/50 text-[#808080] cursor-not-allowed"
-            }`}
+            className={`w-full font-semibold py-3.5 rounded-xl transition-all duration-300 ${paymentMethod
+              ? "bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white"
+              : "bg-[#222F44]/50 text-[#808080] cursor-not-allowed"
+              }`}
           >
             Complete Purchase
           </button>
