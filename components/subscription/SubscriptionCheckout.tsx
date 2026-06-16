@@ -1,8 +1,113 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { CheckCircle2, ArrowRightLeft, QrCode, Copy, Upload, Check, PenLine } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+
+function BankTransferModalContent({ onClose }: { onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex flex-col">
+      <h3 className="text-sm font-medium text-white mb-6">Bank Account Detail</h3>
+
+      <div className="bg-[#222F44] rounded-xl p-4 flex items-center gap-4 mb-6">
+        <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-white p-1">
+          <Image
+            src="/images/session-subscription/kbank.png"
+            alt="KBank Logo"
+            width={48}
+            height={48}
+            className="w-full h-full object-contain"
+            unoptimized
+          />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <p className="text-white font-bold text-base truncate">Kbank <span className="font-normal text-[#808080] text-sm">(Kasikorn Bank)</span></p>
+          <p className="text-sm text-[#808080] truncate mt-0.5">Mr.Chalearmpol Neamsri</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-[#808080] text-sm font-mono">047-2-27169-7</p>
+            <button
+              onClick={() => copyToClipboard("0472271697")}
+              className="text-[#808080] hover:text-white transition-colors"
+              title="Copy Account Number"
+            >
+              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button className="w-full py-3.5 rounded-xl bg-[#F1F5F9] text-[#0f172a] hover:bg-white font-bold text-sm mb-4 transition-colors">
+        Upload Slip
+      </button>
+
+      <div className="flex gap-4">
+        <button
+          onClick={onClose}
+          className="flex-1 py-3.5 rounded-xl bg-[#23344D] text-white hover:bg-[#2A3F5C] font-medium text-sm transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            alert("Confirm Clicked");
+            onClose();
+          }}
+          className="flex-1 py-3.5 rounded-xl bg-[#334155] text-white hover:bg-[#475569] font-medium text-sm transition-colors"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PromptPayModalContent({ price, onClose }: { price: number, onClose: () => void }) {
+  return (
+    <div className="flex flex-col items-center text-center">
+      <h3 className="text-xl font-bold text-white mb-6">Scan QR Code</h3>
+
+      <div className="bg-white p-4 rounded-2xl mb-6">
+        <div className="w-48 h-48 flex items-center justify-center rounded-lg">
+          <QrCode className="w-32 h-32 text-slate-900" />
+        </div>
+      </div>
+
+      <p className="text-white font-bold text-base">Kbank <span className="font-normal text-[#808080] text-sm">(Kasikorn Bank)</span></p>
+      <p className="text-sm text-[#808080] mt-1">Mr.Chalearmpol Neamsri</p>
+      <p className="text-[#808080] text-sm font-mono mt-1">xxx-x-x7169-x</p>
+      <p className="text-[#808080] text-sm font-mono mt-1 mb-6">0000000000000</p>
+
+      <div className="flex w-full gap-4">
+        <button
+          onClick={() => {
+            alert("Simulate Success!");
+            onClose();
+          }}
+          className="flex-1 py-3.5 rounded-xl bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white font-medium text-sm transition-colors"
+        >
+          Simulate Success
+        </button>
+        <button
+          onClick={() => {
+            alert("Simulate Failed!");
+            onClose();
+          }}
+          className="flex-1 py-3.5 rounded-xl bg-[#EF4444] hover:bg-[#DC2626] text-white font-medium text-sm transition-colors"
+        >
+          Simulate Failed
+        </button>
+      </div>
+    </div>
+  );
+}
 
 type PlanType = "monthly" | "yearly";
 type PaymentMethod = "bank" | "promptpay" | null;
@@ -33,7 +138,6 @@ export function SubscriptionCheckout() {
   const [plan, setPlan] = useState<PlanType>("monthly");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const selectedPlan = PLAN_DETAILS[plan];
 
@@ -43,12 +147,6 @@ export function SubscriptionCheckout() {
       return;
     }
     setIsModalOpen(true);
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -67,17 +165,15 @@ export function SubscriptionCheckout() {
             <div className="flex items-center gap-2 bg-[#1A1A1A] border border-[#222F44] p-1 rounded-xl w-fit">
               <button
                 onClick={() => setPlan("monthly")}
-                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
-                  plan === "monthly" ? "bg-[#0D7FF2] text-white" : "text-[#808080] hover:text-white"
-                }`}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${plan === "monthly" ? "bg-[#0D7FF2] text-white" : "text-[#808080] hover:text-white"
+                  }`}
               >
                 รายเดือน
               </button>
               <button
                 onClick={() => setPlan("yearly")}
-                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
-                  plan === "yearly" ? "bg-[#0D7FF2] text-white" : "text-[#808080] hover:text-white"
-                }`}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${plan === "yearly" ? "bg-[#0D7FF2] text-white" : "text-[#808080] hover:text-white"
+                  }`}
               >
                 รายปี
               </button>
@@ -114,24 +210,22 @@ export function SubscriptionCheckout() {
       <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-5">
         <h3 className="text-base font-bold mb-3 text-white">Payment Method</h3>
         <div className="flex gap-4">
-          <button 
-            onClick={() => setPaymentMethod('bank')}
-            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${
-              paymentMethod === 'bank' 
-                ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]' 
-                : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
-            }`}
+          <button
+            onClick={() => { setPaymentMethod('bank'); setIsModalOpen(true); }}
+            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'bank'
+              ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]'
+              : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
+              }`}
           >
             <ArrowRightLeft className="w-6 h-6" />
             <span className="text-sm font-bold">Bank Transfer</span>
           </button>
-          <button 
-            onClick={() => setPaymentMethod('promptpay')}
-            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${
-              paymentMethod === 'promptpay' 
-                ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]' 
-                : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
-            }`}
+          <button
+            onClick={() => { setPaymentMethod('promptpay'); setIsModalOpen(true); }}
+            className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'promptpay'
+              ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]'
+              : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
+              }`}
           >
             <QrCode className="w-6 h-6" />
             <span className="text-sm font-bold">PromptPay</span>
@@ -171,8 +265,8 @@ export function SubscriptionCheckout() {
         </div>
 
         <div className="space-y-3 mt-4">
-          <button 
-            onClick={handleCompletePurchase} 
+          <button
+            onClick={handleCompletePurchase}
             className="w-full bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white font-semibold py-3.5 rounded-xl transition-colors"
           >
             Complete Purchase
@@ -184,92 +278,15 @@ export function SubscriptionCheckout() {
       </div>
 
       {/* Payment Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
+      <Modal
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={paymentMethod === "bank" ? "Bank Account Detail" : "Scan QR Code"}
       >
         {paymentMethod === "bank" && (
-          <div className="space-y-6">
-            <div className="bg-[#0f172a] rounded-xl p-6 border border-white/5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
-                {/* Placeholder for KBank logo */}
-                <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-xs">
-                  KB
-                </div>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-white font-medium truncate">Kbank (Kasikorn Bank)</p>
-                <p className="text-sm text-gray-400 truncate">Newsweb Media Co., Ltd.</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-cyan-400 font-mono">047-2-27169-7</p>
-                  <button 
-                    onClick={() => copyToClipboard("0472271697")}
-                    className="text-gray-400 hover:text-white transition-colors"
-                    title="Copy Account Number"
-                  >
-                    {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <button className="w-full py-3 rounded-xl bg-white text-slate-900 hover:bg-gray-200 font-semibold flex items-center justify-center gap-2 transition-colors">
-              <Upload className="w-5 h-5" />
-              Upload Slip
-            </button>
-            
-            <div className="flex gap-4">
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="flex-1 py-3 rounded-xl bg-[#0f172a] text-white hover:bg-[#1e293b] font-medium transition-colors border border-white/10"
-              >
-                Cancel
-              </button>
-              <button className="flex-1 py-3 rounded-xl bg-gray-600 text-white hover:bg-gray-500 font-medium transition-colors">
-                Confirm
-              </button>
-            </div>
-          </div>
+          <BankTransferModalContent onClose={() => setIsModalOpen(false)} />
         )}
-
         {paymentMethod === "promptpay" && (
-          <div className="space-y-6 flex flex-col items-center">
-            <div className="bg-white p-4 rounded-2xl">
-              {/* Fallback QR Code visualization */}
-              <div className="w-48 h-48 bg-gray-100 flex items-center justify-center border-4 border-gray-200 rounded-lg">
-                <QrCode className="w-32 h-32 text-slate-900" />
-              </div>
-            </div>
-            
-            <div className="text-center">
-              <p className="text-white font-medium">PromptPay QR</p>
-              <p className="text-sm text-gray-400">Newsweb Media Co., Ltd.</p>
-              <p className="text-cyan-400 font-mono mt-1">099-x-x7169-x</p>
-              <p className="text-xl font-bold text-white mt-2">{selectedPlan.price.toLocaleString()} ฿</p>
-            </div>
-
-            <div className="flex w-full gap-4 pt-2">
-              <button 
-                onClick={() => {
-                  alert("จำลองการจ่ายเงินสำเร็จ!");
-                  setIsModalOpen(false);
-                }}
-                className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors"
-              >
-                Simulate Success
-              </button>
-              <button 
-                onClick={() => {
-                  alert("จำลองการจ่ายเงินล้มเหลว!");
-                  setIsModalOpen(false);
-                }}
-                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-medium transition-colors"
-              >
-                Simulate Failed
-              </button>
-            </div>
-          </div>
+          <PromptPayModalContent price={selectedPlan.price} onClose={() => setIsModalOpen(false)} />
         )}
       </Modal>
     </div>
