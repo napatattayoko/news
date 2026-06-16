@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { CheckCircle2, ArrowRightLeft, QrCode, Copy, Upload, Check, PenLine } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 
 function BankTransferModalContent({ onClose }: { onClose: () => void }) {
   const [copied, setCopied] = useState(false);
+  const [slipImage, setSlipImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSlipImage(URL.createObjectURL(file));
+    }
   };
 
   return (
@@ -44,23 +54,50 @@ function BankTransferModalContent({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      <button className="w-full py-3.5 rounded-xl bg-[#F1F5F9] text-[#0f172a] hover:bg-white font-bold text-sm mb-4 transition-colors">
-        Upload Slip
-      </button>
-
+      {/* Hidden file input */}
+      <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+      
+      {slipImage ? (
+        <div className="w-full mb-4 relative rounded-xl border border-[#222F44] bg-[#0a1017] overflow-hidden group">
+          <img src={slipImage} alt="Uploaded Slip" className="w-full h-48 object-contain" />
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+            <button 
+              onClick={() => fileInputRef.current?.click()} 
+              className="text-white text-sm font-bold bg-[#222F44] px-4 py-2 rounded-lg hover:bg-[#334155] transition-colors"
+            >
+              Change Slip
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button 
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full py-3.5 rounded-xl bg-[#F1F5F9] text-[#0f172a] hover:bg-white font-bold text-sm mb-4 transition-colors flex items-center justify-center gap-2"
+        >
+          <Upload className="w-4 h-4" />
+          Upload Slip
+        </button>
+      )}
+      
       <div className="flex gap-4">
-        <button
+        <button 
           onClick={onClose}
           className="flex-1 py-3.5 rounded-xl bg-[#23344D] text-white hover:bg-[#2A3F5C] font-medium text-sm transition-colors"
         >
           Cancel
         </button>
-        <button
+        <button 
           onClick={() => {
-            alert("Confirm Clicked");
+            if (!slipImage) {
+              alert("กรุณาอัปโหลดสลิปก่อนยืนยัน");
+              return;
+            }
+            alert("Confirm Clicked with Slip!");
             onClose();
           }}
-          className="flex-1 py-3.5 rounded-xl bg-[#334155] text-white hover:bg-[#475569] font-medium text-sm transition-colors"
+          className={`flex-1 py-3.5 rounded-xl font-medium text-sm transition-colors ${
+            slipImage ? "bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white" : "bg-[#222F44] text-[#808080] cursor-not-allowed"
+          }`}
         >
           Confirm
         </button>
