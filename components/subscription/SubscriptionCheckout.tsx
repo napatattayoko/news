@@ -216,8 +216,8 @@ export function SubscriptionCheckout() {
       <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-5">
         <h3 className="text-base font-bold mb-3 text-white">Payment Method</h3>
         <div className="flex gap-4">
-          <button
-            onClick={() => { setPaymentMethod('bank'); setIsModalOpen(true); }}
+          <button 
+            onClick={() => setPaymentMethod('bank')}
             className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'bank'
               ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]'
               : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
@@ -226,8 +226,8 @@ export function SubscriptionCheckout() {
             <ArrowRightLeft className="w-6 h-6" />
             <span className="text-sm font-bold">Bank Transfer</span>
           </button>
-          <button
-            onClick={() => { setPaymentMethod('promptpay'); setIsModalOpen(true); }}
+          <button 
+            onClick={() => setPaymentMethod('promptpay')}
             className={`flex-1 rounded-xl py-4 flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'promptpay'
               ? 'bg-[#0D7FF2]/10 border border-[#0D7FF2] text-[#0D7FF2]'
               : 'bg-[#1A1A1A] border border-[#222F44] text-[#808080] hover:text-white'
@@ -262,9 +262,14 @@ export function SubscriptionCheckout() {
         </div>
 
         <div className="space-y-3 mt-4">
-          <button
-            onClick={handleCompletePurchase}
-            className="w-full bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white font-semibold py-3.5 rounded-xl transition-colors"
+          <button 
+            onClick={handleCompletePurchase} 
+            disabled={!paymentMethod}
+            className={`w-full font-semibold py-3.5 rounded-xl transition-all duration-300 ${
+              paymentMethod
+                ? "bg-[#0D7FF2] hover:bg-[#0B6FD4] text-white"
+                : "bg-[#222F44]/50 text-[#808080] cursor-not-allowed"
+            }`}
           >
             Complete Purchase
           </button>
