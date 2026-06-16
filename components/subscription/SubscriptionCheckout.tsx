@@ -75,8 +75,15 @@ function PromptPayModalContent({ price, onClose }: { price: number, onClose: () 
       <h3 className="text-xl font-bold text-white mb-6">Scan QR Code</h3>
 
       <div className="bg-white p-4 rounded-2xl mb-6">
-        <div className="w-48 h-48 flex items-center justify-center rounded-lg">
-          <QrCode className="w-32 h-32 text-slate-900" />
+        <div className="w-48 h-48 flex items-center justify-center rounded-lg overflow-hidden">
+          <Image
+            src="/images/session-subscription/qr.png"
+            alt="PromptPay QR Code"
+            width={192}
+            height={192}
+            className="w-full h-full object-contain"
+            unoptimized
+          />
         </div>
       </div>
 
@@ -129,9 +136,8 @@ const PLAN_DETAILS = {
 
 const FEATURES = [
   "ใช้งานฟีเจอร์ Wishlist เพิ่มหุ้นที่สนใจ",
-  "ติดตามความเคลื่อนไหวหุ้น บมจ. ต่างๆ",
-  "อ่านบทความพรีเมียมและบทวิเคราะห์เชิงลึก",
-  "ไม่มีโฆษณาคั่นระหว่างการอ่าน"
+  "ติดตามความเคลื่อนไหวหุ้นต่างๆ",
+  "บทวิเคราะห์เชิงลึก",
 ];
 
 export function SubscriptionCheckout() {
@@ -150,7 +156,7 @@ export function SubscriptionCheckout() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4">
+    <div className="w-full max-w-5xl mx-auto space-y-4 px-4 md:px-6 pb-12">
       {/* Title */}
       <div>
         <h1 className="text-lg font-extrabold text-white uppercase tracking-wide mb-1">SUBSCRIPTION & CHECKOUT</h1>
@@ -234,22 +240,17 @@ export function SubscriptionCheckout() {
       </div>
 
       {/* Order Summary */}
-      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-5">
+      <div className="bg-[#0a1017] border border-[#222F44] rounded-xl p-5 mb-8">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-base font-bold text-white">Order Summary</h3>
-          <button className="text-[#808080] hover:text-white transition-colors">
-            <PenLine className="w-5 h-5" />
-          </button>
+
         </div>
 
         <div className="flex justify-between items-center text-sm mb-2">
           <span className="text-[#808080] font-medium">{plan === 'monthly' ? 'Monthly' : 'Yearly'}</span>
           <span className="text-[#B3B3B3] font-medium">1 Tools</span>
         </div>
-        <div className="flex justify-between items-center text-sm mb-3">
-          <span className="text-white font-medium">หมอดูหุ้น</span>
-          <span className="text-white font-medium tracking-wide">{selectedPlan.price.toLocaleString()} ฿</span>
-        </div>
+
 
         <hr className="border-[#222F44] my-4" />
 
@@ -257,10 +258,6 @@ export function SubscriptionCheckout() {
           <div>
             <div className="text-xs text-[#808080] font-bold mb-2 uppercase tracking-widest">TOTAL AMOUNT</div>
             <div className="text-4xl font-bold text-[#0D7FF2] tracking-tight">{selectedPlan.price.toLocaleString()}฿</div>
-          </div>
-          <div className="text-right text-xs text-[#808080] font-medium leading-relaxed">
-            <div>Charged {plan === 'monthly' ? 'monthly' : 'annually'}</div>
-            <div>Cancel anytime</div>
           </div>
         </div>
 
@@ -276,6 +273,9 @@ export function SubscriptionCheckout() {
           </button>
         </div>
       </div>
+
+      {/* Spacer to prevent bottom-clipping in scrollable flex layouts */}
+      <div className="h-16" />
 
       {/* Payment Modal */}
       <Modal
