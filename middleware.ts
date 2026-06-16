@@ -12,17 +12,23 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password');
 
+  // Redirect /login path based on auth state
+  if (pathname === '/login') {
+    if (token) {
+      const dashboardUrl = new URL('/', request.url);
+      return NextResponse.redirect(dashboardUrl);
+    }
+    return NextResponse.redirect('https://idea-trade1-p.vercel.app/');
+  }
+
   if (!token) {
-    // If not logged in and trying to access any other page, redirect to /login
+    // If not logged in and trying to access any other page, redirect to the external login page
     if (!isAuthPage) {
-      const loginUrl = new URL('/login', request.url);
-      // Keep track of the original page to redirect back if needed
-      loginUrl.searchParams.set('from', pathname);
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect('https://idea-trade1-p.vercel.app/');
     }
   } else {
-    // If logged in and trying to access /login or /register, redirect to Dashboard (/)
-    if (pathname === '/login' || pathname === '/register') {
+    // If logged in and trying to access /register, redirect to Dashboard (/)
+    if (pathname === '/register') {
       const dashboardUrl = new URL('/', request.url);
       return NextResponse.redirect(dashboardUrl);
     }
