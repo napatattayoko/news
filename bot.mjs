@@ -50,7 +50,7 @@ async function getFinvizData() {
     // Fetch News
     const newsRes = await fetch('http://localhost:3000/api/finviz?action=news', { signal: AbortSignal.timeout(5000) });
     const marketRes = await fetch('http://localhost:3000/api/finviz?action=market', { signal: AbortSignal.timeout(5000) });
-    
+
     let finvizNews = fallbackNews;
     let finvizTrends = fallbackMarketTrends;
 
@@ -154,7 +154,7 @@ async function sendNewsMessage(chatId) {
   const { finvizNews } = await getFinvizData();
   const topNews = finvizNews.slice(0, 3);
   let message = '<b>📰 Latest Top News</b>\n\n';
-  
+
   topNews.forEach((news, index) => {
     message += `<b>${index + 1}. ${news.headline}</b>\n`;
     message += `${news.body.substring(0, 100)}...\n`;
@@ -174,7 +174,7 @@ async function sendMarketMessage(chatId) {
   const { finvizTrends } = await getFinvizData();
   const topTrends = finvizTrends.slice(0, 5);
   let message = '<b>📊 Top Market Trends</b>\n\n';
-  
+
   topTrends.forEach((trend) => {
     const icon = trend.sentiment === 'up' ? '🟢' : '🔴';
     message += `${icon} <b>$${trend.symbol}</b> - ${trend.name}\n`;
@@ -217,7 +217,7 @@ async function handleMessage(message) {
         found = true;
       }
     }
-    
+
     if (found) {
       writeDb(db);
       await sendMessage(chatId, '✅ <b>Successfully unlinked!</b>\nYour Telegram account has been disconnected from the dashboard. You will no longer receive alerts.\n\nUse /link <PIN> to connect again.');
@@ -263,7 +263,7 @@ async function handleMessage(message) {
       db.users[userId] = { trackedSymbols: [] };
     }
     db.users[userId].telegramChatId = chatId;
-    
+
     delete db.pendingLinks[pin];
     writeDb(db);
 
@@ -307,9 +307,9 @@ async function poll() {
   try {
     const res = await fetch(`${API_URL}/getUpdates?offset=${lastUpdateId + 1}&timeout=30`);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    
+
     const data = await res.json();
-    
+
     if (data.ok && data.result.length > 0) {
       for (const update of data.result) {
         lastUpdateId = Math.max(lastUpdateId, update.update_id);
@@ -327,7 +327,7 @@ async function poll() {
       console.error('Polling error:', err);
     }
   }
-  
+
   // Continue polling
   setTimeout(poll, 1000);
 }
@@ -337,8 +337,8 @@ let isFirstNewsPoll = true;
 
 function escapeHTML(str) {
   return str.replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 async function pollNews() {
@@ -349,25 +349,25 @@ async function pollNews() {
       if (data.success && data.news) {
         const db = readDb();
         const reversedNews = [...data.news].reverse();
-        
+
         for (const item of reversedNews) {
           if (!seenNewsIds.has(item.id)) {
             seenNewsIds.add(item.id);
-            
+
             if (!isFirstNewsPoll) {
               const isHighImpact = item.impact === 'high';
-              
+
               for (const [userId, user] of Object.entries(db.users)) {
                 if (user.telegramChatId) {
                   const tracked = user.trackedSymbols || [];
                   const isWatchlist = item.tickers?.some(t => tracked.includes(t.symbol));
-                  
+
                   if (isHighImpact || isWatchlist) {
                     const typeLabel = (isWatchlist && isHighImpact) ? '🔥 High Impact Watchlist Alert' : isHighImpact ? '⚡ High Impact News Alert' : '🔔 Watchlist News Alert';
                     const tickersText = item.tickers?.length ? `\n<i>Related: ${item.tickers.map(t => `$${t.symbol}`).join(', ')}</i>` : '';
                     let message = `<b>${typeLabel}</b>\n\n<b>${escapeHTML(item.headline)}</b>${tickersText}`;
                     if (item.sources && item.sources.length > 0 && item.sources[0].url) {
-                       message += `\n\n<a href="${item.sources[0].url}">Read more</a>`;
+                      message += `\n\n<a href="${item.sources[0].url}">Read more</a>`;
                     }
                     await sendMessage(user.telegramChatId, message);
                   }
@@ -384,7 +384,7 @@ async function pollNews() {
       console.error('Error polling news for bot:', err.message);
     }
   }
-  
+
   setTimeout(pollNews, 15000); // Check every 15 seconds
 }
 
