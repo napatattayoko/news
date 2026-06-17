@@ -408,7 +408,7 @@ async function startBot() {
   } catch (err) {
     console.error('Error during startup getUpdates:', err);
   }
-  
+
   poll();
   pollNews(); // Start background news polling
 }

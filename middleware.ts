@@ -18,13 +18,18 @@ export function middleware(request: NextRequest) {
       const dashboardUrl = new URL('/', request.url);
       return NextResponse.redirect(dashboardUrl);
     }
-    return NextResponse.redirect('https://idea-trade1-p.vercel.app/');
+    // TEMP FIX FOR LOCAL DEV: Disable external redirect
+    // return NextResponse.redirect('https://idea-trade1-p.vercel.app/');
   }
 
   if (!token) {
     // If not logged in and trying to access any other page, redirect to the external login page
     if (!isAuthPage) {
-      return NextResponse.redirect('https://idea-trade1-p.vercel.app/');
+      // TEMP FIX FOR LOCAL DEV: Redirect to local login instead of external site
+      // return NextResponse.redirect('https://idea-trade1-p.vercel.app/');
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(loginUrl);
     }
   } else {
     // If logged in and trying to access /register, redirect to Dashboard (/)
