@@ -6,7 +6,7 @@ import { SubscriptionCheckout } from '@/components/subscription/SubscriptionChec
 export default function SubscriptionPage() {
   usePageLayout({
     useDefaultSidebar: false,
-    showTopBar: true,
+    showTopBar: false,
   });
 
   return (
