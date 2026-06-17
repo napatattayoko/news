@@ -1,12 +1,15 @@
 'use client';
 
 import { Lock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface PremiumLockProps {
   featureName?: string;
 }
 
 export default function PremiumLock({ featureName = 'Watchlist' }: PremiumLockProps) {
+  const router = useRouter();
+
   return (
     <div className="flex-1 flex items-center justify-center bg-[#0a1017]">
       <div className="flex flex-col items-center gap-4 max-w-sm text-center px-6">
@@ -19,7 +22,10 @@ export default function PremiumLock({ featureName = 'Watchlist' }: PremiumLockPr
         <p className="text-sm text-[#808080] leading-relaxed">
           Upgrade to Premium to unlock {featureName}, real-time alerts, and more advanced tools.
         </p>
-        <button className="mt-2 px-6 py-2.5 bg-[#0D7FF2] hover:bg-[#0B6BD4] text-white text-sm font-bold rounded-lg transition-colors">
+        <button 
+          onClick={() => router.push('/subscription')}
+          className="mt-2 px-6 py-2.5 bg-[#0D7FF2] hover:bg-[#0B6BD4] text-white text-sm font-bold rounded-lg transition-colors"
+        >
           Upgrade to Premium
         </button>
       </div>

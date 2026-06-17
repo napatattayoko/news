@@ -48,9 +48,14 @@ const fallbackMarketTrends = [
 async function getFinvizData() {
   try {
     // Fetch News
+<<<<<<< HEAD
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
     const newsRes = await fetch(`${baseUrl}/finviz?action=news`, { signal: AbortSignal.timeout(5000) });
     const marketRes = await fetch(`${baseUrl}/finviz?action=market`, { signal: AbortSignal.timeout(5000) });
+=======
+    const newsRes = await fetch('http://localhost:3000/api/finviz?action=news', { signal: AbortSignal.timeout(5000) });
+    const marketRes = await fetch('http://localhost:3000/api/finviz?action=market', { signal: AbortSignal.timeout(5000) });
+>>>>>>> feature/subscriptionVer2
 
     let finvizNews = fallbackNews;
     let finvizTrends = fallbackMarketTrends;
@@ -350,7 +355,11 @@ async function pollNews() {
       const data = await res.json();
       if (data.success && data.data) {
         const db = readDb();
+<<<<<<< HEAD
         const reversedNews = [...data.data].reverse();
+=======
+        const reversedNews = [...data.news].reverse();
+>>>>>>> feature/subscriptionVer2
 
         for (const item of reversedNews) {
           if (!seenNewsIds.has(item.id)) {
