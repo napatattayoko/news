@@ -8,10 +8,9 @@ import { EyeIcon, EyeOffIcon } from '../../../lib/constants';
 export default function LoginPage() {
   const router = useRouter();
 
-  // TEMP FIX FOR LOCAL DEV: Disable external redirect
-  // useEffect(() => {
-  //   window.location.href = 'https://idea-trade1-p.vercel.app/';
-  // }, []);
+  useEffect(() => {
+    window.location.href = 'https://idea-trade1-p.vercel.app/';
+  }, []);
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
