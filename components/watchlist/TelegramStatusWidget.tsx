@@ -163,7 +163,7 @@ export default function TelegramStatusWidget({
       {/* Notification List */}
       <div className="divide-y divide-[#333333]">
         {relevantNotifications.map((notification) => {
-          const config = statusConfig[notification.status];
+          const config = statusConfig[notification.status as keyof typeof statusConfig];
           return (
             <div
               key={notification.symbol}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
-import { NewsItem } from '@/lib/types';
+import { NewsItem, Category } from '@/lib/types';
 
 // HTTP headers sent with requests to make them look like a real web browser.
 // This helps prevent Finviz from blocking our scraping requests.
@@ -159,6 +159,9 @@ function parseFinvizTime(timeStr: string, lastDateObj: { year: number, month: nu
   }
 }
 
+import PipelineSingleton from '@/lib/ai';
+import { getCategoryCache, saveCategoryCache } from '@/lib/cache';
+
 // 📡 Data Fetching Functions
 /**
  * Scrapes general market news headlines from Finviz news page.
@@ -174,7 +177,7 @@ async function fetchNews() {
   const nyDate = new Date(nyDateStr);
   let currentDateObj = { year: nyDate.getFullYear(), month: nyDate.getMonth(), day: nyDate.getDate() };
 
-  const news: NewsItem[] = [];
+  const rawNews: NewsItem[] = [];
   $('table.styled-table-new tr').each((i, row) => {
     const time = $(row).find('td.news_date-cell').text().trim();
     const linkEl = $(row).find('a.nn-tab-link');
@@ -186,7 +189,7 @@ async function fetchNews() {
       const parsedTime = parseFinvizTime(time, currentDateObj);
       currentDateObj = parsedTime.newDateObj;
 
-      news.push({
+      rawNews.push({
         id: `fv-news-${uniqueId}`,
         headline: title,
         body: `Published at: ${time}. Sourced from Finviz.`,
@@ -195,14 +198,58 @@ async function fetchNews() {
         impact: calculateImpact(title),
         countryCode: 'global',
         regionTag: 'global',
-        category: 'markets',
+        category: 'markets', // Default, will be updated by AI/Cache
         tickers: extractTickers(title),
         sources: [{ name: 'Finviz', url }]
       });
     }
   });
 
-  return news.slice(0, 50);
+  const newsSlice = rawNews.slice(0, 50);
+
+  // AI & Cache Processing
+  const cache = getCategoryCache();
+  const candidateLabels = [
+    'economy', 'geopolitics', 'tech', 'ai', 'energy', 
+    'commodities', 'healthcare', 'real-estate', 'climate', 
+    'defense', 'banking', 'automotive', 'trade', 'entertainment'
+  ];
+  const uncachedItems = newsSlice.filter(item => !cache[item.id]);
+
+  if (uncachedItems.length > 0) {
+    try {
+      console.log(`[AI] Categorizing ${uncachedItems.length} new articles...`);
+      const aiPipeline = await PipelineSingleton.getInstance();
+      
+      for (const item of uncachedItems) {
+        // Zero-shot classification
+        const result = await aiPipeline(item.headline, candidateLabels, { multi_label: false });
+        
+        // Check confidence score of the top predicted label
+        const topLabel = result.labels[0] as Category;
+        const topScore = result.scores[0];
+        
+        // If confidence is reasonably high, assign the category, otherwise fallback to 'markets'
+        if (topScore > 0.15) {
+          cache[item.id] = topLabel;
+        } else {
+          cache[item.id] = 'markets';
+        }
+      }
+      saveCategoryCache(cache);
+      console.log(`[AI] Categorization complete and cached!`);
+    } catch (error) {
+      console.error("[AI] Error during categorization:", error);
+    }
+  }
+
+  // Apply categories from cache
+  const finalNews = newsSlice.map(item => ({
+    ...item,
+    category: (cache[item.id] as Category) || 'markets'
+  }));
+
+  return finalNews;
 }
 
 /**
