@@ -222,15 +222,19 @@ async function fetchNews() {
       const aiPipeline = await PipelineSingleton.getInstance();
       
       for (const item of uncachedItems) {
-        // Zero-shot classification
-        const result = await aiPipeline(item.headline, candidateLabels, { multi_label: false });
+        // Zero-shot classification with multi_label and hypothesis template
+        const result = await aiPipeline(item.headline, candidateLabels, { 
+          multi_label: true,
+          hypothesis_template: "This news article is about {}."
+        });
         
         // Check confidence score of the top predicted label
         const topLabel = result.labels[0] as Category;
         const topScore = result.scores[0];
         
-        // If confidence is reasonably high, assign the category, otherwise fallback to 'markets'
-        if (topScore > 0.15) {
+        // With multi_label: true, scores are independent sigmoids.
+        // If confidence > 45%, assign the category, otherwise fallback to 'markets'
+        if (topScore > 0.45) {
           cache[item.id] = topLabel;
         } else {
           cache[item.id] = 'markets';

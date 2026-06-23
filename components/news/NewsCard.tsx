@@ -48,7 +48,7 @@ export default function NewsCard({ item, compact = false }: NewsCardProps) {
       {/* Headline */}
       <h3
         className={cn(
-          'font-bold text-white leading-snug mb-2 group-hover:text-cyan-50 transition-colors uppercase line-clamp-2',
+          'font-bold text-white leading-snug mb-2 group-hover:text-cyan-50 transition-colors uppercase',
           compact ? 'text-base' : 'text-lg'
         )}
       >

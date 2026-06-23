@@ -5,7 +5,7 @@ env.allowLocalModels = false;
 env.useBrowserCache = false;
 
 // We use a small, fast model for zero-shot text classification
-const MODEL_NAME = 'Xenova/mobilebert-uncased-mnli';
+const MODEL_NAME = 'Xenova/nli-deberta-v3-small';
 
 class PipelineSingleton {
   static task = 'zero-shot-classification';

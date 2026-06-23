@@ -39,7 +39,7 @@ function BreakingCard({ item, large = false }: { item: NewsItem; large?: boolean
       </div>
 
       {/* Headline */}
-      <h3 className={`font-bold leading-snug text-white uppercase mb-2 ${large ? 'text-lg' : 'text-base'} line-clamp-2`}>
+      <h3 className={`font-bold leading-snug text-white uppercase mb-2 ${large ? 'text-lg' : 'text-base'}`}>
         {item.headline}
       </h3>
 
