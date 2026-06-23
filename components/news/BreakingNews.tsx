@@ -13,7 +13,7 @@ function getDomain(url: string) {
   try { return new URL(url).hostname; } catch { return ''; }
 }
 
-function BreakingCard({ item, large = false }: { item: NewsItem; large?: boolean }) {
+function BreakingCard({ item, large = false, className = '' }: { item: NewsItem; large?: boolean; className?: string }) {
   const src = item.sources[0];
 
   return (
@@ -23,7 +23,7 @@ function BreakingCard({ item, large = false }: { item: NewsItem; large?: boolean
       onClick={() => src?.url && window.open(src.url, '_blank', 'noopener,noreferrer')}
       onKeyDown={(e) => { if (e.key === 'Enter' && src?.url) window.open(src.url, '_blank', 'noopener,noreferrer'); }}
       className={`group flex flex-col h-full bg-[#0a1017] border border-[#222F44] border-l-4 rounded-xl p-4 transition-all duration-200 hover:bg-[#111722] cursor-pointer ${item.sentiment === 'good' ? 'border-l-green-500/70' : item.sentiment === 'bad' ? 'border-l-red-500/70' : 'border-l-slate-500/50'
-        } ${large ? 'row-span-2' : ''}`}
+        } ${large ? 'row-span-2' : ''} ${className}`}
       aria-label={item.headline}
     >
       {/* Header: impact badge + time */}
@@ -108,7 +108,7 @@ export default function BreakingNews() {
     // Sort by latest first
     items.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
-    return items.slice(0, 3);
+    return items.slice(0, 4);
   }, [activeCategory, news]);
 
   if (breakingItems.length === 0) return null;
@@ -119,11 +119,11 @@ export default function BreakingNews() {
         Breaking News
       </h2>
 
-      {/* Desktop: 1 large + 2 small grid */}
-      <div className="hidden md:grid grid-cols-2 gap-4">
-        {breakingItems[0] && <BreakingCard item={breakingItems[0]} large />}
-        {breakingItems[1] && <BreakingCard item={breakingItems[1]} />}
-        {breakingItems[2] && <BreakingCard item={breakingItems[2]} />}
+      {/* Desktop: 4 Equal Grid Layout */}
+      <div className="hidden md:grid grid-cols-2 lg:grid-cols-2 gap-4">
+        {breakingItems.map((item) => (
+          <BreakingCard key={item.id} item={item} />
+        ))}
       </div>
 
       {/* Mobile: vertical stack */}
