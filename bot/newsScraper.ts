@@ -18,14 +18,25 @@ function detectSentiment(title: string): 'good' | 'bad' | 'neutral' {
   return 'neutral';
 }
 
+const COMMON_TICKERS = new Set([
+  'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'BRK', 'LLY', 'V',
+  'TSM', 'JPM', 'UNH', 'WMT', 'JNJ', 'MA', 'PG', 'HD', 'AVGO', 'CVX', 'MRK', 'KO',
+  'PEP', 'COST', 'ABBV', 'BAC', 'CRM', 'MCD', 'CSCO', 'ACN', 'TMO', 'LIN', 'NFLX',
+  'ABT', 'DHR', 'AMD', 'CMCSA', 'NKE', 'DIS', 'TXN', 'WFC', 'VZ', 'PM', 'NEE',
+  'RTX', 'INTC', 'HON', 'QCOM', 'IBM', 'BA', 'GE', 'GS', 'CAT', 'UBER', 'MU',
+  'ARM', 'SMCI', 'PLTR', 'SNOW', 'COIN', 'ROKU', 'SQ', 'SHOP', 'SPOT', 'DELL', 'HPQ'
+]);
+
 // Extract potential stock tickers
 function extractTickers(title: string): string[] {
   const match = title.match(/\b[A-Z]{2,5}\b/g);
-  return match ? Array.from(new Set(match)) : [];
+  if (!match) return [];
+  // Filter only known real tickers to avoid false positives like 'AI', 'PCE', 'FED'
+  return Array.from(new Set(match)).filter(word => COMMON_TICKERS.has(word));
 }
 
 // Parse Finviz time format
-function parseFinvizTime(timeStr: string, currentDateObj: {year: number, month: number, day: number}) {
+function parseFinvizTime(timeStr: string, currentDateObj: { year: number, month: number, day: number }) {
   let newDateObj = { ...currentDateObj };
   const d = new Date();
   d.setFullYear(newDateObj.year, newDateObj.month, newDateObj.day);
@@ -35,7 +46,7 @@ function parseFinvizTime(timeStr: string, currentDateObj: {year: number, month: 
   const parts = timeStr.trim().split(' ');
   let datePart = '';
   let timePart = '';
-  
+
   if (parts.length >= 2) {
     if (parts[0].toLowerCase() === 'today') {
       timePart = parts[1];
@@ -43,17 +54,22 @@ function parseFinvizTime(timeStr: string, currentDateObj: {year: number, month: 
       newDateObj = { year: now.getFullYear(), month: now.getMonth(), day: now.getDate() };
       d.setFullYear(newDateObj.year, newDateObj.month, newDateObj.day);
     } else {
-      datePart = parts[0]; 
+      datePart = parts[0];
       timePart = parts[1];
     }
   } else {
-    timePart = parts[0];
+    if (parts[0].includes('-')) {
+      datePart = parts[0];
+      d.setHours(0, 0, 0, 0); // Default to midnight if only date is provided
+    } else {
+      timePart = parts[0];
+    }
   }
 
   if (datePart && datePart.includes('-')) {
     const datePieces = datePart.split('-');
     if (datePieces.length === 2) {
-      const monthMap: Record<string, number> = { 'Jan':0,'Feb':1,'Mar':2,'Apr':3,'May':4,'Jun':5,'Jul':6,'Aug':7,'Sep':8,'Oct':9,'Nov':10,'Dec':11 };
+      const monthMap: Record<string, number> = { 'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5, 'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11 };
       const parsedMonth = monthMap[datePieces[0]];
       const parsedDay = parseInt(datePieces[1], 10);
       if (parsedMonth !== undefined && !isNaN(parsedDay)) {
@@ -71,7 +87,7 @@ function parseFinvizTime(timeStr: string, currentDateObj: {year: number, month: 
     const isAM = timePart.toLowerCase().includes('am');
     const timeOnly = timePart.replace(/am|pm/i, '').trim();
     const timeParts = timeOnly.split(':');
-    
+
     if (timeParts.length === 2) {
       let hours = parseInt(timeParts[0], 10);
       const mins = parseInt(timeParts[1], 10);
@@ -90,8 +106,8 @@ function parseFinvizTime(timeStr: string, currentDateObj: {year: number, month: 
 }
 
 const candidateLabels = [
-  'economy', 'geopolitics', 'tech', 'ai', 'energy', 
-  'commodities', 'healthcare', 'real-estate', 'climate', 
+  'economy', 'geopolitics', 'tech', 'ai', 'energy',
+  'commodities', 'healthcare', 'real-estate', 'climate',
   'defense', 'banking', 'automotive', 'trade', 'entertainment'
 ];
 
@@ -113,13 +129,13 @@ export async function scrapeAndStoreNews() {
 
     const html = await response.text();
     const $ = cheerio.load(html);
-    
+
     // Parse NY time
     const nyOffset = -4; // EDT
     const nowUtc = new Date();
-    const nyDateStr = new Date(nowUtc.getTime() + (nyOffset * 3600 * 1000)).toLocaleString("en-US", {timeZone: "UTC"});
+    const nyDateStr = new Date(nowUtc.getTime() + (nyOffset * 3600 * 1000)).toLocaleString("en-US", { timeZone: "UTC" });
     const nyDate = new Date(nyDateStr);
-    
+
     let currentDateObj = { year: nyDate.getFullYear(), month: nyDate.getMonth(), day: nyDate.getDate() };
     const rawNews: any[] = [];
 
@@ -150,14 +166,14 @@ export async function scrapeAndStoreNews() {
     });
 
     console.log(`[NewsBot] Scraped ${rawNews.length} articles from Finviz. Checking DB for new ones...`);
-    
+
     const existingIds = await prisma.news.findMany({
       where: {
         id: { in: rawNews.map(n => n.id) }
       },
       select: { id: true }
     });
-    
+
     const existingIdSet = new Set(existingIds.map(n => n.id));
     const newArticles = rawNews.filter(n => !existingIdSet.has(n.id));
 
@@ -165,21 +181,23 @@ export async function scrapeAndStoreNews() {
 
     if (newArticles.length > 0) {
       const aiPipeline = await PipelineSingleton.getInstance();
-      
+
       for (const item of newArticles) {
         console.log(`[NewsBot] Categorizing: "${item.headline.substring(0, 50)}..."`);
-        const result = await aiPipeline(item.headline, candidateLabels, { 
+        const result = await aiPipeline(item.headline, candidateLabels, {
           multi_label: true,
           hypothesis_template: "This news article is about {}."
         });
-        
+
         const topLabel = result.labels[0];
         const topScore = result.scores[0];
-        
+
         item.category = topScore > 0.45 ? topLabel : 'markets';
-        
-        await prisma.news.create({
-          data: {
+
+        await prisma.news.upsert({
+          where: { id: item.id },
+          update: {},
+          create: {
             id: item.id,
             headline: item.headline,
             body: item.body,
@@ -194,7 +212,7 @@ export async function scrapeAndStoreNews() {
           }
         });
       }
-      console.log(`[NewsBot] Successfully saved ${newArticles.length} articles to Database!`);
+      console.log(`[NewsBot] Successfully processed ${newArticles.length} articles!`);
     } else {
       console.log(`[NewsBot] No new articles found. DB is up to date.`);
     }
