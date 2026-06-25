@@ -1,23 +1,6 @@
 import * as cheerio from 'cheerio';
 import { prisma } from '../lib/prisma';
-import PipelineSingleton from '../lib/ai';
-
-// Simple impact calculator
-function calculateImpact(title: string): 'high' | 'medium' | 'low' {
-  const t = title.toLowerCase();
-  if (t.includes('surge') || t.includes('plunge') || t.includes('crash') || t.includes('record')) return 'high';
-  if (t.includes('rise') || t.includes('fall') || t.includes('up') || t.includes('down')) return 'medium';
-  return 'low';
-}
-
-// Simple sentiment detection
-function detectSentiment(title: string): 'good' | 'bad' | 'neutral' {
-  const t = title.toLowerCase();
-  if (t.includes('surge') || t.includes('up') || t.includes('rise') || t.includes('gain') || t.includes('record') || t.includes('bull')) return 'good';
-  if (t.includes('plunge') || t.includes('down') || t.includes('fall') || t.includes('loss') || t.includes('crash') || t.includes('bear')) return 'bad';
-  return 'neutral';
-}
-
+import { analyzeArticle, categorizeArticle } from '../lib/ai';
 const COMMON_TICKERS = new Set([
   'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'BRK', 'LLY', 'V',
   'TSM', 'JPM', 'UNH', 'WMT', 'JNJ', 'MA', 'PG', 'HD', 'AVGO', 'CVX', 'MRK', 'KO',
@@ -178,8 +161,6 @@ export async function scrapeAndStoreNews() {
           headline: title,
           body: `Published at: ${time}. Sourced from Finviz.`,
           publishedAt: parsedTime.isoString,
-          sentiment: detectSentiment(title),
-          impact: calculateImpact(title),
           countryCode: 'global',
           regionTag: 'global',
           tickers: extractTickers(title),
@@ -203,19 +184,17 @@ export async function scrapeAndStoreNews() {
     console.log(`[NewsBot] Found ${newArticles.length} NEW articles. Need to categorize via AI...`);
 
     if (newArticles.length > 0) {
-      const aiPipeline = await PipelineSingleton.getInstance();
-
       for (const item of newArticles) {
-        console.log(`[NewsBot] Categorizing: "${item.headline.substring(0, 50)}..."`);
-        const result = await aiPipeline(item.headline, candidateLabels, {
-          multi_label: true,
-          hypothesis_template: "This news article is about {}."
-        });
+        console.log(`[NewsBot] Categorizing & Analyzing: "${item.headline.substring(0, 50)}..."`);
+        
+        // 1. Categorize using HF API (facebook/bart-large-mnli)
+        const catResult = await categorizeArticle(item.headline, candidateLabels);
+        item.category = catResult.score > 0.45 ? catResult.label : 'markets';
 
-        const topLabel = result.labels[0];
-        const topScore = result.scores[0];
-
-        item.category = topScore > 0.45 ? topLabel : 'markets';
+        // 2. Analyze Sentiment & Impact using HF API (ProsusAI/finbert)
+        const analysis = await analyzeArticle(item.headline, item.body);
+        item.sentiment = analysis.sentiment;
+        item.impact = analysis.impact;
 
         await prisma.news.upsert({
           where: { id: item.id },
