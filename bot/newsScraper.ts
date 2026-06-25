@@ -27,12 +27,35 @@ const COMMON_TICKERS = new Set([
   'ARM', 'SMCI', 'PLTR', 'SNOW', 'COIN', 'ROKU', 'SQ', 'SHOP', 'SPOT', 'DELL', 'HPQ'
 ]);
 
+const COMPANY_TICKER_MAP: Record<string, string> = {
+  'apple': 'AAPL', 'microsoft': 'MSFT', 'nvidia': 'NVDA', 'google': 'GOOGL', 'alphabet': 'GOOGL',
+  'amazon': 'AMZN', 'meta': 'META', 'facebook': 'META', 'tesla': 'TSLA', 'berkshire': 'BRK',
+  'lilly': 'LLY', 'visa': 'V', 'tsmc': 'TSM', 'jpmorgan': 'JPM', 'unitedhealth': 'UNH',
+  'walmart': 'WMT', 'johnson & johnson': 'JNJ', 'mastercard': 'MA', 'procter': 'PG',
+  'home depot': 'HD', 'broadcom': 'AVGO', 'chevron': 'CVX', 'merck': 'MRK', 'coca-cola': 'KO',
+  'pepsico': 'PEP', 'costco': 'COST', 'abbvie': 'ABBV', 'bank of america': 'BAC', 'salesforce': 'CRM',
+  'mcdonald': 'MCD', 'cisco': 'CSCO', 'accenture': 'ACN', 'netflix': 'NFLX', 'abbott': 'ABT',
+  'amd': 'AMD', 'comcast': 'CMCSA', 'nike': 'NKE', 'disney': 'DIS', 'texas instruments': 'TXN',
+  'wells fargo': 'WFC', 'verizon': 'VZ', 'intel': 'INTC', 'qualcomm': 'QCOM', 'ibm': 'IBM',
+  'boeing': 'BA', 'goldman sachs': 'GS', 'caterpillar': 'CAT', 'uber': 'UBER', 'micron': 'MU',
+  'arm': 'ARM', 'palantir': 'PLTR', 'snowflake': 'SNOW', 'coinbase': 'COIN', 'roku': 'ROKU',
+  'square': 'SQ', 'shopify': 'SHOP', 'spotify': 'SPOT', 'dell': 'DELL', 'hp': 'HPQ', 'bayer': 'BAYRY'
+};
+
 // Extract potential stock tickers
 function extractTickers(title: string): string[] {
   const match = title.match(/\b[A-Z]{2,5}\b/g);
-  if (!match) return [];
-  // Filter only known real tickers to avoid false positives like 'AI', 'PCE', 'FED'
-  return Array.from(new Set(match)).filter(word => COMMON_TICKERS.has(word));
+  let tickers = match ? Array.from(new Set(match)).filter(word => COMMON_TICKERS.has(word)) : [];
+  
+  // Scan for company names in the headline
+  for (const [company, ticker] of Object.entries(COMPANY_TICKER_MAP)) {
+    const regex = new RegExp(`\\b${company}\\b`, 'i');
+    if (regex.test(title)) {
+      tickers.push(ticker);
+    }
+  }
+  
+  return Array.from(new Set(tickers));
 }
 
 // Parse Finviz time format
