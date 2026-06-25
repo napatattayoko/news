@@ -93,8 +93,12 @@ export async function GET(request: NextRequest) {
     const formattedNews = news.map(item => ({
       ...item,
       category: item.category as Category,
-      sentiment: item.sentiment === 'bullish' ? 'good' : item.sentiment === 'bearish' ? 'bad' : 'neutral',
-      tickers: JSON.parse(item.tickers as string),
+      sentiment: (item.sentiment === 'bullish' || item.sentiment === 'good') ? 'good' : (item.sentiment === 'bearish' || item.sentiment === 'bad') ? 'bad' : 'neutral',
+      tickers: JSON.parse(item.tickers as string).map((t: any) => 
+        typeof t === 'string' 
+          ? { symbol: t, name: t, sentiment: 'flat', sentimentScore: 0 } 
+          : t
+      ),
       sources: JSON.parse(item.sources as string),
       publishedAt: item.publishedAt.toISOString()
     }));
