@@ -226,5 +226,16 @@ export async function scrapeAndStoreNews() {
 
 // Run the script directly if called via command line
 if (require.main === module) {
-  scrapeAndStoreNews();
+  const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  const runContinuously = async () => {
+    console.log(`[NewsBot] Starting continuous scraping mode (runs every 5 minutes)...`);
+    while (true) {
+      await scrapeAndStoreNews();
+      console.log(`[NewsBot] Sleeping for 5 minutes before the next check...`);
+      await new Promise(resolve => setTimeout(resolve, INTERVAL_MS));
+    }
+  };
+
+  runContinuously();
 }
