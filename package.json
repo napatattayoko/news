@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "bot": "node --env-file=.env.local bot.mjs"
+    "bot": "node --env-file=.env.local bot.mjs",
+    "scrape": "tsx --env-file=.env.local bot/newsScraper.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

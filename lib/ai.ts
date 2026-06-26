@@ -58,8 +58,9 @@ export async function categorizeArticle(text: string, candidateLabels: string[])
       inputs: text,
       parameters: { candidate_labels: candidateLabels }
     });
-    // @ts-ignore
-    return { label: response.labels[0], score: response.scores[0] };
+    // The response is an array of objects: [{label: '...', score: 0.9}, ...]
+    const topResult = response[0] as any;
+    return { label: topResult.label, score: topResult.score };
   } catch (error) {
     console.error("[AI] Error categorizing via Hugging Face API:", error);
     return { label: 'markets', score: 1 };

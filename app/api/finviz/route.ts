@@ -5,6 +5,11 @@ import * as cheerio from 'cheerio';
 
 export const dynamic = 'force-dynamic';
 
+import { scrapeAndStoreNews } from '@/bot/newsScraper';
+
+let isScraping = false;
+let lastScrapeTime = 0;
+
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
@@ -80,6 +85,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Default to 'news' action
+    const now = Date.now();
+    // Auto-scrape in the background if 3 minutes have passed
+    if (!isScraping && now - lastScrapeTime > 3 * 60 * 1000) {
+      isScraping = true;
+      lastScrapeTime = now;
+      console.log('[API] Triggering background news scrape...');
+      scrapeAndStoreNews().catch(err => console.error('[API] Scrape error:', err)).finally(() => {
+        isScraping = false;
+        console.log('[API] Background scrape completed.');
+      });
+    }
+
     const limit = parseInt(searchParams.get('limit') || '100', 10);
     const page = parseInt(searchParams.get('page') || '1', 10);
     const skip = (page - 1) * limit;

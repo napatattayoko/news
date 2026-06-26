@@ -29,7 +29,7 @@ const COMPANY_TICKER_MAP: Record<string, string> = {
 function extractTickers(title: string): string[] {
   const match = title.match(/\b[A-Z]{2,5}\b/g);
   let tickers = match ? Array.from(new Set(match)).filter(word => COMMON_TICKERS.has(word)) : [];
-  
+
   // Scan for company names in the headline
   for (const [company, ticker] of Object.entries(COMPANY_TICKER_MAP)) {
     const regex = new RegExp(`\\b${company}\\b`, 'i');
@@ -37,7 +37,7 @@ function extractTickers(title: string): string[] {
       tickers.push(ticker);
     }
   }
-  
+
   return Array.from(new Set(tickers));
 }
 
@@ -186,7 +186,7 @@ export async function scrapeAndStoreNews() {
     if (newArticles.length > 0) {
       for (const item of newArticles) {
         console.log(`[NewsBot] Categorizing & Analyzing: "${item.headline.substring(0, 50)}..."`);
-        
+
         // 1. Categorize using HF API (facebook/bart-large-mnli)
         const catResult = await categorizeArticle(item.headline, candidateLabels);
         item.category = catResult.score > 0.45 ? catResult.label : 'markets';
