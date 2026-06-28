@@ -112,6 +112,13 @@ export default function ImpactFeed() {
       items = items.filter((n) => n.impact === 'high');
     }
 
+    if (sortOrder === 'latest') {
+      // 48 hours = 2 days
+      const TWO_DAYS_MS = 48 * 60 * 60 * 1000;
+      const cutoff = new Date(Date.now() - TWO_DAYS_MS);
+      items = items.filter((n) => new Date(n.publishedAt) >= cutoff);
+    }
+
     return items;
   }, [activeCategory, activeCountry, activeTicker, activeImpact, selectedSymbols, sortOrder, news]);
 
