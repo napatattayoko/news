@@ -12,7 +12,8 @@ export default function NewsSync() {
 
     async function sync() {
       try {
-        const res = await fetch('/api/finviz?action=news');
+        const limit = initialLoadDone.current ? 20 : 2000;
+        const res = await fetch(`/api/finviz?action=news&limit=${limit}`);
         if (!active) return;
         if (res.ok) {
           const responseBody = await res.json();
@@ -20,16 +21,17 @@ export default function NewsSync() {
             if (!initialLoadDone.current) {
               // Silently sync already existing news on first load to prevent flooding toasts
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              responseBody.data.forEach((item: any) => {
-                useTerminalStore.setState((state) => {
-                  if (state.news.some((n) => n.id === item.id)) return {};
-                  // Make sure dates are properly typed as Date objects if they aren't
-                  const formattedItem = {
-                    ...item,
-                    publishedAt: new Date(item.publishedAt)
-                  };
-                  return { news: [formattedItem, ...state.news] };
-                });
+              const formattedItems = responseBody.data.map((item: any) => ({
+                ...item,
+                publishedAt: new Date(item.publishedAt)
+              }));
+              useTerminalStore.setState((state) => {
+                const existingIds = new Set(state.news.map(n => n.id));
+                const newItems = formattedItems.filter((n: any) => !existingIds.has(n.id));
+                // API returns in descending order (newest first). 
+                // We prepend newItems to state.news. Wait, if we prepend the array,
+                // we want the newest items at the start, so we just spread them.
+                return { news: [...newItems, ...state.news] };
               });
               initialLoadDone.current = true;
             } else {

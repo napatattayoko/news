@@ -7,7 +7,7 @@ import { NewsItem } from '@/lib/types';
 import { timeAgo } from '@/lib/utils';
 import TickerChip from '@/components/tickers/TickerChip';
 
-const HOURS_24 = 24 * 60 * 60 * 1000;
+
 
 function getDomain(url: string) {
   try { return new URL(url).hostname; } catch { return ''; }
@@ -96,10 +96,8 @@ export default function BreakingNews() {
   const { news, activeCategory } = useTerminalStore();
 
   const breakingItems = useMemo(() => {
-    const now = new Date();
-    const cutoff = new Date(now.getTime() - HOURS_24);
     let items = news
-      .filter((n) => n.impact === 'high' && new Date(n.publishedAt) >= cutoff);
+      .filter((n) => n.impact === 'high');
 
     if (activeCategory !== 'all') {
       items = items.filter((n) => n.category === activeCategory);

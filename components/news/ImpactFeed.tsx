@@ -9,7 +9,7 @@ import { TrendingDown, TrendingUp, ChevronDown } from 'lucide-react';
 import { NewsItem } from '@/lib/types';
 import { CountryFlag } from '@/lib/constants';
 
-const HOURS_24 = 24 * 60 * 60 * 1000;
+
 const PAGE_SIZE = 20;
 const COUNTRY_INITIAL_ROWS = 10;
 
@@ -84,12 +84,7 @@ export default function ImpactFeed() {
   };
 
   const filtered = useMemo(() => {
-    const now = new Date();
     let items = news;
-
-    // Dashboard: only last 24 hours
-    const cutoff = new Date(now.getTime() - HOURS_24);
-    items = items.filter((n) => new Date(n.publishedAt) >= cutoff);
 
     // Filter by category
     if (activeCategory !== 'all') {
@@ -113,8 +108,12 @@ export default function ImpactFeed() {
       );
     }
 
+    if (sortOrder === 'impact') {
+      items = items.filter((n) => n.impact === 'high');
+    }
+
     return items;
-  }, [activeCategory, activeCountry, activeTicker, activeImpact, selectedSymbols, news]);
+  }, [activeCategory, activeCountry, activeTicker, activeImpact, selectedSymbols, sortOrder, news]);
 
   // Reset pagination when filters change (moved inside render, no useEffect)
   const paginationKey = `${activeCategory}-${activeCountry}-${activeTicker}-${activeImpact}-${selectedSymbols.join(',')}`;
@@ -178,20 +177,24 @@ export default function ImpactFeed() {
 
   const sortItems = (list: typeof filtered) => {
     const impactOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
-    if (sortOrder === 'latest') {
-      return [...list].sort((a, b) => {
-        const timeDiff = new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
-        return timeDiff !== 0 ? timeDiff : impactOrder[a.impact] - impactOrder[b.impact];
-      });
-    } else if (sortOrder === 'oldest') {
-      return [...list].sort((a, b) => {
-        const timeDiff = new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime();
-        return timeDiff !== 0 ? timeDiff : impactOrder[a.impact] - impactOrder[b.impact];
-      });
-    } else if (sortOrder === 'impact') {
-      return [...list].sort((a, b) => impactOrder[a.impact] - impactOrder[b.impact]);
-    }
-    return list;
+    
+    return [...list].sort((a, b) => {
+      const timeA = new Date(a.publishedAt).getTime();
+      const timeB = new Date(b.publishedAt).getTime();
+      
+      // Calculate time difference: 
+      // - 'oldest': Ascending order (timeA - timeB)
+      // - 'latest' & 'impact': Descending order (timeB - timeA)
+      const timeDiff = sortOrder === 'oldest' ? timeA - timeB : timeB - timeA;
+      
+      // Primary sort by time
+      if (timeDiff !== 0) {
+        return timeDiff;
+      }
+      
+      // Secondary sort by impact (High -> Medium -> Low)
+      return impactOrder[a.impact] - impactOrder[b.impact];
+    });
   };
 
   const badItems = sortItems(filtered.filter((n) => n.sentiment === 'bad' || n.sentiment === 'neutral'));
