@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { ImpactLevel } from '@/lib/types';
-import { mockStockSentiment } from '@/lib/api';
 
 export interface TickerStats {
   symbol: string;
@@ -39,14 +38,12 @@ export function useTickersStats(symbols: string[]) {
     fetchStats();
   }, [symbols.join(',')]); // re-run only when the actual list of symbols changes
 
-  // Map to ensure all requested symbols exist in output, with fallback mockup data while loading
+  // Map to ensure all requested symbols exist in output, with default empty stats while loading
   return symbols.map(symbol => {
     const fetched = data.find(d => d.symbol === symbol);
     if (fetched) return fetched;
     
-    // Fallback while loading or if it failed
-    const mock = mockStockSentiment.find(m => m.symbol === symbol);
-    return mock || {
+    return {
       symbol,
       impactLevel: 'low' as ImpactLevel,
       sentiment: 'flat' as const,

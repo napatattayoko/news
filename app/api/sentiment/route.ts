@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     const symbols = symbolsParam.split(',').map(s => s.trim().toUpperCase());
-    
+
     // We will query the DB for each symbol.
     // For small arrays of symbols (e.g. 10-20), Promise.all is perfectly fine and fast.
     const results = await Promise.all(symbols.map(async (symbol) => {
@@ -32,10 +32,9 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      // If no news found in DB, fallback to mock data
+      // If no news found in DB, return default empty stats (no fallback to mock data)
       if (relatedNews.length === 0) {
-        const mock = mockStockSentiment.find(m => m.symbol === symbol);
-        return mock || {
+        return {
           symbol,
           impactLevel: 'low',
           sentiment: 'flat',
@@ -49,8 +48,8 @@ export async function GET(request: NextRequest) {
       // No new aggregation logic needed since the AI already calculated this for us.
       const latestNews = relatedNews[0];
       const impactLevel = latestNews.impact;
-      const sentiment = latestNews.sentiment === 'good' || latestNews.sentiment === 'bullish' ? 'up' : 
-                        latestNews.sentiment === 'bad' || latestNews.sentiment === 'bearish' ? 'down' : 'flat';
+      const sentiment = latestNews.sentiment === 'good' || latestNews.sentiment === 'bullish' ? 'up' :
+        latestNews.sentiment === 'bad' || latestNews.sentiment === 'bearish' ? 'down' : 'flat';
 
       // Mock Score & Historical (since we don't have real logic for them yet)
       const mock = mockStockSentiment.find(m => m.symbol === symbol);
