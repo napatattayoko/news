@@ -79,7 +79,19 @@ export default function MarketTrendsPage() {
   }, []);
 
   const combinedTrends = useMemo(() => {
-    return [...finvizTrends, ...mockMarketTrends];
+    const seen = new Set<string>();
+    const unique: TickerAnalysis[] = [];
+    
+    // Prioritize live trends over mock data
+    [...finvizTrends, ...mockMarketTrends].forEach((item) => {
+      const sym = item.symbol.toUpperCase();
+      if (!seen.has(sym)) {
+        seen.add(sym);
+        unique.push(item);
+      }
+    });
+    
+    return unique;
   }, [finvizTrends]);
 
   const filteredTrends = useMemo(() => {
