@@ -137,100 +137,100 @@ export default function TickerDetailPage() {
   return (
     <>
       <div className="flex-1 overflow-y-auto pb-28 lg:pb-0">
-          {/* Ticker Header */}
-          <div className="px-6 py-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-extrabold text-white">${symbol}</h1>
-                <div className={cn('w-8 h-8 rounded-full flex items-center justify-center', trendConfig[trend].bg)}>
-                  <TrendIcon size={16} className={trendConfig[trend].color} />
-                </div>
+        {/* Ticker Header */}
+        <div className="px-6 py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-extrabold text-white">${symbol}</h1>
+              <div className={cn('w-8 h-8 rounded-full flex items-center justify-center', trendConfig[trend].bg)}>
+                <TrendIcon size={16} className={trendConfig[trend].color} />
               </div>
-
-              <RangeDropdown
-                options={rangeOptions}
-                value={range}
-                onChange={setRange}
-              />
             </div>
-            <p className="text-[#808080] text-sm mt-1">{tickerName}</p>
+
+            <RangeDropdown
+              options={rangeOptions}
+              value={range}
+              onChange={setRange}
+            />
           </div>
+          <p className="text-[#808080] text-sm mt-1">{tickerName}</p>
+        </div>
 
-          {finvizData && finvizData.quote && (
-            <div className="px-6 pb-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl border border-[#222F44] bg-[#111722]">
-                <div className="flex flex-col">
-                  <span className="text-xs text-slate-500">Market Cap</span>
-                  <span className="text-sm font-semibold text-white">{finvizData.quote['Market Cap'] || '-'}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-slate-500">P/E</span>
-                  <span className="text-sm font-semibold text-white">{finvizData.quote['P/E'] || '-'}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-slate-500">Volume</span>
-                  <span className="text-sm font-semibold text-white">{finvizData.quote['Volume'] || '-'}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-slate-500">Target Price</span>
-                  <span className="text-sm font-semibold text-white">{finvizData.quote['Target Price'] || '-'}</span>
-                </div>
+        {finvizData && finvizData.quote && (
+          <div className="px-6 pb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl border border-[#222F44] bg-[#111722]">
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500">Market Cap</span>
+                <span className="text-sm font-semibold text-white">{finvizData.quote['Market Cap'] || '-'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500">P/E</span>
+                <span className="text-sm font-semibold text-white">{finvizData.quote['P/E'] || '-'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500">Volume</span>
+                <span className="text-sm font-semibold text-white">{finvizData.quote['Volume'] || '-'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500">Target Price</span>
+                <span className="text-sm font-semibold text-white">{finvizData.quote['Target Price'] || '-'}</span>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* News Feed — Mobile */}
-          <div className="md:hidden px-4 pb-6">
-            <div className="py-3">
-              <MobileSentimentToggle />
+        {/* News Feed — Mobile */}
+        <div className="md:hidden px-4 pb-6">
+          <div className="py-3">
+            <MobileSentimentToggle />
+          </div>
+          <div className="space-y-3">
+            {(mobileSentiment === 'bad' ? badItems : goodItems).length > 0 ? (
+              (mobileSentiment === 'bad' ? badItems : goodItems).map((item) => (
+                <NewsCard key={item.id} item={item} />
+              ))
+            ) : (
+              <div className="text-center py-12 text-slate-600 text-sm">
+                No {mobileSentiment} sentiment news
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* News Feed — Desktop */}
+        <div className="hidden md:block px-6 pb-6">
+          <div className="grid grid-cols-2 gap-x-5 gap-y-3">
+            {/* Column Headers */}
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingDown size={18} className="text-red-400" />
+              <h2 className="text-base font-bold tracking-widest uppercase text-red-400">Bad Sentiment</h2>
+              <span className="ml-auto text-xs text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">
+                {badItems.length}
+              </span>
             </div>
-                <div className="space-y-3">
-                  {(mobileSentiment === 'bad' ? badItems : goodItems).length > 0 ? (
-                    (mobileSentiment === 'bad' ? badItems : goodItems).map((item) => (
-                      <NewsCard key={item.id} item={item} />
-                    ))
-                  ) : (
-                    <div className="text-center py-12 text-slate-600 text-sm">
-                      No {mobileSentiment} sentiment news
-                    </div>
-                  )}
-                </div>
-              </div>
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp size={18} className="text-green-400" />
+              <h2 className="text-base font-bold tracking-widest uppercase text-green-400">Good Sentiment</h2>
+              <span className="ml-auto text-xs text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">
+                {goodItems.length}
+              </span>
+            </div>
 
-              {/* News Feed — Desktop */}
-              <div className="hidden md:block px-6 pb-6">
-                <div className="grid grid-cols-2 gap-x-5 gap-y-3">
-                  {/* Column Headers */}
-                  <div className="flex items-center gap-2 mb-1">
-                    <TrendingDown size={18} className="text-red-400" />
-                    <h2 className="text-base font-bold tracking-widest uppercase text-red-400">Bad Sentiment</h2>
-                    <span className="ml-auto text-xs text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">
-                      {badItems.length}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <TrendingUp size={18} className="text-green-400" />
-                    <h2 className="text-base font-bold tracking-widest uppercase text-green-400">Good Sentiment</h2>
-                    <span className="ml-auto text-xs text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">
-                      {goodItems.length}
-                    </span>
-                  </div>
+            {Array.from({ length: maxRows }).map((_, i) => (
+              <Fragment key={i}>
+                {badItems[i] ? <NewsCard item={badItems[i]} /> : <div />}
+                {goodItems[i] ? <NewsCard item={goodItems[i]} /> : <div />}
+              </Fragment>
+            ))}
 
-                  {Array.from({ length: maxRows }).map((_, i) => (
-                    <Fragment key={i}>
-                      {badItems[i] ? <NewsCard item={badItems[i]} /> : <div />}
-                      {goodItems[i] ? <NewsCard item={goodItems[i]} /> : <div />}
-                    </Fragment>
-                  ))}
-
-                  {maxRows === 0 && (
-                    <>
-                      <div className="text-center py-12 text-slate-600 text-sm">No bad sentiment news</div>
-                      <div className="text-center py-12 text-slate-600 text-sm">No good sentiment news</div>
-                    </>
-                  )}
-                </div>
-              </div>
+            {maxRows === 0 && (
+              <>
+                <div className="text-center py-12 text-slate-600 text-sm">No bad sentiment news</div>
+                <div className="text-center py-12 text-slate-600 text-sm">No good sentiment news</div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );
