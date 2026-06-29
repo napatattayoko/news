@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import RangeDropdown, { RangeOption } from '@/components/filters/RangeDropdown';
 import { SentimentDonutChart, SentimentScoreCard, StockDetailNewsFeed } from '@/components/stock-detail';
 import { mockStockSentiment, mockAIOutlook } from '@/lib/api';
+import { useTickerStats } from '@/hooks/useTickersStats';
 import { useTerminalStore } from '@/lib/store';
 import { TooltipProvider } from '@/components/ui/Tooltip';
 import { useState } from 'react';
@@ -24,17 +25,7 @@ export default function StockDetailPage() {
 
   const { news } = useTerminalStore();
   
-  // Dynamically calculate row data from news
-  const relatedNews = news.filter(n => n.tickers?.some((t: any) => (typeof t === 'string' ? t : t.symbol) === symbol));
-  
-  const row = mockStockSentiment.find((r) => r.symbol === symbol) || {
-    symbol,
-    impactLevel: 'low' as const,
-    sentiment: 'flat' as const,
-    mentionCount: 0,
-    score: 5,
-    sentimentHistorical: [0, 0, 0, 0, 0]
-  };
+  const row = useTickerStats(symbol);
   const aiOutlook = mockAIOutlook[symbol] ?? 'No AI analysis available for this ticker.';
 
   if (!row) {

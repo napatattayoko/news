@@ -13,6 +13,7 @@ import { ImpactLevel, TrendFilter } from '@/lib/types';
 import SentimentFilterRibbon from '@/components/filters/SentimentFilterRibbon';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import { usePagination } from '@/hooks/usePagination';
+import { useTickersStats } from '@/hooks/useTickersStats';
 import { tickerToast } from '@/lib/toast';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -125,21 +126,7 @@ export default function StockSentimentPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  // Generate baseRows by mapping over sentimentTickers to ensure newly added tickers always appear
-  const baseRows = sentimentTickers.map(symbol => {
-    const mockData = mockStockSentiment.find(m => m.symbol === symbol);
-    if (mockData) return mockData;
-
-    // Fallback mockup row for new tickers added from live news that aren't in the mock file
-    return {
-      symbol,
-      impactLevel: 'low' as ImpactLevel,
-      sentiment: 'flat' as const,
-      mentionCount: 0,
-      score: 5,
-      sentimentHistorical: [0, 0, 0, 0, 0]
-    };
-  });
+  const baseRows = useTickersStats(sentimentTickers);
 
   // Apply sentiment filter + sort
   const filteredRows = (() => {
