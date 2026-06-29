@@ -13,34 +13,12 @@ interface StockDetailNewsFeedProps {
   isLoading?: boolean;
 }
 
-
 export default function StockDetailNewsFeed({ symbol, isLoading: externalIsLoading = false }: StockDetailNewsFeedProps) {
+  const { news } = useTerminalStore();
   const mobileSentiment = useTerminalStore((s) => s.mobileSentiment);
-  const [localNews, setLocalNews] = useState<NewsItem[]>([]);
-  const [isFetching, setIsFetching] = useState(true);
-
-  useEffect(() => {
-    const fetchNews = async () => {
-      setIsFetching(true);
-      try {
-        const res = await fetch(`/api/finviz?action=quote&symbol=${symbol}`);
-        const result = await res.json();
-
-        if (result.success && result.data && Array.isArray(result.data.news)) {
-          setLocalNews(result.data.news);
-        } else {
-          setLocalNews([]);
-        }
-      } catch (error) {
-        console.error('Failed to fetch stock news:', error);
-      } finally {
-        setIsFetching(false);
-      }
-    };
-    if (symbol) {
-      fetchNews();
-    }
-  }, [symbol]);
+  
+  // Dynamically derive news for this symbol from the global store
+  const localNews = news.filter(n => n.tickers?.some((t: any) => (typeof t === 'string' ? t : t.symbol) === symbol));
 
   const badItems = localNews.filter((n) => n.sentiment === 'bad' || n.sentiment === 'neutral');
   const goodItems = localNews.filter((n) => n.sentiment === 'good');
@@ -48,7 +26,7 @@ export default function StockDetailNewsFeed({ symbol, isLoading: externalIsLoadi
 
   const mobileItems = mobileSentiment === 'bad' ? badItems : goodItems;
 
-  const isLoading = externalIsLoading || isFetching;
+  const isLoading = externalIsLoading;
 
   if (isLoading) {
     return (

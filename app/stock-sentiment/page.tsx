@@ -46,7 +46,7 @@ function SortIcon({ column, sortColumn, sortDirection }: { column: SortColumn; s
 
 export default function StockSentimentPage() {
   const router = useRouter();
-  const { sentimentTickers, sentimentTickerOrder, addSentimentTicker, removeSentimentTicker, setSentimentTickerOrder } = useTerminalStore();
+  const { sentimentTickers, sentimentTickerOrder, addSentimentTicker, removeSentimentTicker, setSentimentTickerOrder, news } = useTerminalStore();
   const [rppOpen, setRppOpen] = useState(false);
   const rppRef = useRef<HTMLDivElement>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -103,12 +103,17 @@ export default function StockSentimentPage() {
     }
   };
 
-  const availableToAdd = mockStockSentiment
-    .map((r) => r.symbol)
-    .filter((s) => !sentimentTickers.includes(s));
+  // Dynamically extract unique tickers from actual news data
+  const availableToAdd = Array.from(new Set(
+    news.flatMap(item => item.tickers?.map(t => typeof t === 'string' ? t : t.symbol) || [])
+  ))
+  .filter(symbol => !sentimentTickers.includes(symbol as string))
+  .map(symbol => ({ symbol: symbol as string, name: symbol as string }));
 
   const filteredToAdd = addSearch.trim()
-    ? availableToAdd.filter((s) => s.toLowerCase().includes(addSearch.trim().toLowerCase()))
+    ? availableToAdd.filter((t) => 
+        t.symbol.toLowerCase().includes(addSearch.trim().toLowerCase())
+      )
     : availableToAdd;
 
   useEffect(() => {
@@ -120,7 +125,21 @@ export default function StockSentimentPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const baseRows = mockStockSentiment.filter((r) => sentimentTickers.includes(r.symbol));
+  // Generate baseRows by mapping over sentimentTickers to ensure newly added tickers always appear
+  const baseRows = sentimentTickers.map(symbol => {
+    const mockData = mockStockSentiment.find(m => m.symbol === symbol);
+    if (mockData) return mockData;
+
+    // Fallback mockup row for new tickers added from live news that aren't in the mock file
+    return {
+      symbol,
+      impactLevel: 'low' as ImpactLevel,
+      sentiment: 'flat' as const,
+      mentionCount: 0,
+      score: 5,
+      sentimentHistorical: [0, 0, 0, 0, 0]
+    };
+  });
 
   // Apply sentiment filter + sort
   const filteredRows = (() => {
@@ -196,116 +215,117 @@ export default function StockSentimentPage() {
     <>
       {/* Center content area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto pb-28 lg:pb-0">
-          {/* Header */}
-          <div className="px-4 md:px-6 py-5 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 shrink-0">
-              <Rss size={18} className="text-white md:w-5 md:h-5" />
-              <h1 className="text-base md:text-lg font-extrabold text-white uppercase tracking-wide whitespace-nowrap">
-                STOCK SENTIMENT
-              </h1>
-            </div>
-
-            <RangeDropdown
-              options={rangeOptions}
-              value={selectedRange}
-              onChange={setSelectedRange}
-            />
+        {/* Header */}
+        <div className="px-4 md:px-6 py-5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 shrink-0">
+            <Rss size={18} className="text-white md:w-5 md:h-5" />
+            <h1 className="text-base md:text-lg font-extrabold text-white uppercase tracking-wide whitespace-nowrap">
+              STOCK SENTIMENT
+            </h1>
           </div>
 
-          {/* Ticker Filter Bar */}
-          <div className="px-4 md:px-6 pb-4 flex items-center gap-2">
-            {/* ADD button - fixed position to avoid dropdown clipping */}
-            <div className="relative shrink-0" ref={addRef}>
-              <button
-                onClick={() => { setAddOpen(!addOpen); setAddSearch(''); setTimeout(() => addInputRef.current?.focus(), 0); }}
-                className="flex items-center gap-2 bg-[#0D7FF2] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[#0B6FD4] transition-colors"
-              >
-                <Plus size={14} />
-                ADD
-              </button>
-              {addOpen && (
-                <div className="absolute top-full mt-1 left-0 z-50 bg-[#1A1A1A] border border-[#222F44] rounded-lg shadow-xl overflow-hidden w-56">
-                  <div className="px-3 py-2 border-b border-[#222F44]">
-                    <div className="flex items-center gap-2 bg-[#111722] rounded-lg px-2 py-1.5">
-                      <Search size={13} className="text-slate-500 shrink-0" />
-                      <input
-                        ref={addInputRef}
-                        type="text"
-                        value={addSearch}
-                        onChange={(e) => setAddSearch(e.target.value)}
-                        placeholder="Search symbol…"
-                        className="flex-1 bg-transparent text-xs text-white placeholder:text-slate-500 focus:outline-none"
-                      />
-                    </div>
+          <RangeDropdown
+            options={rangeOptions}
+            value={selectedRange}
+            onChange={setSelectedRange}
+          />
+        </div>
+
+        {/* Ticker Filter Bar */}
+        <div className="px-4 md:px-6 pb-4 flex items-center gap-2">
+          {/* ADD button - fixed position to avoid dropdown clipping */}
+          <div className="relative shrink-0" ref={addRef}>
+            <button
+              onClick={() => { setAddOpen(!addOpen); setAddSearch(''); setTimeout(() => addInputRef.current?.focus(), 0); }}
+              className="flex items-center gap-2 bg-[#0D7FF2] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[#0B6FD4] transition-colors"
+            >
+              <Plus size={14} />
+              ADD
+            </button>
+            {addOpen && (
+              <div className="absolute top-full mt-1 left-0 z-50 bg-[#1A1A1A] border border-[#222F44] rounded-lg shadow-xl overflow-hidden w-56">
+                <div className="px-3 py-2 border-b border-[#222F44]">
+                  <div className="flex items-center gap-2 bg-[#111722] rounded-lg px-2 py-1.5">
+                    <Search size={13} className="text-slate-500 shrink-0" />
+                    <input
+                      ref={addInputRef}
+                      type="text"
+                      value={addSearch}
+                      onChange={(e) => setAddSearch(e.target.value)}
+                      placeholder="Search symbol…"
+                      className="flex-1 bg-transparent text-xs text-white placeholder:text-slate-500 focus:outline-none"
+                    />
                   </div>
-                  <div className="max-h-48 overflow-y-auto">
+                </div>
+                <div className="max-h-48 overflow-y-auto">
                     {filteredToAdd.length === 0 ? (
                       <div className="px-3 py-4 text-center text-xs text-slate-500">
                         {addSearch.trim() ? 'No matches' : 'No more tickers'}
                       </div>
                     ) : (
-                      filteredToAdd.map((symbol) => (
+                      filteredToAdd.slice(0, 50).map((ticker) => (
                         <button
-                          key={symbol}
-                          onClick={() => { addSentimentTicker(symbol); tickerToast.added(symbol, 'sentiment'); setAddOpen(false); }}
-                          className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors"
+                          key={ticker.symbol}
+                          onClick={() => { addSentimentTicker(ticker.symbol); tickerToast.added(ticker.symbol, 'sentiment'); setAddOpen(false); }}
+                          className="block w-full text-left px-4 py-2 hover:bg-white/10 transition-colors flex flex-col sm:flex-row sm:items-baseline gap-1"
                         >
-                          {symbol}
+                          <span className="text-sm font-bold text-white shrink-0">{ticker.symbol}</span>
+                          <span className="text-xs text-slate-400 truncate">{ticker.name}</span>
                         </button>
                       ))
                     )}
-                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
-            {/* Scrollable ticker chips */}
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pr-4 md:pr-0">
-              {sentimentTickers.map((symbol) => (
-                <div
-                  key={symbol}
-                  className="flex items-center gap-2 bg-[#2A2A2A] border border-[#222F44] text-white text-sm font-medium px-4 py-2 rounded-full shrink-0"
+          {/* Scrollable ticker chips */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pr-4 md:pr-0">
+            {sentimentTickers.map((symbol) => (
+              <div
+                key={symbol}
+                className="flex items-center gap-2 bg-[#2A2A2A] border border-[#222F44] text-white text-sm font-medium px-4 py-2 rounded-full shrink-0"
+              >
+                {symbol}
+                <button
+                  onClick={() => { removeSentimentTicker(symbol); tickerToast.removed(symbol, 'sentiment'); }}
+                  className="text-slate-400 hover:text-white transition-colors"
                 >
-                  {symbol}
-                  <button
-                    onClick={() => { removeSentimentTicker(symbol); tickerToast.removed(symbol, 'sentiment'); }}
-                    className="text-slate-400 hover:text-white transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
           </div>
+        </div>
 
-          {/* Sentiment Filter Ribbon */}
-          <div className="px-4 md:px-6 pt-2 pb-6">
-            <SentimentFilterRibbon
-              activeFilter={activeFilter}
-              onFilterChange={(filter) => { setActiveFilter(filter); setSortColumn(null); setSortDirection('asc'); pagination.setPage(0); }}
-            />
-          </div>
+        {/* Sentiment Filter Ribbon */}
+        <div className="px-4 md:px-6 pt-2 pb-6">
+          <SentimentFilterRibbon
+            activeFilter={activeFilter}
+            onFilterChange={(filter) => { setActiveFilter(filter); setSortColumn(null); setSortDirection('asc'); pagination.setPage(0); }}
+          />
+        </div>
 
-          {/* Content */}
-          <div className="px-6 pb-6 pt-0 flex flex-col gap-4">
-            {/* Table */}
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <div className="border border-[#222F44] rounded-xl">
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[700px]">
-                    <thead>
-                      <tr className="border-b border-[#222F44]">
-                        {!sortColumn && activeFilter === 'all' && (
-                          <th className="w-8 px-2 py-3"></th>
-                        )}
-                        <th
-                          onClick={() => handleSort('symbol')}
-                          className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
-                        >
-                          <span className="inline-flex items-center gap-1">
-                            Ticker <SortIcon column="symbol" sortColumn={sortColumn} sortDirection={sortDirection} />
-                          </span>
-                        </th>
+        {/* Content */}
+        <div className="px-6 pb-6 pt-0 flex flex-col gap-4">
+          {/* Table */}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <div className="border border-[#222F44] rounded-xl">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-[#222F44]">
+                      {!sortColumn && activeFilter === 'all' && (
+                        <th className="w-8 px-2 py-3"></th>
+                      )}
+                      <th
+                        onClick={() => handleSort('symbol')}
+                        className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          Ticker <SortIcon column="symbol" sortColumn={sortColumn} sortDirection={sortDirection} />
+                        </span>
+                      </th>
                       <th
                         onClick={() => handleSort('impact')}
                         className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
@@ -463,9 +483,9 @@ export default function StockSentimentPage() {
                 </div>
               </div>
             </div>
-            </DndContext>
-          </div>
+          </DndContext>
         </div>
+      </div>
       <ScrollToTopButton scrollContainerRef={scrollRef} />
     </>
   );
