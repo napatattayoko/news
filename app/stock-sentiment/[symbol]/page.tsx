@@ -33,7 +33,7 @@ export default function StockDetailPage() {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchQuote = async () => {
       try {
         const res = await fetch(`/api/finviz?action=quote&symbol=${symbol}`);

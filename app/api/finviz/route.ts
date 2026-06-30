@@ -110,14 +110,14 @@ export async function GET(request: NextRequest) {
     const formattedNews = news.map(item => {
       const parsedSentiment = (item.sentiment === 'bullish' || item.sentiment === 'good') ? 'good' : (item.sentiment === 'bearish' || item.sentiment === 'bad') ? 'bad' : 'neutral';
       const tickerSentiment = parsedSentiment === 'good' ? 'up' : parsedSentiment === 'bad' ? 'down' : 'flat';
-      
+
       return {
         ...item,
         category: item.category as Category,
         sentiment: parsedSentiment,
-        tickers: JSON.parse(item.tickers as string).map((t: any) => 
-          typeof t === 'string' 
-            ? { symbol: t, name: t, sentiment: tickerSentiment, sentimentScore: parsedSentiment === 'good' ? 8 : parsedSentiment === 'bad' ? 2 : 5 } 
+        tickers: JSON.parse(item.tickers as string).map((t: any) =>
+          typeof t === 'string'
+            ? { symbol: t, name: t, sentiment: tickerSentiment, sentimentScore: parsedSentiment === 'good' ? 8 : parsedSentiment === 'bad' ? 2 : 5 }
             : t
         ),
         sources: JSON.parse(item.sources as string),
