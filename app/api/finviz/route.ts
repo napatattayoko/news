@@ -46,7 +46,7 @@ async function fetchMarket() {
 }
 
 async function fetchQuote(symbol: string) {
-  const response = await fetch(`https://finviz.com/quote.ashx?t=${symbol}`, { headers: HEADERS, next: { revalidate: 600 } });
+  const response = await fetch(`https://finviz.com/quote.ashx?t=${symbol}`, { headers: HEADERS, next: { revalidate: 60 } });
   if (!response.ok) throw new Error('Failed to fetch quote');
   const html = await response.text();
   const $ = cheerio.load(html);

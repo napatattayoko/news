@@ -7,7 +7,7 @@ import { mockStockSentiment, mockAIOutlook } from '@/lib/api';
 import { useTickerStats } from '@/hooks/useTickersStats';
 import { useTerminalStore } from '@/lib/store';
 import { TooltipProvider } from '@/components/ui/Tooltip';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 type TimeRange = '24H' | '7D' | '30D' | 'All';
 
@@ -22,11 +22,42 @@ export default function StockDetailPage() {
   const params = useParams();
   const symbol = (params.symbol as string)?.toUpperCase() ?? '';
   const [selectedRange, setSelectedRange] = useState<TimeRange>('24H');
+  const [stockPrice, setStockPrice] = useState<string>('');
+  const [priceChange, setPriceChange] = useState<string>('');
+  const [priceChangeVal, setPriceChangeVal] = useState<number>(0);
 
   const { news } = useTerminalStore();
 
   const row = useTickerStats(symbol);
   const aiOutlook = mockAIOutlook[symbol] ?? 'No AI analysis available for this ticker.';
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchQuote = async () => {
+      try {
+        const res = await fetch(`/api/finviz?action=quote&symbol=${symbol}`);
+        const result = await res.json();
+        if (isMounted && result.success && result.data?.quote) {
+          const price = result.data.quote['Price'];
+          const change = result.data.quote['Change'];
+          setStockPrice(price || '');
+          setPriceChange(change || '');
+          setPriceChangeVal(parseFloat(change) || 0);
+        }
+      } catch (err) {
+        console.error('[StockDetailPage] Failed to fetch quote:', err);
+      }
+    };
+
+    if (symbol) {
+      fetchQuote();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [symbol]);
 
   if (!row) {
     return (
@@ -40,9 +71,19 @@ export default function StockDetailPage() {
     <TooltipProvider>
       <div className="flex-1 overflow-y-auto pb-28 lg:pb-0">
         <div className="px-6 py-5 flex items-center justify-between">
-          <h1 className="text-lg font-extrabold text-white uppercase tracking-wide">
-            <span className="text-white">${symbol}</span>
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-extrabold text-white uppercase tracking-wide">
+              <span className="text-white">${symbol}</span>
+            </h1>
+            {stockPrice && (
+              <div className="flex items-center gap-2 bg-[#111722] border border-[#222F44] px-3 py-1 rounded-lg text-sm font-semibold select-none">
+                <span className="text-slate-300 font-medium">${stockPrice}</span>
+                <span className={priceChangeVal >= 0 ? 'text-green-400' : 'text-red-400'}>
+                  {priceChange}
+                </span>
+              </div>
+            )}
+          </div>
           <RangeDropdown
             options={rangeOptions}
             value={selectedRange}
