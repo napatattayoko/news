@@ -14,7 +14,7 @@ import SentimentFilterRibbon from '@/components/filters/SentimentFilterRibbon';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import { usePagination } from '@/hooks/usePagination';
 import { useTickersStats } from '@/hooks/useTickersStats';
-import { tickerToast } from '@/lib/toast';
+import { tickerToast, toast } from '@/lib/toast';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { DraggableTableRow } from '@/components/stock-discovery/DraggableTableRow';
@@ -126,11 +126,43 @@ export default function StockSentimentPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const baseRows = useTickersStats(sentimentTickers);
+  const handleAddTicker = (symbol: string) => {
+    addSentimentTicker(symbol);
+    setAddOpen(false);
+
+    // Check if there is any news for this ticker in the last 24h
+    const tickerNews = news.filter(item => {
+      const tickersList = item.tickers || [];
+      return tickersList.some((t: any) => {
+        const sym = typeof t === 'string' ? t : t.symbol;
+        return sym.toUpperCase() === symbol.toUpperCase();
+      });
+    });
+
+    const now = Date.now();
+    const has24HNews = tickerNews.some(n => {
+      const pubDate = new Date(n.publishedAt).getTime();
+      return now - pubDate <= 24 * 60 * 60 * 1000;
+    });
+
+    if (selectedRange === '24H' && !has24HNews) {
+      toast.warning(
+        `Added $${symbol}`,
+        `หุ้นนี้ไม่มีข่าวใหม่ใน 24 ชม. ล่าสุด ลองเปลี่ยนช่วงเวลาด้านบนเป็น "Last 7D" เพื่อดูข้อมูลย้อนหลังนะครับ`
+      );
+    } else {
+      tickerToast.added(symbol, 'sentiment');
+    }
+  };
+
+  const baseRows = useTickersStats(sentimentTickers, selectedRange);
 
   // Apply sentiment filter + sort
   const filteredRows = (() => {
     let filtered = [...baseRows];
+    if (selectedRange === '24H') {
+      filtered = filtered.filter((r) => r.mentionCount > 0);
+    }
     switch (activeFilter) {
       case 'top_positive':
         filtered = filtered.filter((r) => r.sentiment === 'up');
@@ -253,7 +285,7 @@ export default function StockSentimentPage() {
                       filteredToAdd.slice(0, 50).map((ticker) => (
                         <button
                           key={ticker.symbol}
-                          onClick={() => { addSentimentTicker(ticker.symbol); tickerToast.added(ticker.symbol, 'sentiment'); setAddOpen(false); }}
+                          onClick={() => handleAddTicker(ticker.symbol)}
                           className="block w-full text-left px-4 py-2 hover:bg-white/10 transition-colors flex flex-col sm:flex-row sm:items-baseline gap-1"
                         >
                           <span className="text-sm font-bold text-white shrink-0">{ticker.symbol}</span>
