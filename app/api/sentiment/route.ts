@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
       // No new aggregation logic needed since the AI already calculated this for us.
       const latestNews = relatedNews[0];
       const impactLevel = latestNews.impact;
-      const sentiment = latestNews.sentiment === 'good' || latestNews.sentiment === 'bullish' ? 'up' :
-        latestNews.sentiment === 'bad' || latestNews.sentiment === 'bearish' ? 'down' : 'flat';
+      const sentiment = latestNews.sentiment === 'good' ? 'up' :
+        latestNews.sentiment === 'bad' ? 'down' : 'flat';
 
       // 1. Calculate Sentiment Historical by counting positive, negative, and neutral mentions
       let positive = 0;
@@ -56,9 +56,9 @@ export async function GET(request: NextRequest) {
       let neutral = 0;
 
       for (const news of relatedNews) {
-        if (news.sentiment === 'good' || news.sentiment === 'bullish') {
+        if (news.sentiment === 'good') {
           positive++;
-        } else if (news.sentiment === 'bad' || news.sentiment === 'bearish') {
+        } else if (news.sentiment === 'bad') {
           negative++;
         } else {
           neutral++;
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       // Directional News (Positive/Negative) is more actionable: High = 10, Medium = 8, Low = 6
       // Neutral News is less actionable: High = 5, Medium = 3, Low = 1
       const getNewsScore = (s: string, imp: string): number => {
-        const isDirectional = s === 'good' || s === 'bullish' || s === 'bad' || s === 'bearish';
+        const isDirectional = s === 'good' || s === 'bad';
         if (isDirectional) {
           if (imp === 'high') return 10;
           if (imp === 'medium') return 8;

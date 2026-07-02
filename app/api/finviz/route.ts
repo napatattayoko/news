@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
     });
 
     const formattedNews = news.map(item => {
-      const parsedSentiment = (item.sentiment === 'bullish' || item.sentiment === 'good') ? 'good' : (item.sentiment === 'bearish' || item.sentiment === 'bad') ? 'bad' : 'neutral';
+      const parsedSentiment = item.sentiment === 'good' ? 'good' : item.sentiment === 'bad' ? 'bad' : 'neutral';
       const tickerSentiment = parsedSentiment === 'good' ? 'up' : parsedSentiment === 'bad' ? 'down' : 'flat';
 
       return {
