@@ -16,10 +16,10 @@ export default function SentimentHistoricalBar({
   const { positive, negative, neutral } = data;
   const total = positive + negative + neutral;
 
-  // Calculate percentages
-  const positivePercent = (positive / total) * 100;
-  const negativePercent = (negative / total) * 100;
-  const neutralPercent = (neutral / total) * 100;
+  // Calculate percentages (prevent division by zero returning NaN)
+  const positivePercent = total > 0 ? (positive / total) * 100 : 0;
+  const negativePercent = total > 0 ? (negative / total) * 100 : 0;
+  const neutralPercent = total > 0 ? (neutral / total) * 100 : 0;
 
   return (
     <div className="relative w-full min-w-[120px]">
