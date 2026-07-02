@@ -10,7 +10,7 @@ export interface TickerStats {
   sentimentHistorical: { positive: number; negative: number; neutral: number };
 }
 
-export function useTickersStats(symbols: string[]) {
+export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' | 'All' = '24H') {
   const [data, setData] = useState<TickerStats[]>([]);
   
   useEffect(() => {
@@ -22,7 +22,7 @@ export function useTickersStats(symbols: string[]) {
     const fetchStats = async () => {
       try {
         const query = symbols.join(',');
-        const res = await fetch(`/api/sentiment?symbols=${query}`);
+        const res = await fetch(`/api/sentiment?symbols=${query}&range=${range}`);
         const result = await res.json();
         
         if (result.success) {
@@ -36,7 +36,7 @@ export function useTickersStats(symbols: string[]) {
     };
 
     fetchStats();
-  }, [symbols.join(',')]); // re-run only when the actual list of symbols changes
+  }, [symbols.join(','), range]); // re-run when the list of symbols or selected range changes
 
   // Map to ensure all requested symbols exist in output, with default empty stats while loading
   return symbols.map(symbol => {
@@ -54,7 +54,7 @@ export function useTickersStats(symbols: string[]) {
   });
 }
 
-export function useTickerStats(symbol: string) {
-  const stats = useTickersStats([symbol]);
+export function useTickerStats(symbol: string, range: '24H' | '7D' | '30D' | 'All' = '24H') {
+  const stats = useTickersStats([symbol], range);
   return stats[0];
 }

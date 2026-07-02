@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const symbolsParam = searchParams.get('symbols');
+    const range = searchParams.get('range')?.toLowerCase() || '24h';
 
     if (!symbolsParam) {
       return NextResponse.json({ success: false, error: 'Symbols required' }, { status: 400 });
@@ -14,15 +15,30 @@ export async function GET(request: NextRequest) {
 
     const symbols = symbolsParam.split(',').map(s => s.trim().toUpperCase());
 
+    // Calculate time range cutoff date
+    let cutoffDate: Date | null = null;
+    if (range === '24h') {
+      cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    } else if (range === '7d') {
+      cutoffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    } else if (range === '30d') {
+      cutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    }
+
     // We will query the DB for each symbol.
     // For small arrays of symbols (e.g. 10-20), Promise.all is perfectly fine and fast.
     const results = await Promise.all(symbols.map(async (symbol) => {
-      // Find all news that contains the symbol in the JSON string
+      // Find all news that contains the symbol in the JSON string within the time range
       const relatedNews = await prisma.news.findMany({
         where: {
           tickers: {
             contains: `"${symbol}"`
-          }
+          },
+          ...(cutoffDate ? {
+            publishedAt: {
+              gte: cutoffDate
+            }
+          } : {})
         },
         orderBy: { publishedAt: 'desc' },
         select: {
