@@ -28,7 +28,7 @@ export default function StockDetailPage() {
 
   const { news } = useTerminalStore();
 
-  const row = useTickerStats(symbol);
+  const row = useTickerStats(symbol, selectedRange);
   const aiOutlook = mockAIOutlook[symbol] ?? 'No AI analysis available for this ticker.';
 
   useEffect(() => {
