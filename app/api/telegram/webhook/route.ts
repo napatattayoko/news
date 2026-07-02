@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { bot } from '@/lib/telegram';
-import { mockNews, mockMarketTrends } from '@/lib/mock-data';
 
 // This handles incoming webhooks from Telegram
 export async function POST(req: NextRequest) {
