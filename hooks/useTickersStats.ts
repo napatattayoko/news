@@ -8,11 +8,12 @@ export interface TickerStats {
   mentionCount: number;
   score: number;
   sentimentHistorical: { positive: number; negative: number; neutral: number };
+  latestNewsDate?: string | null;
 }
 
 export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' | 'All' = '24H') {
   const [data, setData] = useState<TickerStats[]>([]);
-  
+
   useEffect(() => {
     if (symbols.length === 0) {
       setData([]);
@@ -24,7 +25,7 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
         const query = symbols.join(',');
         const res = await fetch(`/api/sentiment?symbols=${query}&range=${range}`);
         const result = await res.json();
-        
+
         if (result.success) {
           setData(result.data);
         } else {
@@ -42,14 +43,15 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
   return symbols.map(symbol => {
     const fetched = data.find(d => d.symbol === symbol);
     if (fetched) return fetched;
-    
+
     return {
       symbol,
       impactLevel: 'low' as ImpactLevel,
       sentiment: 'flat' as const,
       mentionCount: 0,
       score: 5,
-      sentimentHistorical: { positive: 0, negative: 0, neutral: 0 }
+      sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
+      latestNewsDate: null
     };
   });
 }

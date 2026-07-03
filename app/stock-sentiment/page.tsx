@@ -402,7 +402,14 @@ export default function StockSentimentPage() {
                             isDragDisabled={isDragDisabled}
                           >
                             <td className="px-4 py-3">
-                              <span className="text-[#0D7FF2] font-bold text-sm">${row.symbol}</span>
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-[#0D7FF2] font-bold text-sm">${row.symbol}</span>
+                                {row.latestNewsDate && selectedRange === '7D' && (
+                                  <span className="text-slate-500 text-xs font-normal">
+                                    ({new Date(row.latestNewsDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })})
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               <span className={cn('text-xs font-bold px-4 py-1.5 rounded-full', impact.bg, impact.text, impact.border)}>

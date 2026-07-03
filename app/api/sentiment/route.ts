@@ -43,7 +43,8 @@ export async function GET(request: NextRequest) {
         orderBy: { publishedAt: 'desc' },
         select: {
           impact: true,
-          sentiment: true
+          sentiment: true,
+          publishedAt: true
         }
       });
 
@@ -55,7 +56,8 @@ export async function GET(request: NextRequest) {
           sentiment: 'flat',
           mentionCount: 0,
           score: 5,
-          sentimentHistorical: { positive: 0, negative: 0, neutral: 0 }
+          sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
+          latestNewsDate: null
         };
       }
 
@@ -107,7 +109,8 @@ export async function GET(request: NextRequest) {
         sentiment,
         mentionCount: relatedNews.length,
         score,
-        sentimentHistorical
+        sentimentHistorical,
+        latestNewsDate: latestNews.publishedAt.toISOString()
       };
     }));
 
