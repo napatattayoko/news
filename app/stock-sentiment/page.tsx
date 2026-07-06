@@ -61,6 +61,19 @@ export default function StockSentimentPage() {
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
+  // Remember the last selected filter range when coming back to this page
+  useEffect(() => {
+    const savedRange = localStorage.getItem('selectedRange_sentiment') as TimeRange;
+    if (savedRange && (savedRange === '24H' || savedRange === '7D')) {
+      setSelectedRange(savedRange);
+    }
+  }, []);
+
+  const handleRangeChange = (newRange: TimeRange) => {
+    setSelectedRange(newRange);
+    localStorage.setItem('selectedRange_sentiment', newRange);
+  };
+
   // Drag-and-drop sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -108,13 +121,13 @@ export default function StockSentimentPage() {
   const availableToAdd = Array.from(new Set(
     news.flatMap(item => item.tickers?.map(t => typeof t === 'string' ? t : t.symbol) || [])
   ))
-  .filter(symbol => !sentimentTickers.includes(symbol as string))
-  .map(symbol => ({ symbol: symbol as string, name: symbol as string }));
+    .filter(symbol => !sentimentTickers.includes(symbol as string))
+    .map(symbol => ({ symbol: symbol as string, name: symbol as string }));
 
   const filteredToAdd = addSearch.trim()
-    ? availableToAdd.filter((t) => 
-        t.symbol.toLowerCase().includes(addSearch.trim().toLowerCase())
-      )
+    ? availableToAdd.filter((t) =>
+      t.symbol.toLowerCase().includes(addSearch.trim().toLowerCase())
+    )
     : availableToAdd;
 
   useEffect(() => {
@@ -246,7 +259,7 @@ export default function StockSentimentPage() {
           <RangeDropdown
             options={rangeOptions}
             value={selectedRange}
-            onChange={setSelectedRange}
+            onChange={handleRangeChange}
           />
         </div>
 
@@ -277,22 +290,22 @@ export default function StockSentimentPage() {
                   </div>
                 </div>
                 <div className="max-h-48 overflow-y-auto">
-                    {filteredToAdd.length === 0 ? (
-                      <div className="px-3 py-4 text-center text-xs text-slate-500">
-                        {addSearch.trim() ? 'No matches' : 'No more tickers'}
-                      </div>
-                    ) : (
-                      filteredToAdd.slice(0, 50).map((ticker) => (
-                        <button
-                          key={ticker.symbol}
-                          onClick={() => handleAddTicker(ticker.symbol)}
-                          className="block w-full text-left px-4 py-2 hover:bg-white/10 transition-colors flex flex-col sm:flex-row sm:items-baseline gap-1"
-                        >
-                          <span className="text-sm font-bold text-white shrink-0">{ticker.symbol}</span>
-                          <span className="text-xs text-slate-400 truncate">{ticker.name}</span>
-                        </button>
-                      ))
-                    )}
+                  {filteredToAdd.length === 0 ? (
+                    <div className="px-3 py-4 text-center text-xs text-slate-500">
+                      {addSearch.trim() ? 'No matches' : 'No more tickers'}
+                    </div>
+                  ) : (
+                    filteredToAdd.slice(0, 50).map((ticker) => (
+                      <button
+                        key={ticker.symbol}
+                        onClick={() => handleAddTicker(ticker.symbol)}
+                        className="block w-full text-left px-4 py-2 hover:bg-white/10 transition-colors flex flex-col sm:flex-row sm:items-baseline gap-1"
+                      >
+                        <span className="text-sm font-bold text-white shrink-0">{ticker.symbol}</span>
+                        <span className="text-xs text-slate-400 truncate">{ticker.name}</span>
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
             )}
