@@ -41,6 +41,68 @@ function extractTickers(title: string): string[] {
   return Array.from(new Set(tickers));
 }
 
+function detectCountryAndRegion(headline: string) {
+  let countryCode = 'global';
+  const headlineLower = headline.toLowerCase();
+  if (headlineLower.match(/\b(us|usa|u\.s\.|america|american|fed|federal reserve|congress|sec|biden|trump|wall st|ny|new york|san francisco|california|nasdaq|s&p 500|dow jones)\b/)) {
+    countryCode = 'us';
+  } else if (headlineLower.match(/\b(cn|china|chinese|beijing|shanghai|yuan)\b/)) {
+    countryCode = 'cn';
+  } else if (headlineLower.match(/\b(jp|japan|japanese|tokyo|yen)\b/)) {
+    countryCode = 'jp';
+  } else if (headlineLower.match(/\b(de|germany|german|berlin|frankfurt|dax)\b/)) {
+    countryCode = 'de';
+  } else if (headlineLower.match(/\b(gb|uk|united kingdom|britain|british|london|boe|sterling|burnham|manchester)\b/)) {
+    countryCode = 'gb';
+  } else if (headlineLower.match(/\b(fr|france|french|paris)\b/)) {
+    countryCode = 'fr';
+  } else if (headlineLower.match(/\b(in|india|indian|mumbai|delhi|rupee)\b/)) {
+    countryCode = 'in';
+  } else if (headlineLower.match(/\b(it|italy|italian|rome|milan)\b/)) {
+    countryCode = 'it';
+  } else if (headlineLower.match(/\b(br|brazil|brazilian|rio)\b/)) {
+    countryCode = 'br';
+  } else if (headlineLower.match(/\b(ca|canada|canadian|toronto)\b/)) {
+    countryCode = 'ca';
+  } else if (headlineLower.match(/\b(kr|korea|korean|seoul)\b/)) {
+    countryCode = 'kr';
+  } else if (headlineLower.match(/\b(au|australia|australian|sydney|melbourne)\b/)) {
+    countryCode = 'au';
+  } else if (headlineLower.match(/\b(es|spain|spanish|madrid)\b/)) {
+    countryCode = 'es';
+  } else if (headlineLower.match(/\b(mx|mexico|mexican)\b/)) {
+    countryCode = 'mx';
+  } else if (headlineLower.match(/\b(nl|netherlands|dutch|amsterdam)\b/)) {
+    countryCode = 'nl';
+  } else if (headlineLower.match(/\b(ch|switzerland|swiss|zurich)\b/)) {
+    countryCode = 'ch';
+  } else if (headlineLower.match(/\b(tw|taiwan|taiwanese|taipei|tsmc)\b/)) {
+    countryCode = 'tw';
+  } else if (headlineLower.match(/\b(th|thailand|thai|bangkok)\b/)) {
+    countryCode = 'th';
+  } else if (headlineLower.match(/\b(sg|singapore|singaporean)\b/)) {
+    countryCode = 'sg';
+  } else if (headlineLower.match(/\b(ie|ireland|irish|dublin)\b/)) {
+    countryCode = 'ie';
+  } else if (headlineLower.match(/\b(be|belgium|belgian|brussels)\b/)) {
+    countryCode = 'be';
+  } else if (headlineLower.match(/\b(no|norway|norwegian|oslo)\b/)) {
+    countryCode = 'no';
+  } else if (headlineLower.match(/\b(dk|denmark|danish|copenhagen)\b/)) {
+    countryCode = 'dk';
+  }
+
+  const regionMap: Record<string, string> = {
+    'us': 'us',
+    'cn': 'asia', 'jp': 'asia', 'in': 'asia', 'kr': 'asia', 'tw': 'asia', 'th': 'asia', 'sg': 'asia',
+    'de': 'eu', 'gb': 'eu', 'fr': 'eu', 'it': 'eu', 'es': 'eu', 'nl': 'eu', 'ch': 'eu', 'ie': 'eu', 'be': 'eu', 'no': 'eu', 'dk': 'eu',
+    'br': 'global', 'ca': 'us', 'mx': 'global'
+  };
+  const regionTag = regionMap[countryCode] || 'global';
+
+  return { countryCode, regionTag };
+}
+
 // Parse Finviz time format
 function parseFinvizTime(timeStr: string, currentDateObj: { year: number, month: number, day: number }) {
   let newDateObj = { ...currentDateObj };
@@ -156,13 +218,14 @@ export async function scrapeAndStoreNews() {
         const parsedTime = parseFinvizTime(time, currentDateObj);
         currentDateObj = parsedTime.newDateObj;
 
+        const geo = detectCountryAndRegion(title);
         rawNews.push({
           id: `fv-news-${uniqueId}`,
           headline: title,
           body: `Published at: ${time}. Sourced from Finviz.`,
           publishedAt: parsedTime.isoString,
-          countryCode: 'global',
-          regionTag: 'global',
+          countryCode: geo.countryCode,
+          regionTag: geo.regionTag,
           tickers: extractTickers(title),
           sources: [{ name: 'Finviz', url: newsUrl }]
         });
@@ -196,23 +259,27 @@ export async function scrapeAndStoreNews() {
         item.sentiment = analysis.sentiment;
         item.impact = analysis.impact;
 
-        await prisma.news.upsert({
-          where: { id: item.id },
-          update: {},
-          create: {
-            id: item.id,
-            headline: item.headline,
-            body: item.body,
-            publishedAt: new Date(item.publishedAt),
-            category: item.category,
-            impact: item.impact,
-            sentiment: item.sentiment,
-            countryCode: item.countryCode,
-            regionTag: item.regionTag,
-            tickers: JSON.stringify(item.tickers),
-            sources: JSON.stringify(item.sources)
-          }
-        });
+        try {
+          await prisma.news.upsert({
+            where: { id: item.id },
+            update: {},
+            create: {
+              id: item.id,
+              headline: item.headline,
+              body: item.body,
+              publishedAt: new Date(item.publishedAt),
+              category: item.category,
+              impact: item.impact,
+              sentiment: item.sentiment,
+              countryCode: item.countryCode,
+              regionTag: item.regionTag,
+              tickers: JSON.stringify(item.tickers),
+              sources: JSON.stringify(item.sources)
+            }
+          });
+        } catch (e) {
+          console.error(`[NewsBot] Failed to upsert article ${item.id}:`, e);
+        }
       }
       console.log(`[NewsBot] Successfully processed ${newArticles.length} articles!`);
     } else {

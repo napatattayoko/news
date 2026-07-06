@@ -49,20 +49,20 @@ export default function StockCard({ item, onRemove }: StockCardProps) {
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-white text-xs font-medium">AVG Score</span>
+              <span className="text-white text-xs font-medium">Sentiment Score</span>
               <Tooltip content="Score ranges from -10 to +10">
                 <Info size={14} className="text-slate-500 cursor-help" />
               </Tooltip>
             </div>
             <span className="text-white font-semibold text-sm">
-              {item.score}
+              {Math.round(item.score / 10)}/10
             </span>
           </div>
           {/* Progress bar */}
           <div className="h-2 w-full bg-[#2A2A2A] rounded-full overflow-hidden">
             <div
               className={cn('h-full rounded-full', config.barColor)}
-              style={{ width: `${barWidth}%` }}
+              style={{ width: `${Math.round((Math.abs(item.score) / 100) * 100)}%` }}
             />
           </div>
         </div>

@@ -10,7 +10,7 @@ const trendStyle = {
   flat: { Icon: Minus, bg: 'bg-slate-500/20', text: 'text-slate-400' },
 } as const;
 
-type RankedTicker = { symbol: string; name: string; score: number };
+type RankedTicker = { symbol: string; name: string; score: number; sentiment: 'up' | 'down' | 'flat' };
 
 
 export default function TickerCloud() {
@@ -19,22 +19,17 @@ export default function TickerCloud() {
   const [tickers, setTickers] = useState<RankedTicker[]>([]);
 
   useEffect(() => {
-    fetch('/api/finviz?action=market')
+    fetch('/api/finviz?action=trending')
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data) {
-          const { gainers, losers } = data.data;
-          const mapped: RankedTicker[] = [];
-          
-          gainers.slice(0, 3).forEach((g: any) => {
-            mapped.push({ symbol: g.symbol, name: 'Finviz Top Gainer', score: parseFloat(g.change) || 5 });
-          });
-          
-          losers.slice(0, 2).forEach((l: any) => {
-            mapped.push({ symbol: l.symbol, name: 'Finviz Top Loser', score: parseFloat(l.change) || -5 });
-          });
-          
-          setTickers(mapped.sort((a, b) => Math.abs(b.score) - Math.abs(a.score)));
+          const mapped: RankedTicker[] = data.data.map((item: any) => ({
+            symbol: item.symbol,
+            name: `${item.mentionCount} mentions today`,
+            score: item.score,
+            sentiment: item.sentiment
+          }));
+          setTickers(mapped.slice(0, 5));
         }
       })
       .catch(console.error);
@@ -47,8 +42,8 @@ export default function TickerCloud() {
       </div>
 
       <div>
-        {tickers.map(({ symbol, name, score }, index) => {
-          const trend = score > 0 ? 'up' : score < 0 ? 'down' : 'flat';
+        {tickers.map(({ symbol, name, score, sentiment }, index) => {
+          const trend = sentiment || (score > 0 ? 'up' : score < 0 ? 'down' : 'flat');
           const { Icon, bg, text } = trendStyle[trend];
           const active = activeTicker === symbol;
           const isLast = index === tickers.length - 1;

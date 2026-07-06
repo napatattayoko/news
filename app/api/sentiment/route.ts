@@ -51,16 +51,27 @@ export async function GET(request: NextRequest) {
       const sentiment = latestNews.sentiment === 'good' || latestNews.sentiment === 'bullish' ? 'up' :
         latestNews.sentiment === 'bad' || latestNews.sentiment === 'bearish' ? 'down' : 'flat';
 
-      // Mock Score & Historical (since we don't have real logic for them yet)
-      const mock = mockStockSentiment.find(m => m.symbol === symbol);
+      let positive = 0;
+      let negative = 0;
+      let neutral = 0;
+
+      for (const item of relatedNews) {
+        const parsedSentiment = (item.sentiment === 'bullish' || item.sentiment === 'good') ? 'good' : (item.sentiment === 'bearish' || item.sentiment === 'bad') ? 'bad' : 'neutral';
+        if (parsedSentiment === 'good') positive++;
+        else if (parsedSentiment === 'bad') negative++;
+        else neutral++;
+      }
+
+      const total = positive + negative + neutral;
+      const score = total > 0 ? Math.round(((positive - negative) / total) * 100) : 0;
 
       return {
         symbol,
         impactLevel,
         sentiment,
         mentionCount: relatedNews.length,
-        score: mock?.score ?? 5,
-        sentimentHistorical: mock?.sentimentHistorical ?? { positive: 0, negative: 0, neutral: 0 }
+        score,
+        sentimentHistorical: { positive, negative, neutral }
       };
     }));
 
