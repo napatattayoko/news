@@ -26,7 +26,7 @@ const rangeOptions: RangeOption<TimeRange>[] = [
   { value: '7D', label: 'Last 7D' },
 ];
 
-type SortColumn = 'symbol' | 'impact' | 'sentiment' | 'mention' | 'score';
+type SortColumn = 'symbol' | 'impact' | 'sentiment' | 'mention' | 'score' | 'date';
 type SortDirection = 'asc' | 'desc';
 
 const impactOrder: Record<ImpactLevel, number> = { high: 3, medium: 2, low: 1 };
@@ -93,17 +93,19 @@ export default function StockSentimentPage() {
     pagination.setPage(0);
   };
 
+  const getRowId = (row: any) => row.latestNewsDate ? `${row.symbol}-${row.latestNewsDate}` : row.symbol;
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = paged.findIndex((row) => row.symbol === active.id);
-      const newIndex = paged.findIndex((row) => row.symbol === over.id);
+      const oldIndex = paged.findIndex((row) => getRowId(row) === active.id);
+      const newIndex = paged.findIndex((row) => getRowId(row) === over.id);
 
       if (oldIndex !== -1 && newIndex !== -1) {
         const newPagedOrder = arrayMove(paged, oldIndex, newIndex);
-        // Update the full order by merging with existing order
-        const newFullOrder = [...newPagedOrder.map(r => r.symbol)];
+        // Update the full order by merging with existing order (removing duplicates)
+        const newFullOrder = Array.from(new Set(newPagedOrder.map(r => r.symbol)));
 
         // Add any symbols not in current page
         sentimentTickers.forEach(symbol => {
@@ -231,6 +233,11 @@ export default function StockSentimentPage() {
         break;
       case 'score':
         comparison = a.score - b.score;
+        break;
+      case 'date':
+        const timeA = a.latestNewsDate ? new Date(a.latestNewsDate).getTime() : 0;
+        const timeB = b.latestNewsDate ? new Date(b.latestNewsDate).getTime() : 0;
+        comparison = timeA - timeB;
         break;
     }
     return sortDirection === 'asc' ? comparison : -comparison;
@@ -391,13 +398,21 @@ export default function StockSentimentPage() {
                           Score <SortIcon column="score" sortColumn={sortColumn} sortDirection={sortDirection} />
                         </span>
                       </th>
+                      <th
+                        onClick={() => handleSort('date')}
+                        className="text-right text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
+                      >
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          Date <SortIcon column="date" sortColumn={sortColumn} sortDirection={sortDirection} />
+                        </span>
+                      </th>
                     </tr>
                   </thead>
-                  <SortableContext items={paged.map(r => r.symbol)} strategy={verticalListSortingStrategy}>
+                  <SortableContext items={paged.map(r => r.latestNewsDate ? `${r.symbol}-${r.latestNewsDate}` : r.symbol)} strategy={verticalListSortingStrategy}>
                     <tbody>
                       {paged.length === 0 ? (
                         <tr>
-                          <td colSpan={(!sortColumn && activeFilter === 'all') ? 7 : 6} className="px-4 py-8 text-center text-slate-500 text-sm">
+                          <td colSpan={(!sortColumn && activeFilter === 'all') ? 8 : 7} className="px-4 py-8 text-center text-slate-500 text-sm">
                             {sentimentTickers.length === 0 ? 'Add tickers to get started' : 'No results found'}
                           </td>
                         </tr>
@@ -407,21 +422,17 @@ export default function StockSentimentPage() {
                         const SentIcon = sent.icon;
                         const isDragDisabled = sortColumn !== null || activeFilter !== 'all';
 
+                        const rowId = row.latestNewsDate ? `${row.symbol}-${row.latestNewsDate}` : row.symbol;
                         return (
                           <DraggableTableRow
-                            key={row.symbol}
-                            id={row.symbol}
+                            key={rowId}
+                            id={rowId}
                             onClick={() => router.push(`/stock-sentiment/${row.symbol.toLowerCase()}`)}
                             isDragDisabled={isDragDisabled}
                           >
                             <td className="px-4 py-3">
                               <div className="flex items-baseline gap-1.5">
                                 <span className="text-[#0D7FF2] font-bold text-sm">${row.symbol}</span>
-                                {row.latestNewsDate && selectedRange === '7D' && (
-                                  <span className="text-slate-500 text-xs font-normal">
-                                    ({new Date(row.latestNewsDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })})
-                                  </span>
-                                )}
                               </div>
                             </td>
                             <td className="px-4 py-3">
@@ -445,6 +456,13 @@ export default function StockSentimentPage() {
                               <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full border border-[#222F44] text-white font-bold text-sm">
                                 {row.score}
                               </span>
+                            </td>
+                            <td className="px-4 py-3 text-right text-xs text-slate-400 font-bold whitespace-nowrap">
+                              {row.latestNewsDate ? (
+                                new Date(row.latestNewsDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+                              ) : (
+                                '-'
+                              )}
                             </td>
                           </DraggableTableRow>
                         );
