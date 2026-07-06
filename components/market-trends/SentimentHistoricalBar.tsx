@@ -49,7 +49,7 @@ export default function SentimentHistoricalBar({
 
       {/* Stacked bar */}
       <div
-        className="flex w-full rounded-full overflow-hidden"
+        className="flex w-full rounded-full overflow-hidden bg-slate-800/50"
         style={{ height: `${height}px` }}
       >
         <div
