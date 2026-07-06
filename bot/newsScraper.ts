@@ -41,13 +41,40 @@ function extractTickers(title: string): string[] {
   return Array.from(new Set(tickers));
 }
 
-// Parse Finviz time format
+// Helper to parse New York local date components into a correct UTC Date object
+function getUtcFromNewYork(year: number, month: number, day: number, hours: number, minutes: number): Date {
+  const targetString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+  const utcDate = new Date(targetString + 'Z');
+  
+  // Format the mock UTC date using America/New_York timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', second: 'numeric',
+    hour12: false
+  });
+  
+  const parts = formatter.formatToParts(utcDate);
+  const partVal = (type: string) => parseInt(parts.find(p => p.type === type)!.value, 10);
+  
+  const nyYear = partVal('year');
+  const nyMonth = partVal('month') - 1;
+  const nyDay = partVal('day');
+  const nyHour = partVal('hour') === 24 ? 0 : partVal('hour');
+  const nyMin = partVal('minute');
+  
+  // Calculate timezone offset difference
+  const dateNy = Date.UTC(nyYear, nyMonth, nyDay, nyHour, nyMin);
+  const diff = dateNy - utcDate.getTime();
+  
+  return new Date(utcDate.getTime() - diff);
+}
+
+// Parse Finviz time format (interpreting it as New York Time)
 function parseFinvizTime(timeStr: string, currentDateObj: { year: number, month: number, day: number }) {
   let newDateObj = { ...currentDateObj };
-  const d = new Date();
-  d.setFullYear(newDateObj.year, newDateObj.month, newDateObj.day);
-  d.setSeconds(0);
-  d.setMilliseconds(0);
+  let hours = 0;
+  let mins = 0;
 
   const parts = timeStr.trim().split(' ');
   let datePart = '';
@@ -56,9 +83,9 @@ function parseFinvizTime(timeStr: string, currentDateObj: { year: number, month:
   if (parts.length >= 2) {
     if (parts[0].toLowerCase() === 'today') {
       timePart = parts[1];
-      const now = new Date();
-      newDateObj = { year: now.getFullYear(), month: now.getMonth(), day: now.getDate() };
-      d.setFullYear(newDateObj.year, newDateObj.month, newDateObj.day);
+      const nyDateStr = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+      const nyDate = new Date(nyDateStr);
+      newDateObj = { year: nyDate.getFullYear(), month: nyDate.getMonth(), day: nyDate.getDate() };
     } else {
       datePart = parts[0];
       timePart = parts[1];
@@ -66,7 +93,8 @@ function parseFinvizTime(timeStr: string, currentDateObj: { year: number, month:
   } else {
     if (parts[0].includes('-')) {
       datePart = parts[0];
-      d.setHours(0, 0, 0, 0); // Default to midnight if only date is provided
+      hours = 0;
+      mins = 0;
     } else {
       timePart = parts[0];
     }
@@ -83,7 +111,6 @@ function parseFinvizTime(timeStr: string, currentDateObj: { year: number, month:
         newDateObj.day = parsedDay;
         if (currentDateObj.month === 0 && parsedMonth === 11) newDateObj.year--;
         else if (currentDateObj.month === 11 && parsedMonth === 0) newDateObj.year++;
-        d.setFullYear(newDateObj.year, newDateObj.month, newDateObj.day);
       }
     }
   }
@@ -95,20 +122,23 @@ function parseFinvizTime(timeStr: string, currentDateObj: { year: number, month:
     const timeParts = timeOnly.split(':');
 
     if (timeParts.length === 2) {
-      let hours = parseInt(timeParts[0], 10);
-      const mins = parseInt(timeParts[1], 10);
-      if (!isNaN(hours) && !isNaN(mins)) {
-        if (isPM && hours < 12) hours += 12;
-        if (isAM && hours === 12) hours = 0;
-        d.setHours(hours, mins);
+      let parsedHours = parseInt(timeParts[0], 10);
+      const parsedMins = parseInt(timeParts[1], 10);
+      if (!isNaN(parsedHours) && !isNaN(parsedMins)) {
+        if (isPM && parsedHours < 12) parsedHours += 12;
+        if (isAM && parsedHours === 12) parsedHours = 0;
+        hours = parsedHours;
+        mins = parsedMins;
       }
     }
   }
 
-  if (isNaN(d.getTime())) {
+  try {
+    const calculatedDate = getUtcFromNewYork(newDateObj.year, newDateObj.month, newDateObj.day, hours, mins);
+    return { newDateObj, isoString: calculatedDate.toISOString() };
+  } catch (err) {
     return { newDateObj, isoString: new Date().toISOString() };
   }
-  return { newDateObj, isoString: d.toISOString() };
 }
 
 const candidateLabels = [
