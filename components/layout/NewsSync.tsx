@@ -12,7 +12,7 @@ export default function NewsSync() {
 
     async function sync() {
       try {
-        const limit = initialLoadDone.current ? 20 : 200;
+        const limit = initialLoadDone.current ? 20 : 500;
         const res = await fetch(`/api/finviz?action=news&limit=${limit}`);
         if (!active) return;
         if (res.ok) {
