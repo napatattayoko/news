@@ -400,9 +400,9 @@ export default function StockSentimentPage() {
                       </th>
                       <th
                         onClick={() => handleSort('date')}
-                        className="text-right text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
+                        className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
                       >
-                        <span className="inline-flex items-center gap-1 justify-end">
+                        <span className="inline-flex items-center gap-1 justify-center">
                           Date <SortIcon column="date" sortColumn={sortColumn} sortDirection={sortDirection} />
                         </span>
                       </th>
@@ -457,9 +457,9 @@ export default function StockSentimentPage() {
                                 {row.score}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-right text-xs text-slate-400 font-bold whitespace-nowrap">
+                            <td className="px-4 py-3 text-center text-xs text-slate-400 font-bold whitespace-nowrap">
                               {row.latestNewsDate ? (
-                                new Date(row.latestNewsDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+                                new Date(row.latestNewsDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
                               ) : (
                                 '-'
                               )}

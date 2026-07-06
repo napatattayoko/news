@@ -39,21 +39,25 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
     fetchStats();
   }, [symbols.join(','), range]); // re-run when the list of symbols or selected range changes
 
-  // Map to ensure all requested symbols exist in output, with default empty stats while loading
-  return symbols.map(symbol => {
-    const fetched = data.find(d => d.symbol === symbol);
-    if (fetched) return fetched;
-
-    return {
-      symbol,
-      impactLevel: 'low' as ImpactLevel,
-      sentiment: 'flat' as const,
-      mentionCount: 0,
-      score: 5,
-      sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
-      latestNewsDate: null
-    };
-  });
+  // Map to ensure all requested symbols exist in output, allowing multiple rows per symbol
+  const resultList: TickerStats[] = [];
+  for (const symbol of symbols) {
+    const symbolRows = data.filter(d => d.symbol === symbol);
+    if (symbolRows.length > 0) {
+      resultList.push(...symbolRows);
+    } else {
+      resultList.push({
+        symbol,
+        impactLevel: 'low' as ImpactLevel,
+        sentiment: 'flat' as const,
+        mentionCount: 0,
+        score: 5,
+        sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
+        latestNewsDate: null
+      });
+    }
+  }
+  return resultList;
 }
 
 export function useTickerStats(symbol: string, range: '24H' | '7D' | '30D' | 'All' = '24H') {
