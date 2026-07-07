@@ -170,7 +170,7 @@ export default function StockSentimentPage() {
     }
   };
 
-  const baseRows = useTickersStats(sentimentTickers, selectedRange);
+  const { stats: baseRows, isLoading } = useTickersStats(sentimentTickers, selectedRange);
 
   // Apply sentiment filter + sort
   const filteredRows = (() => {
@@ -410,7 +410,22 @@ export default function StockSentimentPage() {
                   </thead>
                   <SortableContext items={paged.map(r => r.latestNewsDate ? `${r.symbol}-${r.latestNewsDate}` : r.symbol)} strategy={verticalListSortingStrategy}>
                     <tbody>
-                      {paged.length === 0 ? (
+                      {isLoading ? (
+                        Array.from({ length: Math.max(5, sentimentTickers.length) }).map((_, i) => (
+                          <tr key={i} className="animate-pulse border-b border-[#222F44]/30">
+                            {!sortColumn && activeFilter === 'all' && (
+                              <td className="w-8 px-2 py-4" />
+                            )}
+                            <td className="px-4 py-4"><div className="h-4 w-12 bg-slate-700/50 rounded animate-pulse" /></td>
+                            <td className="px-4 py-4"><div className="h-6 w-16 bg-slate-700/30 rounded-full" /></td>
+                            <td className="px-4 py-4"><div className="h-6 w-20 bg-slate-700/30 rounded-full" /></td>
+                            <td className="px-4 py-4 text-center"><div className="h-4 w-6 bg-slate-700/50 rounded mx-auto" /></td>
+                            <td className="px-4 py-4"><div className="h-2 w-full bg-slate-700/20 rounded" /></td>
+                            <td className="px-4 py-4 text-right"><div className="h-6 w-10 bg-slate-700/30 rounded-full ml-auto" /></td>
+                            <td className="px-4 py-4 text-center"><div className="h-4 w-10 bg-slate-700/50 rounded mx-auto" /></td>
+                          </tr>
+                        ))
+                      ) : paged.length === 0 ? (
                         <tr>
                           <td colSpan={(!sortColumn && activeFilter === 'all') ? 8 : 7} className="px-4 py-8 text-center text-slate-500 text-sm">
                             {sentimentTickers.length === 0 ? 'Add tickers to get started' : 'No results found'}

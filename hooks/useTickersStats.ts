@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ImpactLevel } from '@/lib/types';
 
 export interface TickerStats {
@@ -13,14 +13,23 @@ export interface TickerStats {
 
 export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' | 'All' = '24H') {
   const [data, setData] = useState<TickerStats[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
+    isInitialLoad.current = true;
+
     if (symbols.length === 0) {
       setData([]);
+      setIsLoading(false);
       return;
     }
 
     const fetchStats = async () => {
+      // Only set loading to true on initial fetch, not during background polling
+      if (isInitialLoad.current) {
+        setIsLoading(true);
+      }
       try {
         const query = symbols.join(',');
         const res = await fetch(`/api/sentiment?symbols=${query}&range=${range}`);
@@ -28,15 +37,23 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
 
         if (result.success) {
           setData(result.data);
+          isInitialLoad.current = false; // Mark initial load complete on success
         } else {
           console.error('[useTickersStats] API Error:', result.error);
         }
       } catch (err) {
         console.error('[useTickersStats] Network error:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchStats();
+
+    // Poll every 5 seconds to keep the stats real-time
+    const interval = setInterval(fetchStats, 5000);
+
+    return () => clearInterval(interval);
   }, [symbols.join(','), range]); // re-run when the list of symbols or selected range changes
 
   // Map to ensure all requested symbols exist in output, allowing multiple rows per symbol
@@ -57,10 +74,10 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
       });
     }
   }
-  return resultList;
+  return { stats: resultList, isLoading };
 }
 
 export function useTickerStats(symbol: string, range: '24H' | '7D' | '30D' | 'All' = '24H') {
-  const stats = useTickersStats([symbol], range);
+  const { stats } = useTickersStats([symbol], range);
   return stats[0];
 }
