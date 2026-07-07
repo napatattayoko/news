@@ -26,12 +26,23 @@ export default function NewsSync() {
                 publishedAt: new Date(item.publishedAt)
               }));
               useTerminalStore.setState((state) => {
+                const itemMap = new Map(formattedItems.map((n: any) => [n.id, n]));
+                const updatedNews = state.news.map((oldItem) => {
+                  const newItem = itemMap.get(oldItem.id);
+                  if (newItem) {
+                    return {
+                      ...oldItem,
+                      ...newItem,
+                      publishedAt: newItem.publishedAt
+                    };
+                  }
+                  return oldItem;
+                });
+                
                 const existingIds = new Set(state.news.map(n => n.id));
-                const newItems = formattedItems.filter((n: any) => !existingIds.has(n.id));
-                // API returns in descending order (newest first). 
-                // We prepend newItems to state.news. Wait, if we prepend the array,
-                // we want the newest items at the start, so we just spread them.
-                return { news: [...newItems, ...state.news] };
+                const brandNewItems = formattedItems.filter((n: any) => !existingIds.has(n.id));
+                
+                return { news: [...brandNewItems, ...updatedNews] };
               });
               initialLoadDone.current = true;
             } else {

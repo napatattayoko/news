@@ -2,9 +2,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import RangeDropdown, { RangeOption } from '@/components/filters/RangeDropdown';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, ChevronDown } from 'lucide-react';
 import { TrendFilter, TickerAnalysis } from '@/lib/types';
-import { mockMarketTrends } from '@/lib/mock-data';
 import {
   TopStocksRow,
   TrendFilterTabs,
@@ -18,95 +17,86 @@ const rangeOptions: RangeOption<TimeRange>[] = [
   { value: '7D', label: 'Last 7D' },
 ];
 
-function filterTrends(
-  items: TickerAnalysis[],
-  filter: TrendFilter
-): TickerAnalysis[] {
-  let filtered: TickerAnalysis[];
-  switch (filter) {
-    case 'top_positive':
-      filtered = items.filter((i) => i.sentiment === 'up');
-      filtered.sort((a, b) => b.score - a.score);
-      break;
-    case 'top_negative':
-      filtered = items.filter((i) => i.sentiment === 'down');
-      filtered.sort((a, b) => a.score - b.score);
-      break;
-    case 'most_mention':
-      filtered = [...items];
-      filtered.sort((a, b) => b.mentionCount - a.mentionCount);
-      break;
-    default:
-      filtered = [...items];
-      filtered.sort((a, b) => b.score - a.score);
-  }
-  return filtered;
-}
-
 export default function MarketTrendsPage() {
   const [selectedRange, setSelectedRange] = useState<TimeRange>('24H');
   const [activeFilter, setActiveFilter] = useState<TrendFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'highest_score' | 'lowest_score' | 'highest_mention'>('highest_score');
   const [finvizTrends, setFinvizTrends] = useState<TickerAnalysis[]>([]);
 
   useEffect(() => {
-    fetch('/api/finviz?action=market')
+    fetch('/api/finviz?action=trending')
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data) {
-          const { gainers, losers } = data.data;
-          const mappedGainers: TickerAnalysis[] = gainers.map((g: any, i: number) => ({
-            symbol: g.symbol,
-            name: `Vol: ${g.volume} | Last: ${g.last}`,
-            impactLevel: 'high',
-            sentiment: 'up',
-            mentionCount: 100 - i,
-            sentimentHistorical: { positive: 80, negative: 10, neutral: 10 },
-            score: parseFloat(g.change.replace('%', '')) || 50,
-          }));
-          const mappedLosers: TickerAnalysis[] = losers.map((l: any, i: number) => ({
-            symbol: l.symbol,
-            name: `Vol: ${l.volume} | Last: ${l.last}`,
-            impactLevel: 'high',
-            sentiment: 'down',
-            mentionCount: 100 - i,
-            sentimentHistorical: { positive: 10, negative: 80, neutral: 10 },
-            score: parseFloat(l.change.replace('%', '')) || -50,
-          }));
-          setFinvizTrends([...mappedGainers, ...mappedLosers]);
+          setFinvizTrends(data.data);
         }
       })
       .catch(console.error);
   }, []);
 
   const combinedTrends = useMemo(() => {
-    const seen = new Set<string>();
-    const unique: TickerAnalysis[] = [];
-    
-    // Prioritize live trends over mock data
-    [...finvizTrends, ...mockMarketTrends].forEach((item) => {
-      const sym = item.symbol.toUpperCase();
-      if (!seen.has(sym)) {
-        seen.add(sym);
-        unique.push(item);
-      }
-    });
-    
-    return unique;
+    return finvizTrends;
   }, [finvizTrends]);
 
   const filteredTrends = useMemo(() => {
-    return filterTrends(combinedTrends, activeFilter);
-  }, [activeFilter, combinedTrends]);
+    let items = [...combinedTrends];
 
-  // Top 4 cards: "All" shows most extreme scores (furthest from 0), others follow filter
-  const sortedTopStocks = useMemo(() => {
-    if (activeFilter === 'all') {
-      return [...combinedTrends]
-        .sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
-        .slice(0, 4);
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter(item => 
+        item.symbol.toLowerCase().includes(q) || 
+        item.name.toLowerCase().includes(q)
+      );
     }
-    return filteredTrends.slice(0, 4);
-  }, [activeFilter, filteredTrends]);
+
+    // Category/Trend filter
+    if (activeFilter === 'top_positive') {
+      items = items.filter((i) => i.sentiment === 'up');
+    } else if (activeFilter === 'top_negative') {
+      items = items.filter((i) => i.sentiment === 'down');
+    }
+
+    // Sort order
+    if (sortBy === 'highest_score') {
+      items.sort((a, b) => b.score - a.score);
+    } else if (sortBy === 'lowest_score') {
+      items.sort((a, b) => a.score - b.score);
+    } else if (sortBy === 'highest_mention') {
+      items.sort((a, b) => b.mentionCount - a.mentionCount);
+    }
+
+    return items;
+  }, [activeFilter, combinedTrends, searchQuery, sortBy]);
+
+  const topStocks = useMemo(() => {
+    const majorSymbols = ['NVDA', 'AAPL', 'TSLA', 'AMZN'];
+    const companyNames: Record<string, string> = {
+      'NVDA': 'NVIDIA Corporation',
+      'AAPL': 'Apple Inc.',
+      'TSLA': 'Tesla, Inc.',
+      'AMZN': 'Amazon.com, Inc.'
+    };
+    return majorSymbols.map(sym => {
+      const found = combinedTrends.find(item => item.symbol.toUpperCase() === sym);
+      if (found) {
+        return {
+          ...found,
+          name: companyNames[sym] || found.name
+        };
+      }
+      return {
+        symbol: sym,
+        name: companyNames[sym] || sym,
+        impactLevel: 'medium' as const,
+        sentiment: 'flat' as const,
+        mentionCount: 0,
+        sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
+        score: 0
+      };
+    });
+  }, [combinedTrends]);
 
   return (
     <>
@@ -131,20 +121,47 @@ export default function MarketTrendsPage() {
         {/* Content */}
         <div className="pl-6 pr-8 pb-6 pt-0 flex flex-col gap-4">
           {/* Top Stock Cards */}
-          <TopStocksRow items={sortedTopStocks} />
+          <TopStocksRow items={topStocks} />
         </div>
 
-        {/* Filter Tabs - outside content padding */}
-        <div className="px-4 md:px-6 pb-4">
+        {/* Filter Tabs, Search & Sort */}
+        <div className="px-6 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <TrendFilterTabs
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
           />
+
+          <div className="flex items-center gap-3">
+            {/* Search Box */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search symbol..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[180px] bg-[#0a1017] border border-[#222F44] focus:border-[#0D7FF2] text-white text-sm px-3 py-2 rounded-md outline-none transition-colors placeholder:text-slate-500"
+              />
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e: any) => setSortBy(e.target.value)}
+                className="bg-[#0a1017] border border-[#222F44] text-white text-sm px-3 py-2 rounded-md outline-none cursor-pointer focus:border-[#0D7FF2] appearance-none pr-8 font-semibold min-w-[140px]"
+              >
+                <option value="highest_score">Highest Score</option>
+                <option value="lowest_score">Lowest Score</option>
+                <option value="highest_mention">Highest Mention</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
         </div>
 
         {/* Data Table */}
         <div className="px-6 pb-6">
-          <TrendDataTable key={activeFilter} items={filteredTrends} />
+          <TrendDataTable key={`${activeFilter}-${sortBy}-${searchQuery}`} items={filteredTrends} />
         </div>
       </div>
     </>
