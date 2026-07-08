@@ -168,16 +168,11 @@ export async function GET(request: NextRequest) {
                 : newsScore;
             const finalScore = clamp(hybridScore, -10, 10);
 
-            // ── Sentiment: price direction is ground truth ───────────────
-            // Tiebreak when priceScore == 0 or unavailable: use news majority
-            let sentiment: "up" | "down" | "flat";
-            if (priceScore != null && priceScore !== 0) {
-              sentiment = priceScore > 0 ? "up" : "down";
-            } else {
-              if (positive > negative) sentiment = "up";
-              else if (negative > positive) sentiment = "down";
-              else sentiment = "flat";
-            }
+            // ── Sentiment: always follow the final hybrid score ──────────
+            // This guarantees Score and Sentiment column are always consistent
+            const sentiment: "up" | "down" | "flat" =
+              finalScore > 0 ? "up" : finalScore < 0 ? "down" : "flat";
+
 
             // ── Impact: take the higher of price magnitude vs news majority ─
             let priceMagnitudeImpact: "high" | "medium" | "low" = "low";
