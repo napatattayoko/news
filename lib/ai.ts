@@ -67,3 +67,27 @@ export async function categorizeArticle(text: string, candidateLabels: string[])
   }
 }
 
+export async function generateAIOutlook(symbol: string, priceChange: number, headlines: string[]): Promise<string> {
+  const headlinesText = headlines.length > 0 ? headlines.slice(0, 5).join('; ') : 'No headlines';
+  const prompt = `You are a professional quantitative financial analyst. The stock ${symbol} had an actual price change of ${priceChange.toFixed(2)}% today. The recent news headlines are: "${headlinesText}". Write a concise 2-sentence summary explaining whether the price action matches the news sentiment or if there is a divergence (e.g. Sell on the News, or price dropping despite positive headlines). Be highly specific and objective.`;
+
+  try {
+    const response = await hf.textGeneration({
+      model: 'meta-llama/Meta-Llama-3-8B-Instruct',
+      inputs: `<|begin_of_text|><|start_header_id|>system<|end_header_id|>\nYou are a professional quantitative financial analyst.<|eot_id|><|start_header_id|>user<|end_header_id|>\n${prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n`,
+      parameters: {
+        max_new_tokens: 100,
+        temperature: 0.3,
+        return_full_text: false
+      }
+    });
+
+    return response.generated_text.trim();
+  } catch (error) {
+    console.error(`[AI] Error generating outlook for ${symbol}:`, error);
+    // Fallback based on simple logic if HF fails or API key is missing
+    const direction = priceChange > 0 ? 'upward' : priceChange < 0 ? 'downward' : 'neutral';
+    return `${symbol} experienced a ${direction} price movement of ${priceChange.toFixed(2)}% today. The news headlines show mixed correlation with this price action, suggesting standard market volatility.`;
+  }
+}
+

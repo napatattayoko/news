@@ -25,11 +25,11 @@ export default function StockDetailPage() {
   const [stockPrice, setStockPrice] = useState<string>('');
   const [priceChange, setPriceChange] = useState<string>('');
   const [priceChangeVal, setPriceChangeVal] = useState<number>(0);
+  const [aiOutlook, setAiOutlook] = useState<string>('Analyzing market signals...');
 
   const { news } = useTerminalStore();
 
   const row = useTickerStats(symbol, selectedRange);
-  const aiOutlook = mockAIOutlook[symbol] ?? 'No AI analysis available for this ticker.';
 
   useEffect(() => {
     let isMounted = true;
@@ -50,8 +50,28 @@ export default function StockDetailPage() {
       }
     };
 
+    const fetchOutlook = async () => {
+      try {
+        const res = await fetch(`/api/ai-outlook?symbol=${symbol}`);
+        const result = await res.json();
+        if (isMounted) {
+          if (result.success && result.outlook) {
+            setAiOutlook(result.outlook);
+          } else {
+            setAiOutlook('No AI analysis available for this ticker.');
+          }
+        }
+      } catch (err) {
+        console.error('[StockDetailPage] Failed to fetch AI outlook:', err);
+        if (isMounted) {
+          setAiOutlook('No AI analysis available for this ticker.');
+        }
+      }
+    };
+
     if (symbol) {
       fetchQuote();
+      fetchOutlook();
     }
 
     return () => {
