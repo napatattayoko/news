@@ -3,8 +3,9 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-// ─── Helper: Fetch price change % from Yahoo Finance ─────────────────────────
+// ─── Helper: Fetch price change % from Yahoo Finance (with Finviz fallback) ──
 async function fetchPriceChange(symbol: string, range: string): Promise<number | null> {
+  // ── 1. Try Yahoo Finance ─────────────────────────────────────────────────
   try {
     const yfRangeMap: Record<string, { range: string; interval: string }> = {
       "24h": { range: "2d",  interval: "1d" },
@@ -14,34 +15,76 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
     const yfParams = yfRangeMap[range] ?? { range: "2d", interval: "1d" };
 
     const res = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${yfParams.range}&interval=${yfParams.interval}`
+      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${yfParams.range}&interval=${yfParams.interval}`,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "application/json",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      }
     );
-    if (!res.ok) return null;
 
-    const data = await res.json();
-    const result = data?.chart?.result?.[0];
-    if (!result) return null;
+    if (res.ok) {
+      const data = await res.json();
+      const result = data?.chart?.result?.[0];
+      if (result) {
+        const closes = result.indicators.quote[0].close as (number | null)[];
+        const opens  = result.indicators.quote[0].open  as (number | null)[];
 
-    const closes = result.indicators.quote[0].close as (number | null)[];
-    const opens  = result.indicators.quote[0].open  as (number | null)[];
-
-    if (range === "24h") {
-      // Latest trading day: open → close
-      const latestClose = closes[closes.length - 1];
-      const latestOpen  = opens[opens.length - 1];
-      if (latestClose == null || latestOpen == null || latestOpen === 0) return null;
-      return ((latestClose - latestOpen) / latestOpen) * 100;
-    } else {
-      // Multi-day range: first open → last close
-      const firstOpen = opens.find((v) => v != null);
-      const lastClose = [...closes].reverse().find((v) => v != null);
-      if (firstOpen == null || lastClose == null || firstOpen === 0) return null;
-      return ((lastClose - firstOpen) / firstOpen) * 100;
+        if (range === "24h") {
+          const latestClose = closes[closes.length - 1];
+          const latestOpen  = opens[opens.length - 1];
+          if (latestClose != null && latestOpen != null && latestOpen !== 0) {
+            return ((latestClose - latestOpen) / latestOpen) * 100;
+          }
+          // Also try meta.regularMarketChangePercent (works when market is open)
+          const liveChange = result.meta?.regularMarketChangePercent;
+          if (liveChange != null) return liveChange;
+        } else {
+          const firstOpen = opens.find((v) => v != null);
+          const lastClose = [...closes].reverse().find((v) => v != null);
+          if (firstOpen != null && lastClose != null && firstOpen !== 0) {
+            return ((lastClose - firstOpen) / firstOpen) * 100;
+          }
+        }
+      }
     }
-  } catch {
-    return null;
-  }
+  } catch { /* fall through to Finviz */ }
+
+  // ── 2. Fallback: Finviz snapshot (scrape Change field) ───────────────────
+  try {
+    const finvizRes = await fetch(`https://finviz.com/quote.ashx?t=${symbol}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html",
+        "Referer": "https://finviz.com/",
+      },
+    });
+    if (finvizRes.ok) {
+      const html = await finvizRes.text();
+      // Extract Change % from snapshot table (key: "Change", value: e.g. "-1.59%")
+      const match = html.match(/<td[^>]*>Change<\/td>\s*<td[^>]*>([-\d.]+)%<\/td>/i)
+        ?? html.match(/data-testid="quote-change-percent"[^>]*>([-\d.]+)/i);
+
+      // Simpler: look for the change value in the snapshot table structure
+      const changeMatch = html.match(/title="Change"[\s\S]*?<b>([-+]?[\d.]+)%<\/b>/i)
+        ?? html.match(/>Change<\/td>[\s\S]{0,200}?>([-+]?[\d.]+)%</i);
+
+      const rawChange = match?.[1] ?? changeMatch?.[1];
+      if (rawChange != null) {
+        const pct = parseFloat(rawChange);
+        if (!isNaN(pct)) {
+          // For 24H always use today's Change; for 7D/30D we use it as approximation
+          return pct;
+        }
+      }
+    }
+  } catch { /* ignore */ }
+
+  return null;
 }
+
 
 function clamp(val: number, min: number, max: number) {
   return Math.max(min, Math.min(max, val));
