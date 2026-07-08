@@ -9,15 +9,6 @@ export async function GET(request: NextRequest) {
     const symbolsParam = searchParams.get("symbols");
     const range = searchParams.get("range")?.toLowerCase() || "24h";
 
-    if (!symbolsParam) {
-      return NextResponse.json(
-        { success: false, error: "Symbols required" },
-        { status: 400 },
-      );
-    }
-
-    const symbols = symbolsParam.split(",").map((s) => s.trim().toUpperCase());
-
     // Calculate time range cutoff date
     let cutoffDate: Date | null = null;
     if (range === "24h") {
@@ -26,6 +17,39 @@ export async function GET(request: NextRequest) {
       cutoffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     } else if (range === "30d") {
       cutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    let symbols: string[] = [];
+    if (symbolsParam) {
+      symbols = symbolsParam.split(",").map((s) => s.trim().toUpperCase());
+    } else {
+      // Find all tickers mentioned in news within the cutoff range
+      const recentNews = await prisma.news.findMany({
+        where: cutoffDate ? {
+          publishedAt: {
+            gte: cutoffDate,
+          },
+        } : {},
+        select: {
+          tickers: true,
+        },
+      });
+
+      const symbolSet = new Set<string>();
+      for (const item of recentNews) {
+        try {
+          const tickersList = JSON.parse(item.tickers as string) || [];
+          for (const t of tickersList) {
+            const sym = typeof t === "string" ? t : (t as any).symbol;
+            if (sym) {
+              symbolSet.add(sym.toUpperCase());
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      symbols = Array.from(symbolSet);
     }
 
     // We will query the DB for each symbol.

@@ -19,20 +19,14 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
   useEffect(() => {
     isInitialLoad.current = true;
 
-    if (symbols.length === 0) {
-      setData([]);
-      setIsLoading(false);
-      return;
-    }
-
     const fetchStats = async () => {
       // Only set loading to true on initial fetch, not during background polling
       if (isInitialLoad.current) {
         setIsLoading(true);
       }
       try {
-        const query = symbols.join(',');
-        const res = await fetch(`/api/sentiment?symbols=${query}&range=${range}`);
+        const queryPart = symbols.length > 0 ? `symbols=${symbols.join(',')}&` : '';
+        const res = await fetch(`/api/sentiment?${queryPart}range=${range}`);
         const result = await res.json();
 
         if (result.success) {
@@ -57,24 +51,28 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
   }, [symbols.join(','), range]); // re-run when the list of symbols or selected range changes
 
   // Map to ensure all requested symbols exist in output, allowing multiple rows per symbol
-  const resultList: TickerStats[] = [];
-  for (const symbol of symbols) {
-    const symbolRows = data.filter(d => d.symbol === symbol);
-    if (symbolRows.length > 0) {
-      resultList.push(...symbolRows);
-    } else {
-      resultList.push({
-        symbol,
-        impactLevel: 'low' as ImpactLevel,
-        sentiment: 'flat' as const,
-        mentionCount: 0,
-        score: 5,
-        sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
-        latestNewsDate: null
-      });
+  if (symbols.length > 0) {
+    const resultList: TickerStats[] = [];
+    for (const symbol of symbols) {
+      const symbolRows = data.filter(d => d.symbol === symbol);
+      if (symbolRows.length > 0) {
+        resultList.push(...symbolRows);
+      } else {
+        resultList.push({
+          symbol,
+          impactLevel: 'low' as ImpactLevel,
+          sentiment: 'flat' as const,
+          mentionCount: 0,
+          score: 5,
+          sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
+          latestNewsDate: null
+        });
+      }
     }
+    return { stats: resultList, isLoading };
   }
-  return { stats: resultList, isLoading };
+  
+  return { stats: data, isLoading };
 }
 
 export function useTickerStats(symbol: string, range: '24H' | '7D' | '30D' | 'All' = '24H') {

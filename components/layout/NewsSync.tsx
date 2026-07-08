@@ -26,7 +26,7 @@ export default function NewsSync() {
                 publishedAt: new Date(item.publishedAt)
               }));
               useTerminalStore.setState((state) => {
-                const itemMap = new Map(formattedItems.map((n: any) => [n.id, n]));
+                const itemMap = new Map<string, any>(formattedItems.map((n: any) => [n.id, n]));
                 const updatedNews = state.news.map((oldItem) => {
                   const newItem = itemMap.get(oldItem.id);
                   if (newItem) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Category, NewsItem } from "@/lib/types";
+import { Category, NewsItem, RegionTab } from "@/lib/types";
 import * as cheerio from "cheerio";
 
 export const dynamic = "force-dynamic";
