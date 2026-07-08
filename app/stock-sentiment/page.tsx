@@ -45,20 +45,18 @@ export default function StockSentimentPage() {
   const rppRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [selectedRange, setSelectedRange] = useState<TimeRange>('24H');
+  const [selectedRange, setSelectedRange] = useState<TimeRange>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('selectedRange_sentiment') as TimeRange;
+      if (saved === '24H' || saved === '7D') return saved;
+    }
+    return '24H';
+  });
   const [activeFilter, setActiveFilter] = useState<TrendFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [impactFilter, setImpactFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-
-  // Remember the last selected filter range when coming back to this page
-  useEffect(() => {
-    const savedRange = localStorage.getItem('selectedRange_sentiment') as TimeRange;
-    if (savedRange && (savedRange === '24H' || savedRange === '7D')) {
-      setSelectedRange(savedRange);
-    }
-  }, []);
 
   const handleRangeChange = (newRange: TimeRange) => {
     setSelectedRange(newRange);

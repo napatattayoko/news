@@ -11,41 +11,66 @@ export interface TickerStats {
   latestNewsDate?: string | null;
 }
 
+// Module-level cache so data survives component unmount/remount (page navigation)
+const statsCache = new Map<string, TickerStats[]>();
+
+function getCacheKey(symbols: string[], range: string) {
+  return `${symbols.join(',')}_${range}`;
+}
+
 export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' | 'All' = '24H') {
-  const [data, setData] = useState<TickerStats[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const isInitialLoad = useRef(true);
+  const cacheKey = getCacheKey(symbols, range);
+  const cached = statsCache.get(cacheKey);
+
+  // Initialize from cache if available, skip loading skeleton
+  const [data, setData] = useState<TickerStats[]>(cached ?? []);
+  const [isLoading, setIsLoading] = useState(!cached);
+  const fetchIdRef = useRef(0);
 
   useEffect(() => {
-    isInitialLoad.current = true;
+    // If cache exists for this key, hydrate immediately (no flicker)
+    const cachedData = statsCache.get(cacheKey);
+    if (cachedData) {
+      setData(cachedData);
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
 
-    const fetchStats = async () => {
-      // Only set loading to true on initial fetch, not during background polling
-      if (isInitialLoad.current) {
-        setIsLoading(true);
-      }
+    const fetchStats = async (id: number) => {
       try {
         const queryPart = symbols.length > 0 ? `symbols=${symbols.join(',')}&` : '';
         const res = await fetch(`/api/sentiment?${queryPart}range=${range}`);
         const result = await res.json();
 
+        // Only apply if this is still the latest request (prevents race condition)
+        if (id !== fetchIdRef.current) return;
+
         if (result.success) {
           setData(result.data);
-          isInitialLoad.current = false; // Mark initial load complete on success
+          statsCache.set(cacheKey, result.data); // Update cache
         } else {
           console.error('[useTickersStats] API Error:', result.error);
         }
       } catch (err) {
+        if (id !== fetchIdRef.current) return;
         console.error('[useTickersStats] Network error:', err);
       } finally {
-        setIsLoading(false);
+        if (id === fetchIdRef.current) {
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchStats();
+    // Increment fetch ID to invalidate any in-flight requests from previous range
+    const currentId = ++fetchIdRef.current;
+    fetchStats(currentId);
 
     // Poll every 5 seconds to keep the stats real-time
-    const interval = setInterval(fetchStats, 5000);
+    const interval = setInterval(() => {
+      const pollId = ++fetchIdRef.current;
+      fetchStats(pollId);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [symbols.join(','), range]); // re-run when the list of symbols or selected range changes
