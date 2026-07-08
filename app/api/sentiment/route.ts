@@ -52,119 +52,112 @@ export async function GET(request: NextRequest) {
       symbols = Array.from(symbolSet);
     }
 
-    // We will query the DB for each symbol.
-    // For small arrays of symbols (e.g. 10-20), Promise.all is perfectly fine and fast.
+    // For each symbol, query the news in the DB, group by date, and calculate the averaged consensus
     const resultsArray = await Promise.all(
       symbols.map(async (symbol) => {
-        // Find all news that contains the symbol in the JSON string within the time range
-        const relatedNews = await prisma.news.findMany({
-          where: {
-            tickers: {
-              contains: `"${symbol}"`,
+        try {
+          // Fetch related news from DB
+          const relatedNews = await prisma.news.findMany({
+            where: {
+              tickers: {
+                contains: `"${symbol}"`,
+              },
+              ...(cutoffDate
+                ? {
+                    publishedAt: {
+                      gte: cutoffDate,
+                    },
+                  }
+                : {}),
             },
-            ...(cutoffDate
-              ? {
-                  publishedAt: {
-                    gte: cutoffDate,
-                  },
-                }
-              : {}),
-          },
-          orderBy: { publishedAt: "desc" },
-          select: {
-            impact: true,
-            sentiment: true,
-            publishedAt: true,
-          },
-        });
-
-        // If no news found in DB, return default empty stats (no fallback to mock data)
-        if (relatedNews.length === 0) {
-          return [
-            {
-              symbol,
-              impactLevel: "low",
-              sentiment: "flat",
-              mentionCount: 0,
-              score: 5,
-              sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
-              latestNewsDate: null,
+            orderBy: { publishedAt: "desc" },
+            select: {
+              sentiment: true,
+              impact: true,
+              publishedAt: true,
             },
-          ];
-        }
-
-        // Group news by New York calendar date (M/D/YYYY)
-        const dateGroups: Record<string, typeof relatedNews> = {};
-        for (const item of relatedNews) {
-          const dateKey = item.publishedAt.toLocaleDateString("en-US", {
-            timeZone: "America/New_York",
           });
-          if (!dateGroups[dateKey]) {
-            dateGroups[dateKey] = [];
+
+          // If no news found in DB, return default empty stats
+          if (relatedNews.length === 0) {
+            return [
+              {
+                symbol,
+                impactLevel: "low",
+                sentiment: "flat",
+                mentionCount: 0,
+                score: 0,
+                sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
+                latestNewsDate: null,
+              },
+            ];
           }
-          dateGroups[dateKey].push(item);
-        }
 
-        // For each date group, calculate the stats
-        const dailyStats = Object.entries(dateGroups).map(([_, newsList]) => {
-          const latestNews = newsList[0];
-          const impactLevel = latestNews.impact;
-          const sentiment =
-            latestNews.sentiment === "good"
-              ? "up"
-              : latestNews.sentiment === "bad"
-                ? "down"
-                : "flat";
-
-          // 1. Calculate Sentiment Historical by counting positive, negative, and neutral mentions
-          let positive = 0;
-          let negative = 0;
-          let neutral = 0;
-
-          for (const news of newsList) {
-            if (news.sentiment === "good") {
-              positive++;
-            } else if (news.sentiment === "bad") {
-              negative++;
-            } else {
-              neutral++;
+          // Group news by New York calendar date (M/D/YYYY)
+          const dateGroups: Record<string, typeof relatedNews> = {};
+          for (const item of relatedNews) {
+            const dateKey = item.publishedAt.toLocaleDateString("en-US", {
+              timeZone: "America/New_York",
+            });
+            if (!dateGroups[dateKey]) {
+              dateGroups[dateKey] = [];
             }
+            dateGroups[dateKey].push(item);
           }
-          const sentimentHistorical = { positive, negative, neutral };
 
-          // 2. Calculate Actionable Score (1 to 10) based on Sentiment and Impact
-          const getNewsScore = (s: string, imp: string): number => {
-            const isDirectional = s === "good" || s === "bad";
-            if (isDirectional) {
-              if (imp === "high") return 10;
-              if (imp === "medium") return 8;
-              return 6;
-            } else {
-              if (imp === "high") return 5;
-              if (imp === "medium") return 3;
-              return 1;
+          const impactWeights: Record<string, number> = { high: 3, medium: 2, low: 1 };
+
+          // Calculate averaged statistics for each date group
+          const dailyStats = Object.entries(dateGroups).map(([_, newsList]) => {
+            let positive = 0;
+            let negative = 0;
+            let neutral = 0;
+            let totalImpactWeight = 0;
+
+            for (const news of newsList) {
+              if (news.sentiment === "good") positive++;
+              else if (news.sentiment === "bad") negative++;
+              else neutral++;
+
+              totalImpactWeight += impactWeights[news.impact] || 1;
             }
-          };
 
-          const totalScore = newsList.reduce(
-            (sum, news) => sum + getNewsScore(news.sentiment, news.impact),
-            0,
+            const totalNews = newsList.length;
+            const sentimentHistorical = { positive, negative, neutral };
+
+            // Calculate Net News Sentiment Score (-10 to +10)
+            const netSentiment = (positive - negative) / totalNews;
+            const score = Math.round(netSentiment * 10);
+
+            const sentiment = score > 0 ? "up" : score < 0 ? "down" : "flat";
+
+            // Calculate Average News Impact level
+            const avgImpactWeight = totalImpactWeight / totalNews;
+            const impactLevel =
+              avgImpactWeight >= 2.5 ? "high" : avgImpactWeight >= 1.5 ? "medium" : "low";
+
+            return {
+              symbol,
+              impactLevel,
+              sentiment,
+              mentionCount: totalNews,
+              score,
+              sentimentHistorical,
+              latestNewsDate: newsList[0].publishedAt.toISOString(),
+            };
+          });
+
+          // Sort daily stats by date descending
+          dailyStats.sort(
+            (a, b) => new Date(b.latestNewsDate).getTime() - new Date(a.latestNewsDate).getTime()
           );
-          const score = Math.round(totalScore / newsList.length);
 
-          return {
-            symbol,
-            impactLevel,
-            sentiment,
-            mentionCount: newsList.length,
-            score,
-            sentimentHistorical,
-            latestNewsDate: latestNews.publishedAt.toISOString(),
-          };
-        });
-
-        return dailyStats;
-      }),
+          return dailyStats;
+        } catch (err) {
+          console.error(`[Sentiment API] Error processing ${symbol}:`, err);
+          return [];
+        }
+      })
     );
 
     const results = resultsArray.flat();
