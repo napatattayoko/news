@@ -157,8 +157,12 @@ export default function StockSentimentPage() {
   const sortedRows = useMemo(() => {
     const sorted = [...filteredRows];
     if (!sortColumn) {
-      // Default order: by mention count descending, then by absolute score descending
-      return sorted.sort((a, b) => b.mentionCount - a.mentionCount || Math.abs(b.score) - Math.abs(a.score));
+      // Default order: latest date first → then by mention count → then by absolute score
+      return sorted.sort((a, b) => {
+        const timeA = a.latestNewsDate ? new Date(a.latestNewsDate).getTime() : 0;
+        const timeB = b.latestNewsDate ? new Date(b.latestNewsDate).getTime() : 0;
+        return timeB - timeA || b.mentionCount - a.mentionCount || Math.abs(b.score) - Math.abs(a.score);
+      });
     }
 
     return sorted.sort((a, b) => {
