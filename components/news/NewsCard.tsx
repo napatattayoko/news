@@ -161,6 +161,7 @@ const TICKER_WORDS_MAP: Record<string, string[]> = {
   AMZN: ['Amazon'],
   META: ['Meta', 'Facebook'],
   TSLA: ['Tesla'],
+  TSM: ['TSMC', 'Taiwan Semiconductor'],
   NFLX: ['Netflix'],
   AMD: ['AMD'],
   INTC: ['Intel'],
