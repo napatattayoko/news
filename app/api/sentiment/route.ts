@@ -122,8 +122,9 @@ export async function GET(request: NextRequest) {
     if (symbolsParam) {
       symbols = symbolsParam.split(",").map((s) => s.trim().toUpperCase());
     } else {
-      // Auto-discover tickers from all news in the database
+      // Auto-discover tickers from recent news in DB
       const recentNews = await prisma.news.findMany({
+        where: cutoffDate ? { publishedAt: { gte: cutoffDate } } : {},
         select: { tickers: true },
       });
 

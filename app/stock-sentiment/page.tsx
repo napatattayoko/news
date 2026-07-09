@@ -137,10 +137,8 @@ export default function StockSentimentPage() {
     if (impactFilter !== 'all') {
       filtered = filtered.filter(row => row.impactLevel === impactFilter);
     }
-
-
-
-    // Filter by sentiment filter ribbon
+    // Filter out stocks that have no news in the selected range
+    filtered = filtered.filter((r) => r.mentionCount > 0);    // Filter by sentiment filter ribbon
     switch (activeFilter) {
       case 'top_positive':
         filtered = filtered.filter((r) => r.sentiment === 'up');
