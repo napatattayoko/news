@@ -3,13 +3,96 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+// ─── Helper: Fetch overall price change % for the range (with Finviz fallback) ──
+async function fetchPriceChange(symbol: string, range: string): Promise<number | null> {
+  // ── 1. Try Yahoo Finance ─────────────────────────────────────────────────
+  try {
+    const yfRangeMap: Record<string, { range: string; interval: string }> = {
+      "24h": { range: "2d",  interval: "1d" },
+      "7d":  { range: "7d",  interval: "1d" },
+      "30d": { range: "1mo", interval: "1d" },
+    };
+    const yfParams = yfRangeMap[range] ?? { range: "2d", interval: "1d" };
+
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${yfParams.range}&interval=${yfParams.interval}`,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "application/json",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      }
+    );
+
+    if (res.ok) {
+      const data = await res.json();
+      const result = data?.chart?.result?.[0];
+      if (result) {
+        const closes = result.indicators.quote[0].close as (number | null)[];
+        const opens  = result.indicators.quote[0].open  as (number | null)[];
+
+        if (range === "24h") {
+          const latestClose = closes[closes.length - 1];
+          const latestOpen  = opens[opens.length - 1];
+          if (latestClose != null && latestOpen != null && latestOpen !== 0) {
+            return ((latestClose - latestOpen) / latestOpen) * 100;
+          }
+          // Also try meta.regularMarketChangePercent (works when market is open)
+          const liveChange = result.meta?.regularMarketChangePercent;
+          if (liveChange != null) return liveChange;
+        } else {
+          const firstOpen = opens.find((v) => v != null);
+          const lastClose = [...closes].reverse().find((v) => v != null);
+          if (firstOpen != null && lastClose != null && firstOpen !== 0) {
+            return ((lastClose - firstOpen) / firstOpen) * 100;
+          }
+        }
+      }
+    }
+  } catch { /* fall through to Finviz */ }
+
+  // ── 2. Fallback: Finviz current day quote Change ──────────────────────────
+  try {
+    const finvizRes = await fetch(`https://finviz.com/quote.ashx?t=${symbol}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html",
+        "Referer": "https://finviz.com/",
+      },
+    });
+    if (finvizRes.ok) {
+      const html = await finvizRes.text();
+      const match = html.match(/<td[^>]*>Change<\/td>\s*<td[^>]*>([-\d.]+)%<\/td>/i)
+        ?? html.match(/data-testid="quote-change-percent"[^>]*>([-\d.]+)/i);
+
+      const changeMatch = html.match(/title="Change"[\s\S]*?<b>([-+]?[\d.]+)%<\/b>/i)
+        ?? html.match(/>Change<\/td>[\s\S]{0,200}?>([-+]?[\d.]+)%</i);
+
+      const rawChange = match?.[1] ?? changeMatch?.[1];
+      if (rawChange != null) {
+        const pct = parseFloat(rawChange);
+        if (!isNaN(pct)) {
+          return pct;
+        }
+      }
+    }
+  } catch { /* ignore */ }
+
+  return null;
+}
+
+function clamp(val: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, val));
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const symbolsParam = searchParams.get("symbols");
     const range = searchParams.get("range")?.toLowerCase() || "24h";
 
-    // Calculate time range cutoff date
+    // Calculate DB cutoff date from range
     let cutoffDate: Date | null = null;
     if (range === "24h") {
       cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -23,16 +106,10 @@ export async function GET(request: NextRequest) {
     if (symbolsParam) {
       symbols = symbolsParam.split(",").map((s) => s.trim().toUpperCase());
     } else {
-      // Find all tickers mentioned in news within the cutoff range
+      // Auto-discover tickers from recent news in DB
       const recentNews = await prisma.news.findMany({
-        where: cutoffDate ? {
-          publishedAt: {
-            gte: cutoffDate,
-          },
-        } : {},
-        select: {
-          tickers: true,
-        },
+        where: cutoffDate ? { publishedAt: { gte: cutoffDate } } : {},
+        select: { tickers: true },
       });
 
       const symbolSet = new Set<string>();
@@ -41,133 +118,132 @@ export async function GET(request: NextRequest) {
           const tickersList = JSON.parse(item.tickers as string) || [];
           for (const t of tickersList) {
             const sym = typeof t === "string" ? t : (t as any).symbol;
-            if (sym) {
-              symbolSet.add(sym.toUpperCase());
-            }
+            if (sym) symbolSet.add(sym.toUpperCase());
           }
-        } catch (e) {
-          // ignore
-        }
+        } catch { /* ignore */ }
       }
       symbols = Array.from(symbolSet);
     }
 
-    // For each symbol, query the news in the DB, group by date, and calculate the averaged consensus
-    const resultsArray = await Promise.all(
+    // For each symbol: fetch price + news, compute hybrid score
+    const results = await Promise.all(
       symbols.map(async (symbol) => {
         try {
-          // Fetch related news from DB
+          // ── 1. Fetch overall price change for this symbol ────────────────
+          const priceChangePercent = await fetchPriceChange(symbol, range);
+          const priceScore =
+            priceChangePercent != null
+              ? clamp(Math.round(priceChangePercent * 2), -10, 10)
+              : null;
+
+          // ── 2. Related news from DB ──────────────────────────────────────
           const relatedNews = await prisma.news.findMany({
             where: {
-              tickers: {
-                contains: `"${symbol}"`,
-              },
-              ...(cutoffDate
-                ? {
-                    publishedAt: {
-                      gte: cutoffDate,
-                    },
-                  }
-                : {}),
+              tickers: { contains: `"${symbol}"` },
+              ...(cutoffDate ? { publishedAt: { gte: cutoffDate } } : {}),
             },
             orderBy: { publishedAt: "desc" },
-            select: {
-              sentiment: true,
-              impact: true,
-              publishedAt: true,
-            },
+            select: { sentiment: true, impact: true, publishedAt: true },
           });
 
-          // If no news found in DB, return default empty stats
+          // ── 3. No news fallback ──────────────────────────────────────────
           if (relatedNews.length === 0) {
-            return [
-              {
-                symbol,
-                impactLevel: "low",
-                sentiment: "flat",
-                mentionCount: 0,
-                score: 0,
-                sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
-                latestNewsDate: null,
-              },
-            ];
-          }
-
-          // Group news by New York calendar date (M/D/YYYY)
-          const dateGroups: Record<string, typeof relatedNews> = {};
-          for (const item of relatedNews) {
-            const dateKey = item.publishedAt.toLocaleDateString("en-US", {
-              timeZone: "America/New_York",
-            });
-            if (!dateGroups[dateKey]) {
-              dateGroups[dateKey] = [];
-            }
-            dateGroups[dateKey].push(item);
-          }
-
-          const impactWeights: Record<string, number> = { high: 3, medium: 2, low: 1 };
-
-          // Calculate averaged statistics for each date group
-          const dailyStats = Object.entries(dateGroups).map(([_, newsList]) => {
-            let positive = 0;
-            let negative = 0;
-            let neutral = 0;
-            let totalImpactWeight = 0;
-
-            for (const news of newsList) {
-              if (news.sentiment === "good") positive++;
-              else if (news.sentiment === "bad") negative++;
-              else neutral++;
-
-              totalImpactWeight += impactWeights[news.impact] || 1;
-            }
-
-            const totalNews = newsList.length;
-            const sentimentHistorical = { positive, negative, neutral };
-
-            // Calculate Net News Sentiment Score (-10 to +10)
-            const netSentiment = (positive - negative) / totalNews;
-            const score = Math.round(netSentiment * 10);
-
-            const sentiment = score > 0 ? "up" : score < 0 ? "down" : "flat";
-
-            // Calculate Average News Impact level
-            const avgImpactWeight = totalImpactWeight / totalNews;
-            const impactLevel =
-              avgImpactWeight >= 2.5 ? "high" : avgImpactWeight >= 1.5 ? "medium" : "low";
+            const fallbackScore = priceScore ?? 0;
+            const fallbackSentiment =
+              fallbackScore > 0 ? "up" : fallbackScore < 0 ? "down" : "flat";
+            const absFallback = Math.abs(fallbackScore);
+            const fallbackImpact =
+              absFallback >= 7 ? "high" : absFallback >= 4 ? "medium" : "low";
 
             return {
               symbol,
-              impactLevel,
-              sentiment,
-              mentionCount: totalNews,
-              score,
-              sentimentHistorical,
-              latestNewsDate: newsList[0].publishedAt.toISOString(),
+              impactLevel: fallbackImpact,
+              sentiment: fallbackSentiment,
+              mentionCount: 0,
+              score: fallbackScore,
+              sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
+              latestNewsDate: null,
             };
-          });
+          }
 
-          // Sort daily stats by date descending
-          dailyStats.sort(
-            (a, b) => new Date(b.latestNewsDate).getTime() - new Date(a.latestNewsDate).getTime()
-          );
+          // ── 4. Aggregate stats for the selected range ────────────────────
+          let positive = 0, negative = 0, neutral = 0;
+          let highCount = 0, mediumCount = 0, lowCount = 0;
 
-          return dailyStats;
+          for (const news of relatedNews) {
+            if (news.sentiment === "good") positive++;
+            else if (news.sentiment === "bad") negative++;
+            else neutral++;
+
+            if (news.impact === "high") highCount++;
+            else if (news.impact === "medium") mediumCount++;
+            else lowCount++;
+          }
+
+          const totalNews = relatedNews.length;
+          const sentimentHistorical = { positive, negative, neutral };
+
+          // News Score (-10 to +10): net sentiment ratio
+          const newsScore = Math.round(((positive - negative) / totalNews) * 10);
+
+          // Hybrid Score: price direction carries 60%, news carries 40%
+          const hybridScore =
+            priceScore != null
+              ? Math.round(priceScore * 0.6 + newsScore * 0.4)
+              : newsScore;
+          const finalScore = clamp(hybridScore, -10, 10);
+
+          // Sentiment: follows the final hybrid score
+          const sentiment: "up" | "down" | "flat" =
+            finalScore > 0 ? "up" : finalScore < 0 ? "down" : "flat";
+
+          // Impact: take the higher of price magnitude vs news majority
+          let priceMagnitudeImpact: "high" | "medium" | "low" = "low";
+          if (priceChangePercent != null) {
+            const absPct = Math.abs(priceChangePercent);
+            if (absPct >= 3.5) priceMagnitudeImpact = "high";
+            else if (absPct >= 2.0) priceMagnitudeImpact = "medium";
+          }
+
+          const newsMajorityImpact: "high" | "medium" | "low" =
+            highCount >= mediumCount && highCount >= lowCount
+              ? "high"
+              : mediumCount >= lowCount
+              ? "medium"
+              : "low";
+
+          const impactRank = { high: 3, medium: 2, low: 1 };
+          const impactLevel: "high" | "medium" | "low" =
+            impactRank[priceMagnitudeImpact] >= impactRank[newsMajorityImpact]
+              ? priceMagnitudeImpact
+              : newsMajorityImpact;
+
+          return {
+            symbol,
+            impactLevel,
+            sentiment,
+            mentionCount: totalNews,
+            score: finalScore,
+            sentimentHistorical,
+            latestNewsDate: relatedNews[0].publishedAt.toISOString(),
+          };
         } catch (err) {
           console.error(`[Sentiment API] Error processing ${symbol}:`, err);
-          return [];
+          return null;
         }
       })
     );
 
-    const results = resultsArray.flat();
+    // Filter out nulls
+    const filteredResults = results.filter((r) => r !== null);
+    return NextResponse.json({ success: true, data: filteredResults });
 
-    return NextResponse.json({ success: true, data: results });
   } catch (error: any) {
     console.error("[Sentiment API] Error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
+

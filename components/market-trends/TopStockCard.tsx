@@ -55,14 +55,14 @@ export default function StockCard({ item, onRemove }: StockCardProps) {
               </Tooltip>
             </div>
             <span className="text-white font-semibold text-sm">
-              {Math.round(item.score / 10)}/10
+              {item.score > 0 ? `+${item.score}` : item.score}/10
             </span>
           </div>
           {/* Progress bar */}
           <div className="h-2 w-full bg-[#2A2A2A] rounded-full overflow-hidden">
             <div
               className={cn('h-full rounded-full', config.barColor)}
-              style={{ width: `${Math.round((Math.abs(item.score) / 100) * 100)}%` }}
+              style={{ width: `${barWidth}%` }}
             />
           </div>
         </div>
