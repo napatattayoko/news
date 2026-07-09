@@ -123,7 +123,7 @@ export default function StockDetailPage() {
               aiOutlook={aiOutlook}
             />
           </div>
-          <StockDetailNewsFeed symbol={symbol} />
+          <StockDetailNewsFeed symbol={symbol} range={selectedRange} />
         </div>
       </div>
     </TooltipProvider>

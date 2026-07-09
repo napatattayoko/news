@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { NewsItem } from '@/lib/types';
 import { useTerminalStore } from '@/lib/store';
 import NewsCard from '@/components/news/NewsCard';
@@ -10,18 +10,31 @@ import { TrendingDown, TrendingUp } from 'lucide-react';
 
 interface StockDetailNewsFeedProps {
   symbol: string;
+  range?: '24H' | '7D' | '30D' | 'All';
   isLoading?: boolean;
 }
 
-export default function StockDetailNewsFeed({ symbol, isLoading: externalIsLoading = false }: StockDetailNewsFeedProps) {
+export default function StockDetailNewsFeed({ symbol, range = '24H', isLoading: externalIsLoading = false }: StockDetailNewsFeedProps) {
   const { news } = useTerminalStore();
   const mobileSentiment = useTerminalStore((s) => s.mobileSentiment);
   
   // Dynamically derive news for this symbol from the global store
   const localNews = news.filter(n => n.tickers?.some((t: any) => (typeof t === 'string' ? t : t.symbol) === symbol));
 
-  const badItems = localNews.filter((n) => n.sentiment === 'bad' || n.sentiment === 'neutral');
-  const goodItems = localNews.filter((n) => n.sentiment === 'good');
+  // Filter localNews by range cutoff
+  const filteredByRange = useMemo(() => {
+    if (!range || range === 'All') return localNews;
+    const now = Date.now();
+    let cutoff = 0;
+    if (range === '24H') cutoff = now - 24 * 60 * 60 * 1000;
+    else if (range === '7D') cutoff = now - 7 * 24 * 60 * 60 * 1000;
+    else if (range === '30D') cutoff = now - 30 * 24 * 60 * 60 * 1000;
+
+    return localNews.filter(n => new Date(n.publishedAt).getTime() >= cutoff);
+  }, [localNews, range]);
+
+  const badItems = filteredByRange.filter((n) => n.sentiment === 'bad' || n.sentiment === 'neutral');
+  const goodItems = filteredByRange.filter((n) => n.sentiment === 'good');
   const maxRows = Math.max(badItems.length, goodItems.length);
 
   const mobileItems = mobileSentiment === 'bad' ? badItems : goodItems;

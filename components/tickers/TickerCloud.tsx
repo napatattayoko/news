@@ -25,7 +25,7 @@ export default function TickerCloud() {
         if (data.success && data.data) {
           const mapped: RankedTicker[] = data.data.map((item: any) => ({
             symbol: item.symbol,
-            name: `${item.mentionCount} mentions today`,
+            name: `${item.mentionCount} recent mentions`,
             score: item.score,
             sentiment: item.sentiment
           }));
