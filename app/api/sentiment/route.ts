@@ -122,9 +122,8 @@ export async function GET(request: NextRequest) {
     if (symbolsParam) {
       symbols = symbolsParam.split(",").map((s) => s.trim().toUpperCase());
     } else {
-      // Auto-discover tickers from recent news in DB
+      // Auto-discover tickers from all news in the database
       const recentNews = await prisma.news.findMany({
-        where: cutoffDate ? { publishedAt: { gte: cutoffDate } } : {},
         select: { tickers: true },
       });
 
@@ -170,6 +169,11 @@ export async function GET(request: NextRequest) {
             const absFallback = Math.abs(fallbackScore);
             const fallbackImpact =
               absFallback >= 7 ? "high" : absFallback >= 4 ? "medium" : "low";
+
+            // Use the latest date from chart or today's date
+            const latestChartDate = Object.keys(dailyPriceChanges).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? todayKey;
+            const fallbackDateIso = new Date(latestChartDate).toISOString();
+
             return [
               {
                 symbol,
@@ -178,7 +182,7 @@ export async function GET(request: NextRequest) {
                 mentionCount: 0,
                 score: fallbackScore,
                 sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
-                latestNewsDate: null,
+                latestNewsDate: fallbackDateIso,
               },
             ];
           }

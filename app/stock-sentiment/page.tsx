@@ -138,10 +138,7 @@ export default function StockSentimentPage() {
       filtered = filtered.filter(row => row.impactLevel === impactFilter);
     }
 
-    // Filter by 24H mentions (if range is 24H)
-    if (selectedRange === '24H') {
-      filtered = filtered.filter((r) => r.mentionCount > 0);
-    }
+
 
     // Filter by sentiment filter ribbon
     switch (activeFilter) {
