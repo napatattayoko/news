@@ -385,6 +385,7 @@ export default function StockSentimentPage() {
                         <td className="px-4 py-3 text-right text-xs text-slate-400 font-bold whitespace-nowrap">
                           {row.latestNewsDate ? (
                             new Date(row.latestNewsDate).toLocaleString('en-US', {
+                              timeZone: 'America/New_York',
                               month: 'short',
                               day: 'numeric',
                               hour: '2-digit',
