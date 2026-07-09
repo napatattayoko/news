@@ -21,7 +21,21 @@ const rangeOptions: RangeOption<TimeRange>[] = [
 export default function StockDetailPage() {
   const params = useParams();
   const symbol = (params.symbol as string)?.toUpperCase() ?? '';
-  const [selectedRange, setSelectedRange] = useState<TimeRange>('24H');
+  const [selectedRange, setSelectedRange] = useState<TimeRange>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('selectedRange_sentiment') as TimeRange;
+      if (saved === '24H' || saved === '7D' || saved === '30D' || saved === 'All') return saved;
+    }
+    return '24H';
+  });
+
+  const handleRangeChange = (newRange: TimeRange) => {
+    setSelectedRange(newRange);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedRange_sentiment', newRange);
+    }
+  };
+
   const [stockPrice, setStockPrice] = useState<string>('');
   const [priceChange, setPriceChange] = useState<string>('');
   const [priceChangeVal, setPriceChangeVal] = useState<number>(0);
@@ -107,7 +121,7 @@ export default function StockDetailPage() {
           <RangeDropdown
             options={rangeOptions}
             value={selectedRange}
-            onChange={setSelectedRange}
+            onChange={handleRangeChange}
           />
         </div>
 
