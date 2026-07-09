@@ -52,13 +52,13 @@ export default function NewsCard({ item, compact = false }: NewsCardProps) {
           compact ? 'text-base' : 'text-lg'
         )}
       >
-        {highlightTickers(item.headline)}
+        {highlightTickers(item.headline, item.tickers.map(t => t.symbol))}
       </h3>
 
       {/* Body */}
       {!compact && (
         <p className="text-sm text-slate-400 leading-relaxed mb-3 line-clamp-3 flex-1">
-          {highlightTickers(item.body)}
+          {highlightTickers(item.body, item.tickers.map(t => t.symbol))}
         </p>
       )}
 
@@ -151,15 +151,73 @@ function SourcesPopup({ sources }: { sources: { name: string; url: string }[] })
   );
 }
 
-function highlightTickers(text: string) {
-  const parts = text.split(/(\$[A-Z]{1,5})/g);
-  return parts.map((part, i) =>
-    part.startsWith('$') ? (
-      <span key={i} className="text-cyan-400 font-semibold">
-        {part}
-      </span>
-    ) : (
-      part
-    )
-  );
+const TICKER_WORDS_MAP: Record<string, string[]> = {
+  NKE: ['Nike'],
+  AAPL: ['Apple'],
+  MSFT: ['Microsoft'],
+  NVDA: ['Nvidia'],
+  GOOGL: ['Google', 'Alphabet'],
+  GOOG: ['Google', 'Alphabet'],
+  AMZN: ['Amazon'],
+  META: ['Meta', 'Facebook'],
+  TSLA: ['Tesla'],
+  NFLX: ['Netflix'],
+  AMD: ['AMD'],
+  INTC: ['Intel'],
+  JPM: ['JPMorgan', 'JP Morgan'],
+  V: ['Visa'],
+  MA: ['Mastercard'],
+  WMT: ['Walmart'],
+  DIS: ['Disney'],
+  COIN: ['Coinbase'],
+  PLTR: ['Palantir'],
+  IBM: ['IBM'],
+  CSCO: ['Cisco'],
+  SPY: ['SPY'],
+  QQQ: ['QQQ'],
+};
+
+function highlightTickers(text: string, tickerSymbols: string[] = []) {
+  if (!text) return '';
+
+  const termMap = new Map<string, string>();
+  for (const sym of tickerSymbols) {
+    const upperSym = sym.toUpperCase();
+    termMap.set(upperSym.toLowerCase(), upperSym);
+
+    const alts = TICKER_WORDS_MAP[upperSym] || [];
+    for (const alt of alts) {
+      termMap.set(alt.toLowerCase(), upperSym);
+    }
+  }
+
+  const searchTerms = Array.from(termMap.keys())
+    .map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'))
+    .filter(Boolean);
+
+  let regex: RegExp;
+  if (searchTerms.length > 0) {
+    regex = new RegExp(`(\\$[A-Z]{2,5}\\b|\\b(?:${searchTerms.join('|')})\\b)`, 'gi');
+  } else {
+    regex = /(\$[A-Z]{2,5}\b)/g;
+  }
+
+  const parts = text.split(regex);
+  return parts.map((part, i) => {
+    const upperPart = part.toUpperCase();
+    const isDollarTicker = part.startsWith('$') && /^\$[A-Z]{2,5}$/.test(upperPart);
+
+    const cleanPart = part.startsWith('$') ? part.slice(1) : part;
+    const targetSymbol = termMap.get(cleanPart.toLowerCase());
+
+    if (isDollarTicker || targetSymbol) {
+      const displaySymbol = targetSymbol || cleanPart.toUpperCase();
+      return (
+        <span key={i} className="text-[#0D7FF2] font-semibold">
+          {`$${displaySymbol}`}
+        </span>
+      );
+    }
+    return part;
+  });
 }
