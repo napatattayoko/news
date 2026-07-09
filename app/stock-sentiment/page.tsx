@@ -55,8 +55,8 @@ export default function StockSentimentPage() {
   const [activeFilter, setActiveFilter] = useState<TrendFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [impactFilter, setImpactFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
-  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const handleRangeChange = (newRange: TimeRange) => {
     setSelectedRange(newRange);
@@ -353,7 +353,7 @@ export default function StockSentimentPage() {
 
                     return (
                       <tr
-                        key={row.latestNewsDate ? `${row.symbol}-${row.latestNewsDate}` : row.symbol}
+                        key={row.id || (row.latestNewsDate ? `${row.symbol}-${row.latestNewsDate}` : row.symbol)}
                         onClick={() => router.push(`/stock-sentiment/${row.symbol.toLowerCase()}`)}
                         className="border-b border-[#222F44] hover:bg-white/5 transition-colors cursor-pointer"
                       >
@@ -384,7 +384,13 @@ export default function StockSentimentPage() {
                         </td>
                         <td className="px-4 py-3 text-right text-xs text-slate-400 font-bold whitespace-nowrap">
                           {row.latestNewsDate ? (
-                            new Date(row.latestNewsDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+                            new Date(row.latestNewsDate).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true,
+                            })
                           ) : (
                             '-'
                           )}

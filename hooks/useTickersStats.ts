@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ImpactLevel } from '@/lib/types';
 
 export interface TickerStats {
+  id?: string;
   symbol: string;
   impactLevel: ImpactLevel;
   sentiment: 'up' | 'down' | 'flat';
