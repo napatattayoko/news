@@ -84,6 +84,9 @@ export default function StockSentimentPage() {
   // Fetch all tickers stats by passing an empty array
   const { stats: baseRows, isLoading } = useTickersStats([], selectedRange);
 
+  // Fetch specific major tickers for top cards to get correct price action stats when there's no news
+  const { stats: topRows } = useTickersStats(['NVDA', 'AAPL', 'TSLA', 'AMZN'], selectedRange);
+
   // Map NVDA, AAPL, TSLA, AMZN stats dynamically for top stock cards
   const topStocks = useMemo(() => {
     const majorSymbols = ['NVDA', 'AAPL', 'TSLA', 'AMZN'];
@@ -95,7 +98,7 @@ export default function StockSentimentPage() {
     };
     return majorSymbols.map(sym => {
       // Find the latest record for this symbol (since there can be multiple daily rows)
-      const symbolRows = baseRows.filter(item => item.symbol.toUpperCase() === sym);
+      const symbolRows = topRows.filter(item => item.symbol.toUpperCase() === sym);
       const found = symbolRows.sort((a, b) => {
         const timeA = a.latestNewsDate ? new Date(a.latestNewsDate).getTime() : 0;
         const timeB = b.latestNewsDate ? new Date(b.latestNewsDate).getTime() : 0;
@@ -111,14 +114,14 @@ export default function StockSentimentPage() {
       return {
         symbol: sym,
         name: companyNames[sym] || sym,
-        impactLevel: 'medium' as const,
+        impactLevel: 'low' as const,
         sentiment: 'flat' as const,
         mentionCount: 0,
         sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
-        score: 5
+        score: 0
       };
     });
-  }, [baseRows]);
+  }, [topRows]);
 
   // Apply search query, sentiment filter + sort
   const filteredRows = useMemo(() => {
