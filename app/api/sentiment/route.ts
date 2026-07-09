@@ -3,16 +3,18 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-// ─── Helper: Fetch price change % from Yahoo Finance (with Finviz fallback) ──
-async function fetchPriceChange(symbol: string, range: string): Promise<number | null> {
-  // ── 1. Try Yahoo Finance ─────────────────────────────────────────────────
+// ─── Helper: Fetch daily price change percents mapped by dateKey ─────────────
+async function fetchDailyPriceChanges(symbol: string, range: string): Promise<Record<string, number>> {
+  const priceChanges: Record<string, number> = {};
+
+  // ── 1. Try Yahoo Finance Daily Chart ──────────────────────────────────────
   try {
     const yfRangeMap: Record<string, { range: string; interval: string }> = {
-      "24h": { range: "2d",  interval: "1d" },
-      "7d":  { range: "7d",  interval: "1d" },
-      "30d": { range: "1mo", interval: "1d" },
+      "24h": { range: "5d",  interval: "1d" },
+      "7d":  { range: "10d", interval: "1d" },
+      "30d": { range: "45d", interval: "1d" },
     };
-    const yfParams = yfRangeMap[range] ?? { range: "2d", interval: "1d" };
+    const yfParams = yfRangeMap[range] ?? { range: "5d", interval: "1d" };
 
     const res = await fetch(
       `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${yfParams.range}&interval=${yfParams.interval}`,
@@ -29,30 +31,41 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
       const data = await res.json();
       const result = data?.chart?.result?.[0];
       if (result) {
+        const timestamps = result.timestamp as number[];
         const closes = result.indicators.quote[0].close as (number | null)[];
         const opens  = result.indicators.quote[0].open  as (number | null)[];
 
-        if (range === "24h") {
-          const latestClose = closes[closes.length - 1];
-          const latestOpen  = opens[opens.length - 1];
-          if (latestClose != null && latestOpen != null && latestOpen !== 0) {
-            return ((latestClose - latestOpen) / latestOpen) * 100;
+        if (timestamps && closes && opens) {
+          for (let i = 0; i < timestamps.length; i++) {
+            const dateKey = new Date(timestamps[i] * 1000).toLocaleDateString("en-US", {
+              timeZone: "America/New_York",
+            });
+            const open = opens[i];
+            const close = closes[i];
+            if (open != null && close != null && open !== 0) {
+              priceChanges[dateKey] = ((close - open) / open) * 100;
+            }
           }
-          // Also try meta.regularMarketChangePercent (works when market is open)
-          const liveChange = result.meta?.regularMarketChangePercent;
-          if (liveChange != null) return liveChange;
-        } else {
-          const firstOpen = opens.find((v) => v != null);
-          const lastClose = [...closes].reverse().find((v) => v != null);
-          if (firstOpen != null && lastClose != null && firstOpen !== 0) {
-            return ((lastClose - firstOpen) / firstOpen) * 100;
+          // If 24h, check live change as fallback
+          if (range === "24h" && result.meta?.regularMarketChangePercent != null) {
+            const todayKey = new Date().toLocaleDateString("en-US", {
+              timeZone: "America/New_York",
+            });
+            if (priceChanges[todayKey] == null) {
+              priceChanges[todayKey] = result.meta.regularMarketChangePercent;
+            }
           }
         }
       }
     }
-  } catch { /* fall through to Finviz */ }
+  } catch { /* fallback to Finviz */ }
 
-  // ── 2. Fallback: Finviz snapshot (scrape Change field) ───────────────────
+  // If we got values from Yahoo Finance, return them
+  if (Object.keys(priceChanges).length > 0) {
+    return priceChanges;
+  }
+
+  // ── 2. Fallback: Finviz current day quote Change ──────────────────────────
   try {
     const finvizRes = await fetch(`https://finviz.com/quote.ashx?t=${symbol}`, {
       headers: {
@@ -63,11 +76,9 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
     });
     if (finvizRes.ok) {
       const html = await finvizRes.text();
-      // Extract Change % from snapshot table (key: "Change", value: e.g. "-1.59%")
       const match = html.match(/<td[^>]*>Change<\/td>\s*<td[^>]*>([-\d.]+)%<\/td>/i)
         ?? html.match(/data-testid="quote-change-percent"[^>]*>([-\d.]+)/i);
 
-      // Simpler: look for the change value in the snapshot table structure
       const changeMatch = html.match(/title="Change"[\s\S]*?<b>([-+]?[\d.]+)%<\/b>/i)
         ?? html.match(/>Change<\/td>[\s\S]{0,200}?>([-+]?[\d.]+)%</i);
 
@@ -75,16 +86,17 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
       if (rawChange != null) {
         const pct = parseFloat(rawChange);
         if (!isNaN(pct)) {
-          // For 24H always use today's Change; for 7D/30D we use it as approximation
-          return pct;
+          const todayKey = new Date().toLocaleDateString("en-US", {
+            timeZone: "America/New_York",
+          });
+          priceChanges[todayKey] = pct;
         }
       }
     }
   } catch { /* ignore */ }
 
-  return null;
+  return priceChanges;
 }
-
 
 function clamp(val: number, min: number, max: number) {
   return Math.max(min, Math.min(max, val));
@@ -129,18 +141,12 @@ export async function GET(request: NextRequest) {
       symbols = Array.from(symbolSet);
     }
 
-    // For each symbol: fetch price + news, compute hybrid score
+    // For each symbol: fetch price map + news, compute hybrid score per date
     const resultsArray = await Promise.all(
       symbols.map(async (symbol) => {
         try {
-          // ── 1. Price change % from Yahoo Finance ─────────────────────────
-          const priceChangePercent = await fetchPriceChange(symbol, range);
-
-          // Price Score (-10 to +10): ±0.5% per point, capped at ±5%
-          const priceScore: number | null =
-            priceChangePercent != null
-              ? clamp(Math.round(priceChangePercent * 2), -10, 10)
-              : null;
+          // ── 1. Fetch daily price changes map for this symbol ─────────────
+          const dailyPriceChanges = await fetchDailyPriceChanges(symbol, range);
 
           // ── 2. Related news from DB ──────────────────────────────────────
           const relatedNews = await prisma.news.findMany({
@@ -152,9 +158,13 @@ export async function GET(request: NextRequest) {
             select: { sentiment: true, impact: true, publishedAt: true },
           });
 
-          // ── 3. No news — use price data alone ───────────────────────────
+          // ── 3. No news fallback — use today's price change ───────────────
           if (relatedNews.length === 0) {
-            const fallbackScore = priceScore ?? 0;
+            const todayKey = new Date().toLocaleDateString("en-US", {
+              timeZone: "America/New_York",
+            });
+            const priceChangePercent = dailyPriceChanges[todayKey] ?? Object.values(dailyPriceChanges)[0] ?? null;
+            const fallbackScore = priceChangePercent != null ? clamp(Math.round(priceChangePercent * 2), -10, 10) : 0;
             const fallbackSentiment =
               fallbackScore > 0 ? "up" : fallbackScore < 0 ? "down" : "flat";
             const absFallback = Math.abs(fallbackScore);
@@ -184,7 +194,7 @@ export async function GET(request: NextRequest) {
           }
 
           // ── 5. Per-date stats ────────────────────────────────────────────
-          const dailyStats = Object.entries(dateGroups).map(([_, newsList]) => {
+          const dailyStats = Object.entries(dateGroups).map(([dateKey, newsList]) => {
             let positive = 0, negative = 0, neutral = 0;
             let highCount = 0, mediumCount = 0, lowCount = 0;
 
@@ -204,6 +214,13 @@ export async function GET(request: NextRequest) {
             // News Score (-10 to +10): net sentiment ratio
             const newsScore = Math.round(((positive - negative) / totalNews) * 10);
 
+            // Get daily price change for this specific day
+            const priceChangePercent = dailyPriceChanges[dateKey] ?? null;
+            const priceScore =
+              priceChangePercent != null
+                ? clamp(Math.round(priceChangePercent * 2), -10, 10)
+                : null;
+
             // Hybrid Score: price direction carries 60%, news carries 40%
             const hybridScore =
               priceScore != null
@@ -211,13 +228,11 @@ export async function GET(request: NextRequest) {
                 : newsScore;
             const finalScore = clamp(hybridScore, -10, 10);
 
-            // ── Sentiment: always follow the final hybrid score ──────────
-            // This guarantees Score and Sentiment column are always consistent
+            // Sentiment: follows the final hybrid score
             const sentiment: "up" | "down" | "flat" =
               finalScore > 0 ? "up" : finalScore < 0 ? "down" : "flat";
 
-
-            // ── Impact: take the higher of price magnitude vs news majority ─
+            // Impact: take the higher of price magnitude vs news majority
             let priceMagnitudeImpact: "high" | "medium" | "low" = "low";
             if (priceChangePercent != null) {
               const absPct = Math.abs(priceChangePercent);
@@ -275,3 +290,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
