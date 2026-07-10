@@ -39,6 +39,45 @@ function SortIcon({ column, sortColumn, sortDirection }: { column: SortColumn; s
     : <ArrowDown size={12} className="text-[#3B82F6]" />;
 }
 
+function PriceSparkline({ trend }: { trend?: number[] }) {
+  if (!trend || trend.length < 2) {
+    return <div className="text-left text-xs text-slate-500 font-medium pl-1">-</div>;
+  }
+
+  const min = Math.min(...trend);
+  const max = Math.max(...trend);
+  const range = max - min === 0 ? 1 : max - min;
+
+  const width = 120;
+  const height = 24;
+  const padding = 2;
+
+  const points = trend.map((price, index) => {
+    const x = (index / (trend.length - 1)) * (width - padding * 2) + padding;
+    const y = height - ((price - min) / range) * (height - padding * 2) - padding;
+    return `${x},${y}`;
+  });
+
+  const pathData = `M ${points.join(' L ')}`;
+  const isUp = trend[trend.length - 1] >= trend[0];
+  const strokeColor = isUp ? '#10B981' : '#EF4444';
+
+  return (
+    <div className="flex items-center h-[24px] select-none">
+      <svg width={width} height={height} className="overflow-visible">
+        <path
+          d={pathData}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
+  );
+}
+
 export default function StockSentimentPage() {
   const router = useRouter();
   const [rppOpen, setRppOpen] = useState(false);
@@ -308,7 +347,9 @@ export default function StockSentimentPage() {
                         Mention <SortIcon column="mention" sortColumn={sortColumn} sortDirection={sortDirection} />
                       </span>
                     </th>
-                    <th className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3">Sentiment Historical</th>
+                    <th className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
+                      {selectedRange === '24H' ? 'Sentiment Historical' : '7D Price Trend'}
+                    </th>
                     <th
                       onClick={() => handleSort('score')}
                       className="text-right text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
@@ -375,7 +416,11 @@ export default function StockSentimentPage() {
                           <span className="text-white text-sm font-bold">{row.mentionCount}</span>
                         </td>
                         <td className="px-4 py-3">
-                          <SentimentHistoricalBar data={row.sentimentHistorical} height={6} />
+                          {selectedRange === '24H' ? (
+                            <SentimentHistoricalBar data={row.sentimentHistorical} height={6} />
+                          ) : (
+                            <PriceSparkline trend={row.priceTrend} />
+                          )}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full border border-[#222F44] text-white font-bold text-sm">

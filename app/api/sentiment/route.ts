@@ -80,8 +80,9 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
 }
 
 // ─── Helper: Fetch daily price change map for standard dates ───
-async function fetchDailyPriceChanges(symbol: string, range: string): Promise<Record<string, number>> {
+async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ dailyChanges: Record<string, number>; closes: number[] }> {
   const dailyChanges: Record<string, number> = {};
+  const closesList: number[] = [];
   try {
     const yfRangeMap: Record<string, { range: string; interval: string }> = {
       "24h": { range: "5d",  interval: "1d" },
@@ -118,6 +119,7 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<Re
                 timeZone: "America/New_York",
               });
               dailyChanges[dateKey] = ((close - open) / open) * 100;
+              closesList.push(close);
             }
           }
         }
@@ -126,7 +128,7 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<Re
   } catch (err) {
     console.error(`[Daily Price Chart] Error fetching for ${symbol}:`, err);
   }
-  return dailyChanges;
+  return { dailyChanges, closes: closesList };
 }
 
 function clamp(val: number, min: number, max: number) {
@@ -163,7 +165,7 @@ export async function GET(request: NextRequest) {
     const matchedSymbols = new Set<string>();
 
     // Cache price changes in-request to prevent duplicate fetch calls
-    const priceChangesCache = new Map<string, Record<string, number>>();
+    const priceChangesCache = new Map<string, { dailyChanges: Record<string, number>; closes: number[] }>();
 
     // Pre-collect unique symbols that will be queried
     const uniqueSymbols = new Set<string>();
@@ -184,11 +186,11 @@ export async function GET(request: NextRequest) {
     await Promise.all(
       Array.from(uniqueSymbols).map(async (symbol) => {
         try {
-          const changes = await fetchDailyPriceChanges(symbol, range);
-          priceChangesCache.set(symbol, changes);
+          const data = await fetchDailyPriceChanges(symbol, range);
+          priceChangesCache.set(symbol, data);
         } catch (err) {
           console.error(`[Pre-fetch Price Error] Failed for ${symbol}:`, err);
-          priceChangesCache.set(symbol, {});
+          priceChangesCache.set(symbol, { dailyChanges: {}, closes: [] });
         }
       })
     );
@@ -212,7 +214,8 @@ export async function GET(request: NextRequest) {
         matchedSymbols.add(symbol);
 
         // Retrieve pre-fetched price changes instantly
-        const dailyPriceChanges = priceChangesCache.get(symbol) ?? {};
+        const priceData = priceChangesCache.get(symbol) ?? { dailyChanges: {}, closes: [] };
+        const dailyPriceChanges = priceData.dailyChanges;
         const dateKey = news.publishedAt.toLocaleDateString("en-US", {
           timeZone: "America/New_York",
         });
@@ -258,6 +261,7 @@ export async function GET(request: NextRequest) {
             neutral: news.sentiment === "neutral" ? 1 : 0,
           },
           latestNewsDate: news.publishedAt.toISOString(),
+          priceTrend: priceData.closes,
         });
       }
     }
@@ -276,6 +280,15 @@ export async function GET(request: NextRequest) {
           const absFallback = Math.abs(priceScore);
           const fallbackImpact = absFallback >= 7 ? "high" : absFallback >= 4 ? "medium" : "low";
 
+          const priceData = priceChangesCache.get(symbol) ?? { dailyChanges: {}, closes: [] };
+          let trendCloses = priceData.closes;
+          if (trendCloses.length === 0) {
+            try {
+              const data = await fetchDailyPriceChanges(symbol, range);
+              trendCloses = data.closes;
+            } catch {}
+          }
+
           results.push({
             id: `fallback-${symbol}`,
             symbol,
@@ -285,6 +298,7 @@ export async function GET(request: NextRequest) {
             score: priceScore,
             sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
             latestNewsDate: null,
+            priceTrend: trendCloses,
           });
         }
       }
