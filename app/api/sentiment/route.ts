@@ -164,13 +164,34 @@ export async function GET(request: NextRequest) {
 
     // Cache price changes in-request to prevent duplicate fetch calls
     const priceChangesCache = new Map<string, Record<string, number>>();
-    async function getCachedPriceChanges(symbol: string) {
-      if (!priceChangesCache.has(symbol)) {
-        const changes = await fetchDailyPriceChanges(symbol, range);
-        priceChangesCache.set(symbol, changes);
-      }
-      return priceChangesCache.get(symbol)!;
+
+    // Pre-collect unique symbols that will be queried
+    const uniqueSymbols = new Set<string>();
+    for (const news of newsItems) {
+      try {
+        const parsed = JSON.parse(news.tickers as string) || [];
+        const tickersList = parsed.map((t: any) => (typeof t === "string" ? t : t.symbol).toUpperCase());
+        const active = filterSymbols 
+          ? tickersList.filter((t: string) => filterSymbols!.has(t))
+          : tickersList;
+        for (const sym of active) {
+          uniqueSymbols.add(sym);
+        }
+      } catch {}
     }
+
+    // Fetch all price changes in parallel
+    await Promise.all(
+      Array.from(uniqueSymbols).map(async (symbol) => {
+        try {
+          const changes = await fetchDailyPriceChanges(symbol, range);
+          priceChangesCache.set(symbol, changes);
+        } catch (err) {
+          console.error(`[Pre-fetch Price Error] Failed for ${symbol}:`, err);
+          priceChangesCache.set(symbol, {});
+        }
+      })
+    );
 
     // ── 2. Generate one row per news article per ticker ──────────────────
     for (const news of newsItems) {
@@ -190,8 +211,8 @@ export async function GET(request: NextRequest) {
       for (const symbol of activeTickers) {
         matchedSymbols.add(symbol);
 
-        // Fetch price change for this ticker on this news publish day
-        const dailyPriceChanges = await getCachedPriceChanges(symbol);
+        // Retrieve pre-fetched price changes instantly
+        const dailyPriceChanges = priceChangesCache.get(symbol) ?? {};
         const dateKey = news.publishedAt.toLocaleDateString("en-US", {
           timeZone: "America/New_York",
         });
