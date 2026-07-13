@@ -290,7 +290,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Determine if price had huge swing
-        let priceMagnitudeImpact = "low";
+        let priceMagnitudeImpact: "high" | "medium" | "low" = "low";
         if (dailyPriceChanges[dateKey] !== undefined) {
           const absPct = Math.abs(dailyPriceChanges[dateKey]);
           if (absPct >= 3.5) priceMagnitudeImpact = "high";
@@ -309,11 +309,6 @@ export async function GET(request: NextRequest) {
     }
 
     for (const [symbol, group] of groupedMap.entries()) {
-      let finalScore = 0;
-      if (group.totalNewsVal > 0) {
-        finalScore = clamp(Math.round((group.sumPriceScore / group.totalNewsVal) * 10), -10, 10);
-      }
-
       // Majority logic
       const maxSentimentVal = Math.max(group.positive, group.negative, group.neutral);
       let majoritySentiment = "flat";
@@ -324,6 +319,23 @@ export async function GET(request: NextRequest) {
       let majorityImpact = "low";
       if (maxImpactVal === group.impacts.high && maxImpactVal > 0) majorityImpact = "high";
       else if (maxImpactVal === group.impacts.medium && maxImpactVal > 0) majorityImpact = "medium";
+
+      const getNewsScore = (s: string, imp: string): number => {
+        const isDirectional = s === 'up' || s === 'down';
+        let absScore = 0;
+        if (isDirectional) {
+          if (imp === 'high') absScore = 10;
+          else if (imp === 'medium') absScore = 8;
+          else absScore = 6;
+        } else {
+          if (imp === 'high') absScore = 5;
+          else if (imp === 'medium') absScore = 3;
+          else absScore = 1;
+        }
+        return s === 'down' ? -absScore : absScore;
+      };
+
+      const finalScore = getNewsScore(majoritySentiment, majorityImpact);
 
       results.push({
         id: symbol,

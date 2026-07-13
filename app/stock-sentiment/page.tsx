@@ -429,9 +429,11 @@ export default function StockSentimentPage() {
                               timeZone: 'America/New_York',
                               month: 'short',
                               day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: true,
+                              ...(selectedRange === '24H' ? {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true,
+                              } : {})
                             })
                           ) : (
                             '-'
