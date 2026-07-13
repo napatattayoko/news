@@ -91,6 +91,9 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ 
     };
     const yfParams = yfRangeMap[range] ?? { range: "5d", interval: "1d" };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
     const res = await fetch(
       `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${yfParams.range}&interval=${yfParams.interval}`,
       {
@@ -98,8 +101,11 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ 
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           "Accept": "application/json",
         },
+        next: { revalidate: 3600 },
+        signal: controller.signal,
       }
     );
+    clearTimeout(timeoutId);
 
     if (res.ok) {
       const data = await res.json();
@@ -159,6 +165,7 @@ export async function GET(request: NextRequest) {
     const newsItems = await prisma.news.findMany({
       where: cutoffDate ? { publishedAt: { gte: cutoffDate } } : {},
       orderBy: { publishedAt: "desc" },
+      take: 2000, // Limit to prevent memory exhaustion
     });
 
     const results: any[] = [];
@@ -179,21 +186,40 @@ export async function GET(request: NextRequest) {
         for (const sym of active) {
           uniqueSymbols.add(sym);
         }
-      } catch {}
+      } catch (err) {}
     }
 
-    // Fetch all price changes in parallel
-    await Promise.all(
-      Array.from(uniqueSymbols).map(async (symbol) => {
-        try {
-          const data = await fetchDailyPriceChanges(symbol, range);
-          priceChangesCache.set(symbol, data);
-        } catch (err) {
-          console.error(`[Pre-fetch Price Error] Failed for ${symbol}:`, err);
-          priceChangesCache.set(symbol, { dailyChanges: {}, closes: [] });
-        }
-      })
-    );
+    // Fetch all price changes in batches of 10
+    const symbolsArray = Array.from(uniqueSymbols);
+    for (let i = 0; i < symbolsArray.length; i += 10) {
+      const batch = symbolsArray.slice(i, i + 10);
+      await Promise.all(
+        batch.map(async (symbol) => {
+          try {
+            const data = await fetchDailyPriceChanges(symbol, range);
+            priceChangesCache.set(symbol, data);
+          } catch (err) {
+            console.error(`[Pre-fetch Price Error] Failed for ${symbol}:`, err);
+            priceChangesCache.set(symbol, { dailyChanges: {}, closes: [] });
+          }
+        })
+      );
+    }
+
+    const groupedMap = new Map<
+      string,
+      {
+        count: number;
+        sumPriceScore: number;
+        totalNewsVal: number;
+        impacts: Record<string, number>;
+        positive: number;
+        negative: number;
+        neutral: number;
+        latestNewsDate: string | null;
+        priceTrend: number[];
+      }
+    >();
 
     // ── 2. Generate one row per news article per ticker ──────────────────
     for (const news of newsItems) {
@@ -201,11 +227,11 @@ export async function GET(request: NextRequest) {
       try {
         const parsed = JSON.parse(news.tickers as string) || [];
         tickersList = parsed.map((t: any) => (typeof t === "string" ? t : t.symbol).toUpperCase());
-      } catch {
+      } catch (err) {
         continue;
       }
 
-      // Filter tickers if symbolsParam is active
+      // If filter is active, only include matching symbols for this news item
       const activeTickers = filterSymbols 
         ? tickersList.filter(t => filterSymbols!.has(t))
         : tickersList;
@@ -213,30 +239,60 @@ export async function GET(request: NextRequest) {
       for (const symbol of activeTickers) {
         matchedSymbols.add(symbol);
 
+        if (!groupedMap.has(symbol)) {
+          groupedMap.set(symbol, {
+            count: 0,
+            sumPriceScore: 0,
+            totalNewsVal: 0,
+            impacts: { high: 0, medium: 0, low: 0 },
+            positive: 0,
+            negative: 0,
+            neutral: 0,
+            latestNewsDate: null,
+            priceTrend: [],
+          });
+        }
+        const group = groupedMap.get(symbol)!;
+
         // Retrieve pre-fetched price changes instantly
         const priceData = priceChangesCache.get(symbol) ?? { dailyChanges: {}, closes: [] };
         const dailyPriceChanges = priceData.dailyChanges;
+        
+        if (group.priceTrend.length === 0) {
+          group.priceTrend = priceData.closes;
+        }
+
         const dateKey = news.publishedAt.toLocaleDateString("en-US", {
           timeZone: "America/New_York",
         });
-        
-        const priceChangePercent = dailyPriceChanges[dateKey] ?? Object.values(dailyPriceChanges)[0] ?? null;
-        
-        const priceScore =
-          priceChangePercent != null
-            ? clamp(Math.round(priceChangePercent * 2), -10, 10)
-            : 0;
 
-        const newsScore = news.sentiment === "good" ? 10 : news.sentiment === "bad" ? -10 : 0;
-        const hybridScore = Math.round(priceScore * 0.6 + newsScore * 0.4);
-        const finalScore = clamp(hybridScore, -10, 10);
+        // Add weighted score based on price influence
+        const influence = Math.min(Math.abs(dailyPriceChanges[dateKey] || 0) * 0.1, 0.4);
+        const weight = 0.6 + influence;
 
-        const sentiment: "up" | "down" | "flat" =
-          finalScore > 0 ? "up" : finalScore < 0 ? "down" : "flat";
+        if (news.sentiment === "good") {
+          group.positive += 1;
+          group.sumPriceScore += 1 * weight;
+          group.totalNewsVal += weight;
+        } else if (news.sentiment === "bad") {
+          group.negative += 1;
+          group.sumPriceScore += -1 * weight;
+          group.totalNewsVal += weight;
+        } else {
+          group.neutral += 1;
+          group.sumPriceScore += 0 * weight;
+          group.totalNewsVal += weight;
+        }
 
-        let priceMagnitudeImpact: "high" | "medium" | "low" = "low";
-        if (priceChangePercent != null) {
-          const absPct = Math.abs(priceChangePercent);
+        group.count += 1;
+        if (!group.latestNewsDate || new Date(news.publishedAt) > new Date(group.latestNewsDate)) {
+          group.latestNewsDate = news.publishedAt.toISOString();
+        }
+
+        // Determine if price had huge swing
+        let priceMagnitudeImpact = "low";
+        if (dailyPriceChanges[dateKey] !== undefined) {
+          const absPct = Math.abs(dailyPriceChanges[dateKey]);
           if (absPct >= 3.5) priceMagnitudeImpact = "high";
           else if (absPct >= 2.0) priceMagnitudeImpact = "medium";
         }
@@ -245,25 +301,45 @@ export async function GET(request: NextRequest) {
         const newsImpact = news.impact === "high" ? "high" : news.impact === "medium" ? "medium" : "low";
         const impactLevel: "high" | "medium" | "low" =
           impactRank[priceMagnitudeImpact] >= impactRank[newsImpact]
-            ? priceMagnitudeImpact
-            : newsImpact;
-
-        results.push({
-          id: `${news.id}-${symbol}`,
-          symbol,
-          impactLevel,
-          sentiment,
-          mentionCount: 1,
-          score: finalScore,
-          sentimentHistorical: {
-            positive: news.sentiment === "good" ? 1 : 0,
-            negative: news.sentiment === "bad" ? 1 : 0,
-            neutral: news.sentiment === "neutral" ? 1 : 0,
-          },
-          latestNewsDate: news.publishedAt.toISOString(),
-          priceTrend: priceData.closes,
-        });
+            ? (priceMagnitudeImpact as "high" | "medium" | "low")
+            : (newsImpact as "high" | "medium" | "low");
+        
+        group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + 1;
       }
+    }
+
+    for (const [symbol, group] of groupedMap.entries()) {
+      let finalScore = 0;
+      if (group.totalNewsVal > 0) {
+        finalScore = clamp(Math.round((group.sumPriceScore / group.totalNewsVal) * 10), -10, 10);
+      }
+
+      // Majority logic
+      const maxSentimentVal = Math.max(group.positive, group.negative, group.neutral);
+      let majoritySentiment = "flat";
+      if (maxSentimentVal === group.positive && maxSentimentVal > 0) majoritySentiment = "up";
+      else if (maxSentimentVal === group.negative && maxSentimentVal > 0) majoritySentiment = "down";
+
+      const maxImpactVal = Math.max(group.impacts.high, group.impacts.medium, group.impacts.low);
+      let majorityImpact = "low";
+      if (maxImpactVal === group.impacts.high && maxImpactVal > 0) majorityImpact = "high";
+      else if (maxImpactVal === group.impacts.medium && maxImpactVal > 0) majorityImpact = "medium";
+
+      results.push({
+        id: symbol,
+        symbol,
+        impactLevel: majorityImpact,
+        sentiment: majoritySentiment,
+        mentionCount: group.count,
+        score: finalScore,
+        sentimentHistorical: {
+          positive: group.positive,
+          negative: group.negative,
+          neutral: group.neutral,
+        },
+        latestNewsDate: group.latestNewsDate,
+        priceTrend: group.priceTrend,
+      });
     }
 
     // ── 3. Fallback: Generate overall price action for symbols with 0 news if symbolsParam is set ──

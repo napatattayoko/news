@@ -261,11 +261,32 @@ export async function GET(request: NextRequest) {
         });
     }
 
+    const symbolParam = searchParams.get("symbol");
+    const rangeParam = searchParams.get("range");
+
+    let cutoffDate: Date | undefined;
+    if (rangeParam === "24H") {
+      cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    } else if (rangeParam === "7D") {
+      cutoffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    } else if (rangeParam === "30D") {
+      cutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    }
+
     const limit = parseInt(searchParams.get("limit") || "100", 10);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const skip = (page - 1) * limit;
 
+    const whereClause: any = {};
+    if (cutoffDate) {
+      whereClause.publishedAt = { gte: cutoffDate };
+    }
+    if (symbolParam) {
+      whereClause.tickers = { contains: `"${symbolParam}"`, mode: "insensitive" };
+    }
+
     const news = await prisma.news.findMany({
+      where: whereClause,
       orderBy: { publishedAt: "desc" },
       take: limit,
       skip: skip,
@@ -385,13 +406,29 @@ export async function GET(request: NextRequest) {
         regionTag = regionMap[countryCode] || "global";
       }
 
+      let parsedTickers = [];
+      try {
+        parsedTickers = JSON.parse(item.tickers as string);
+        if (!Array.isArray(parsedTickers)) parsedTickers = [];
+      } catch (e) {
+        parsedTickers = [];
+      }
+
+      let parsedSources = [];
+      try {
+        parsedSources = JSON.parse(item.sources as string);
+        if (!Array.isArray(parsedSources)) parsedSources = [];
+      } catch (e) {
+        parsedSources = [];
+      }
+
       return {
         ...item,
         category: item.category as Category,
         sentiment: parsedSentiment,
         countryCode,
         regionTag: regionTag as RegionTab,
-        tickers: JSON.parse(item.tickers as string).map((t: any) =>
+        tickers: parsedTickers.map((t: any) =>
           typeof t === "string"
             ? {
                 symbol: t,
@@ -406,7 +443,7 @@ export async function GET(request: NextRequest) {
               }
             : t,
         ),
-        sources: JSON.parse(item.sources as string),
+        sources: parsedSources,
         publishedAt: item.publishedAt.toISOString(),
       };
     });

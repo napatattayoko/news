@@ -15,23 +15,33 @@ interface StockDetailNewsFeedProps {
 }
 
 export default function StockDetailNewsFeed({ symbol, range = '24H', isLoading: externalIsLoading = false }: StockDetailNewsFeedProps) {
-  const { news } = useTerminalStore();
   const mobileSentiment = useTerminalStore((s) => s.mobileSentiment);
-  
-  // Dynamically derive news for this symbol from the global store
-  const localNews = news.filter(n => n.tickers?.some((t: any) => (typeof t === 'string' ? t : t.symbol) === symbol));
+  const [localNews, setLocalNews] = useState<NewsItem[]>([]);
+  const [isFetching, setIsFetching] = useState(true);
 
-  // Filter localNews by range cutoff
-  const filteredByRange = useMemo(() => {
-    if (!range || range === 'All') return localNews;
-    const now = Date.now();
-    let cutoff = 0;
-    if (range === '24H') cutoff = now - 24 * 60 * 60 * 1000;
-    else if (range === '7D') cutoff = now - 7 * 24 * 60 * 60 * 1000;
-    else if (range === '30D') cutoff = now - 30 * 24 * 60 * 60 * 1000;
+  useEffect(() => {
+    let isMounted = true;
+    const fetchNews = async () => {
+      setIsFetching(true);
+      try {
+        const res = await fetch(`/api/finviz?action=news&symbol=${symbol}&range=${range}`, { cache: 'no-store' });
+        const result = await res.json();
+        if (isMounted && result.success) {
+          setLocalNews(result.data);
+        }
+      } catch (err) {
+        console.error('[StockDetailNewsFeed] Error fetching news:', err);
+      } finally {
+        if (isMounted) setIsFetching(false);
+      }
+    };
+    fetchNews();
+    return () => {
+      isMounted = false;
+    };
+  }, [symbol, range]);
 
-    return localNews.filter(n => new Date(n.publishedAt).getTime() >= cutoff);
-  }, [localNews, range]);
+  const filteredByRange = localNews; // already filtered by API
 
   const badItems = filteredByRange.filter((n) => n.sentiment === 'bad' || n.sentiment === 'neutral');
   const goodItems = filteredByRange.filter((n) => n.sentiment === 'good');
@@ -39,7 +49,7 @@ export default function StockDetailNewsFeed({ symbol, range = '24H', isLoading: 
 
   const mobileItems = mobileSentiment === 'bad' ? badItems : goodItems;
 
-  const isLoading = externalIsLoading;
+  const isLoading = externalIsLoading || isFetching;
 
   if (isLoading) {
     return (

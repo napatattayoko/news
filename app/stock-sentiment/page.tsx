@@ -348,7 +348,7 @@ export default function StockSentimentPage() {
                       </span>
                     </th>
                     <th className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
-                      {selectedRange === '24H' ? 'Sentiment Historical' : '7D Price Trend'}
+                      Sentiment Historical
                     </th>
                     <th
                       onClick={() => handleSort('score')}
@@ -416,11 +416,7 @@ export default function StockSentimentPage() {
                           <span className="text-white text-sm font-bold">{row.mentionCount}</span>
                         </td>
                         <td className="px-4 py-3">
-                          {selectedRange === '24H' ? (
-                            <SentimentHistoricalBar data={row.sentimentHistorical} height={6} />
-                          ) : (
-                            <PriceSparkline trend={row.priceTrend} />
-                          )}
+                          <SentimentHistoricalBar data={row.sentimentHistorical} height={6} />
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full border border-[#222F44] text-white font-bold text-sm">
