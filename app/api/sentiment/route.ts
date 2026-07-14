@@ -269,22 +269,28 @@ export async function GET(request: NextRequest) {
           timeZone: "America/New_York",
         });
 
-        // Add weighted score based on price influence
-        const influence = Math.min(Math.abs(dailyPriceChanges[dateKey] || 0) * 0.1, 0.4);
-        const weight = 0.6 + influence;
+        // ── Time-weighted voting: fresh news has more influence ──────────
+        function getTimeWeight(publishedAt: Date): number {
+          const hoursOld = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60);
+          if (hoursOld < 12) return 1.0;   // 0-12 hours: full weight
+          if (hoursOld < 72) return 0.5;   // 1-3 days: half weight
+          return 0.1;                       // 4-7+ days: 10% weight
+        }
+
+        const timeW = getTimeWeight(news.publishedAt);
 
         if (news.sentiment === "good") {
-          group.positive += 1;
-          group.sumPriceScore += 1 * weight;
-          group.totalNewsVal += weight;
+          group.positive += timeW;
+          group.sumPriceScore += 1 * timeW;
+          group.totalNewsVal += timeW;
         } else if (news.sentiment === "bad") {
-          group.negative += 1;
-          group.sumPriceScore += -1 * weight;
-          group.totalNewsVal += weight;
+          group.negative += timeW;
+          group.sumPriceScore += -1 * timeW;
+          group.totalNewsVal += timeW;
         } else {
-          group.neutral += 1;
-          group.sumPriceScore += 0 * weight;
-          group.totalNewsVal += weight;
+          group.neutral += timeW;
+          group.sumPriceScore += 0;
+          group.totalNewsVal += timeW;
         }
 
         group.count += 1;
@@ -307,7 +313,7 @@ export async function GET(request: NextRequest) {
             ? (priceMagnitudeImpact as "high" | "medium" | "low")
             : (newsImpact as "high" | "medium" | "low");
         
-        group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + 1;
+        group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + timeW;
 
         // ── Per-news accuracy (raw, before time decay) ──────────────────
         // Only calculate if we have price data for that day
