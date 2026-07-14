@@ -359,7 +359,7 @@ export default function StockSentimentPage() {
                       </span>
                     </th>
                     <th className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
-                      Accuracy
+                      Stat
                     </th>
                     <th
                       onClick={() => handleSort('date')}
