@@ -215,7 +215,7 @@ const TICKER_WORDS_MAP: Record<string, string[]> = {
   QQQ: ['QQQ'],
 };
 
-function highlightTickers(text: string, tickerSymbols: string[] = []) {
+export function highlightTickers(text: string, tickerSymbols: string[] = []) {
   if (!text) return '';
 
   const termMap = new Map<string, string>();

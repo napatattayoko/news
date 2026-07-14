@@ -9,6 +9,8 @@ import TickerChip from '@/components/tickers/TickerChip';
 
 
 
+import { highlightTickers } from './NewsCard';
+
 function getDomain(url: string) {
   try { return new URL(url).hostname; } catch { return ''; }
 }
@@ -40,13 +42,13 @@ function BreakingCard({ item, large = false, className = '' }: { item: NewsItem;
 
       {/* Headline */}
       <h3 className={`font-bold leading-snug text-white uppercase mb-2 ${large ? 'text-lg' : 'text-base'}`}>
-        {item.headline}
+        {highlightTickers(item.headline, item.tickers.map(t => t.symbol))}
       </h3>
 
       {/* Body preview */}
       {item.body && (
         <p className={`text-sm text-slate-400 leading-relaxed mb-3 flex-1 ${large ? 'line-clamp-3' : 'line-clamp-2'}`}>
-          {item.body}
+          {highlightTickers(item.body, item.tickers.map(t => t.symbol))}
         </p>
       )}
 
