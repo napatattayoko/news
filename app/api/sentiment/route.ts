@@ -438,23 +438,19 @@ export async function GET(request: NextRequest) {
 
       let accuracy: number | null = null;
       if (group.accuracyEntries.length > 0) {
-        // Weighted average: each news item's rawAccuracy is multiplied by its time decay weight
+        // Weighted average: each news item's accuracy (0-100%) is multiplied by its time decay weight
         let weightedSum = 0;
         let weightTotal = 0;
         for (const entry of group.accuracyEntries) {
           const timePts = getTimePts(entry.publishedAt);
-          // time weight is 0.1 to 1.0 scale (30pts max → normalized)
+          // Normalize time weight to 0.03 - 1.0 scale
           const timeWeight = timePts / 30;
-          weightedSum += entry.rawAccuracy * timeWeight;
-          weightTotal += 70 * timeWeight; // 70 = max raw accuracy
+          // Convert raw accuracy (0-70) to percentage (0-100%)
+          const normalizedAccuracy = (entry.rawAccuracy / 70) * 100;
+          weightedSum += normalizedAccuracy * timeWeight;
+          weightTotal += timeWeight;
         }
-        const baseAccuracy = weightTotal > 0 ? (weightedSum / weightTotal) * 70 : 0;
-        // Add time bonus from the latest news item only (how fresh is the most recent signal)
-        const latestEntry = group.accuracyEntries.reduce((a, b) =>
-          a.publishedAt > b.publishedAt ? a : b
-        );
-        const timePtsBonus = getTimePts(latestEntry.publishedAt);
-        accuracy = Math.round(Math.min(100, baseAccuracy + timePtsBonus));
+        accuracy = weightTotal > 0 ? Math.round(weightedSum / weightTotal) : 0;
       }
 
       results.push({
