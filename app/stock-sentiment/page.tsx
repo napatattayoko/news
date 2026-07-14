@@ -359,7 +359,7 @@ export default function StockSentimentPage() {
                       </span>
                     </th>
                     <th className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
-                      Stat
+                      Accuracy
                     </th>
                     <th
                       onClick={() => handleSort('date')}
@@ -435,8 +435,8 @@ export default function StockSentimentPage() {
                                 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
                                 : 'bg-red-500/20 text-red-400 border-red-500/30';
                             return (
-                              <span className={cn('inline-flex items-center justify-center min-w-[48px] px-2 py-1 rounded-full border text-xs font-bold', color)}>
-                                {acc}%
+                              <span className={cn('inline-flex items-center justify-center min-w-[64px] px-2 py-1 rounded-full border text-xs font-bold', color)}>
+                                {(acc / 10).toFixed(1)}/10
                               </span>
                             );
                           })() : (

@@ -379,16 +379,18 @@ export async function GET(request: NextRequest) {
           if (scoreDir === 0 && priceDir === 0) dirPts = 40; // neutral + flat = correct
           else if (scoreDir === priceDir && scoreDir !== 0) dirPts = 40;
 
-          // Magnitude match: 0 or 30 pts
-          const absPct = Math.abs(pricePct);
-          const scoreAbsLevel = newsImpact; // high/medium/low already computed above
+          // Magnitude match: 0 or 30 pts (Only calculated if direction matched!)
           let magPts = 0;
-          if (scoreAbsLevel === 'high' && absPct >= 2) magPts = 30;
-          else if (scoreAbsLevel === 'medium' && absPct >= 1) magPts = 30;
-          else if (scoreAbsLevel === 'low' && absPct < 1) magPts = 30;
+          if (dirPts > 0) {
+            const absPct = Math.abs(pricePct);
+            const scoreAbsLevel = newsImpact; // high/medium/low already computed above
+            if (scoreAbsLevel === 'high' && absPct >= 2) magPts = 30;
+            else if (scoreAbsLevel === 'medium' && absPct >= 1) magPts = 30;
+            else if (scoreAbsLevel === 'low' && absPct < 1) magPts = 30;
+          }
 
           group.accuracyEntries.push({
-            rawAccuracy: dirPts + magPts, // 0-70
+            rawAccuracy: dirPts + magPts, // 0 (if wrong direction) or 40-70 (if correct)
             publishedAt: news.publishedAt,
           });
         }
