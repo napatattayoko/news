@@ -216,6 +216,9 @@ export async function GET(request: NextRequest) {
         positive: number;
         negative: number;
         neutral: number;
+        posCount: number;
+        negCount: number;
+        neuCount: number;
         latestNewsDate: string | null;
         priceTrend: number[];
         // Per-news accuracy tracking: each entry = { rawAccuracy: 0-70, publishedAt: Date }
@@ -250,6 +253,9 @@ export async function GET(request: NextRequest) {
             positive: 0,
             negative: 0,
             neutral: 0,
+            posCount: 0,
+            negCount: 0,
+            neuCount: 0,
             latestNewsDate: null,
             priceTrend: [],
             accuracyEntries: [],
@@ -301,14 +307,17 @@ export async function GET(request: NextRequest) {
 
         if (news.sentiment === "good") {
           group.positive += combinedWeight;
+          group.posCount += 1;
           group.sumPriceScore += 1 * combinedWeight;
           group.totalNewsVal += combinedWeight;
         } else if (news.sentiment === "bad") {
           group.negative += combinedWeight;
+          group.negCount += 1;
           group.sumPriceScore += -1 * combinedWeight;
           group.totalNewsVal += combinedWeight;
         } else {
           group.neutral += combinedWeight;
+          group.neuCount += 1;
           group.sumPriceScore += 0;
           group.totalNewsVal += combinedWeight;
         }
@@ -419,9 +428,9 @@ export async function GET(request: NextRequest) {
         score: finalScore,
         accuracy,
         sentimentHistorical: {
-          positive: group.positive,
-          negative: group.negative,
-          neutral: group.neutral,
+          positive: group.posCount,
+          negative: group.negCount,
+          neutral: group.neuCount,
         },
         latestNewsDate: group.latestNewsDate,
         priceTrend: group.priceTrend,
