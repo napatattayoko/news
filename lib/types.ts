@@ -56,6 +56,7 @@ export interface TickerAnalysis {
   mentionCount: number;
   sentimentHistorical: SentimentHistorical;
   score: number;
+  accuracy?: number | null; // 0-100%, null = no price data to compute
 }
 
 export interface LiveUpdate {

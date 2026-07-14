@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -167,6 +167,9 @@ export default function TrendDataTable({ items }: TrendDataTableProps) {
                 <span className="text-[11px] font-medium text-slate-400 tracking-normal">(-10 to 10)</span>
               </span>
             </th>
+            <th className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
+              RELIABILITY
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -234,8 +237,27 @@ export default function TrendDataTable({ items }: TrendDataTableProps) {
                 {/* Score */}
                 <td className="px-4 py-3 text-right">
                   <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full border border-[#222F44] text-white font-bold text-sm">
-                    {Math.round(item.score / 10)}
+                    {item.score}
                   </span>
+                </td>
+
+                {/* Reliability */}
+                <td className="px-4 py-3 text-center">
+                  {item.accuracy != null ? (() => {
+                    const acc = item.accuracy as number;
+                    const color = acc >= 70
+                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                      : acc >= 40
+                      ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                      : 'bg-red-500/20 text-red-400 border-red-500/30';
+                    return (
+                      <span className={cn('inline-flex items-center justify-center min-w-[48px] px-2 py-1 rounded-full border text-xs font-bold', color)}>
+                        {acc}%
+                      </span>
+                    );
+                  })() : (
+                    <span className="text-slate-500 text-xs">N/A</span>
+                  )}
                 </td>
               </tr>
             );

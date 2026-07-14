@@ -11,6 +11,7 @@ export interface TickerStats {
   sentimentHistorical: { positive: number; negative: number; neutral: number };
   latestNewsDate?: string | null;
   priceTrend?: number[];
+  accuracy?: number | null; // 0-100%, null = no price data to compute
 }
 
 // Module-level cache so data survives component unmount/remount (page navigation)

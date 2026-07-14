@@ -194,7 +194,7 @@ export default function StockSentimentPage() {
   const sortedRows = useMemo(() => {
     const sorted = [...filteredRows];
     if (!sortColumn) {
-      // Default order: latest date first → then by mention count → then by absolute score
+      // Default order: latest date first โ’ then by mention count โ’ then by absolute score
       return sorted.sort((a, b) => {
         const timeA = a.latestNewsDate ? new Date(a.latestNewsDate).getTime() : 0;
         const timeB = b.latestNewsDate ? new Date(b.latestNewsDate).getTime() : 0;
@@ -358,6 +358,9 @@ export default function StockSentimentPage() {
                         Score <SortIcon column="score" sortColumn={sortColumn} sortDirection={sortDirection} />
                       </span>
                     </th>
+                    <th className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
+                      Reliability
+                    </th>
                     <th
                       onClick={() => handleSort('date')}
                       className="text-right text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
@@ -422,6 +425,23 @@ export default function StockSentimentPage() {
                           <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full border border-[#222F44] text-white font-bold text-sm">
                             {row.score}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {row.accuracy != null ? (() => {
+                            const acc = row.accuracy as number;
+                            const color = acc >= 70
+                              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                              : acc >= 40
+                              ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                              : 'bg-red-500/20 text-red-400 border-red-500/30';
+                            return (
+                              <span className={cn('inline-flex items-center justify-center min-w-[48px] px-2 py-1 rounded-full border text-xs font-bold', color)}>
+                                {acc}%
+                              </span>
+                            );
+                          })() : (
+                            <span className="text-slate-500 text-xs">N/A</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-right text-xs text-slate-400 font-bold whitespace-nowrap">
                           {row.latestNewsDate ? (

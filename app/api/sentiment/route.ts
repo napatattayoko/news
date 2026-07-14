@@ -218,6 +218,8 @@ export async function GET(request: NextRequest) {
         neutral: number;
         latestNewsDate: string | null;
         priceTrend: number[];
+        // Per-news accuracy tracking: each entry = { rawAccuracy: 0-70, publishedAt: Date }
+        accuracyEntries: Array<{ rawAccuracy: number; publishedAt: Date }>;
       }
     >();
 
@@ -250,6 +252,7 @@ export async function GET(request: NextRequest) {
             neutral: 0,
             latestNewsDate: null,
             priceTrend: [],
+            accuracyEntries: [],
           });
         }
         const group = groupedMap.get(symbol)!;
@@ -305,6 +308,32 @@ export async function GET(request: NextRequest) {
             : (newsImpact as "high" | "medium" | "low");
         
         group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + 1;
+
+        // ── Per-news accuracy (raw, before time decay) ──────────────────
+        // Only calculate if we have price data for that day
+        if (dailyPriceChanges[dateKey] !== undefined) {
+          const pricePct = dailyPriceChanges[dateKey]; // positive = price up, negative = price down
+          const scoreDir = news.sentiment === "good" ? 1 : news.sentiment === "bad" ? -1 : 0;
+          const priceDir = pricePct > 0.3 ? 1 : pricePct < -0.3 ? -1 : 0; // ±0.3% deadzone
+
+          // Direction match: 0 or 40 pts
+          let dirPts = 0;
+          if (scoreDir === 0 && priceDir === 0) dirPts = 40; // neutral + flat = correct
+          else if (scoreDir === priceDir && scoreDir !== 0) dirPts = 40;
+
+          // Magnitude match: 0 or 30 pts
+          const absPct = Math.abs(pricePct);
+          const scoreAbsLevel = newsImpact; // high/medium/low already computed above
+          let magPts = 0;
+          if (scoreAbsLevel === 'high' && absPct >= 2) magPts = 30;
+          else if (scoreAbsLevel === 'medium' && absPct >= 1) magPts = 30;
+          else if (scoreAbsLevel === 'low' && absPct < 1) magPts = 30;
+
+          group.accuracyEntries.push({
+            rawAccuracy: dirPts + magPts, // 0-70
+            publishedAt: news.publishedAt,
+          });
+        }
       }
     }
 
@@ -337,6 +366,39 @@ export async function GET(request: NextRequest) {
 
       const finalScore = getNewsScore(majoritySentiment, majorityImpact);
 
+      // ── Accuracy with Time Decay ─────────────────────────────────────
+      // Time decay factor based on age of each news item
+      function getTimePts(publishedAt: Date): number {
+        const hoursOld = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60);
+        if (hoursOld < 6)   return 30;
+        if (hoursOld < 12)  return 24;
+        if (hoursOld < 24)  return 18;
+        if (hoursOld < 72)  return 9;   // 1-3 days
+        if (hoursOld < 168) return 3;   // 3-7 days
+        return 1; // >7 days: minimal but not zero (history still counts a little)
+      }
+
+      let accuracy: number | null = null;
+      if (group.accuracyEntries.length > 0) {
+        // Weighted average: each news item's rawAccuracy is multiplied by its time decay weight
+        let weightedSum = 0;
+        let weightTotal = 0;
+        for (const entry of group.accuracyEntries) {
+          const timePts = getTimePts(entry.publishedAt);
+          // time weight is 0.1 to 1.0 scale (30pts max → normalized)
+          const timeWeight = timePts / 30;
+          weightedSum += entry.rawAccuracy * timeWeight;
+          weightTotal += 70 * timeWeight; // 70 = max raw accuracy
+        }
+        const baseAccuracy = weightTotal > 0 ? (weightedSum / weightTotal) * 70 : 0;
+        // Add time bonus from the latest news item only (how fresh is the most recent signal)
+        const latestEntry = group.accuracyEntries.reduce((a, b) =>
+          a.publishedAt > b.publishedAt ? a : b
+        );
+        const timePtsBonus = getTimePts(latestEntry.publishedAt);
+        accuracy = Math.round(Math.min(100, baseAccuracy + timePtsBonus));
+      }
+
       results.push({
         id: symbol,
         symbol,
@@ -344,6 +406,7 @@ export async function GET(request: NextRequest) {
         sentiment: majoritySentiment,
         mentionCount: group.count,
         score: finalScore,
+        accuracy,
         sentimentHistorical: {
           positive: group.positive,
           negative: group.negative,
