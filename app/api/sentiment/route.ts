@@ -269,35 +269,6 @@ export async function GET(request: NextRequest) {
           timeZone: "America/New_York",
         });
 
-        // ── Time-weighted voting: fresh news has more influence ──────────
-        function getTimeWeight(publishedAt: Date): number {
-          const hoursOld = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60);
-          if (hoursOld < 12) return 1.0;   // 0-12 hours: full weight
-          if (hoursOld < 72) return 0.5;   // 1-3 days: half weight
-          return 0.1;                       // 4-7+ days: 10% weight
-        }
-
-        const timeW = getTimeWeight(news.publishedAt);
-
-        if (news.sentiment === "good") {
-          group.positive += timeW;
-          group.sumPriceScore += 1 * timeW;
-          group.totalNewsVal += timeW;
-        } else if (news.sentiment === "bad") {
-          group.negative += timeW;
-          group.sumPriceScore += -1 * timeW;
-          group.totalNewsVal += timeW;
-        } else {
-          group.neutral += timeW;
-          group.sumPriceScore += 0;
-          group.totalNewsVal += timeW;
-        }
-
-        group.count += 1;
-        if (!group.latestNewsDate || new Date(news.publishedAt) > new Date(group.latestNewsDate)) {
-          group.latestNewsDate = news.publishedAt.toISOString();
-        }
-
         // Determine if price had huge swing
         let priceMagnitudeImpact: "high" | "medium" | "low" = "low";
         if (dailyPriceChanges[dateKey] !== undefined) {
@@ -312,8 +283,42 @@ export async function GET(request: NextRequest) {
           impactRank[priceMagnitudeImpact] >= impactRank[newsImpact]
             ? (priceMagnitudeImpact as "high" | "medium" | "low")
             : (newsImpact as "high" | "medium" | "low");
-        
-        group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + timeW;
+
+        let impactMultiplier = 0.3;
+        if (impactLevel === "high") impactMultiplier = 3.0;
+        else if (impactLevel === "medium") impactMultiplier = 1.5;
+
+        // ── Time-weighted voting: fresh news has more influence ──────────
+        function getTimeWeight(publishedAt: Date): number {
+          const hoursOld = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60);
+          if (hoursOld < 12) return 1.0;   // 0-12 hours: full weight
+          if (hoursOld < 72) return 0.5;   // 1-3 days: half weight
+          return 0.1;                       // 4-7+ days: 10% weight
+        }
+
+        const timeW = getTimeWeight(news.publishedAt);
+        const combinedWeight = timeW * impactMultiplier;
+
+        if (news.sentiment === "good") {
+          group.positive += combinedWeight;
+          group.sumPriceScore += 1 * combinedWeight;
+          group.totalNewsVal += combinedWeight;
+        } else if (news.sentiment === "bad") {
+          group.negative += combinedWeight;
+          group.sumPriceScore += -1 * combinedWeight;
+          group.totalNewsVal += combinedWeight;
+        } else {
+          group.neutral += combinedWeight;
+          group.sumPriceScore += 0;
+          group.totalNewsVal += combinedWeight;
+        }
+
+        group.count += 1;
+        if (!group.latestNewsDate || new Date(news.publishedAt) > new Date(group.latestNewsDate)) {
+          group.latestNewsDate = news.publishedAt.toISOString();
+        }
+
+        group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + combinedWeight;
 
         // ── Per-news accuracy (raw, before time decay) ──────────────────
         // Only calculate if we have price data for that day
