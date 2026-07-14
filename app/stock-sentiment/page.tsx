@@ -432,8 +432,8 @@ export default function StockSentimentPage() {
                             const color = acc >= 70
                               ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                               : acc >= 40
-                              ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                              : 'bg-red-500/20 text-red-400 border-red-500/30';
+                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                : 'bg-red-500/20 text-red-400 border-red-500/30';
                             return (
                               <span className={cn('inline-flex items-center justify-center min-w-[48px] px-2 py-1 rounded-full border text-xs font-bold', color)}>
                                 {acc}%
