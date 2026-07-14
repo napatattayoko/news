@@ -13,6 +13,11 @@ const singlePriceCache = new Map<string, CacheEntry<number | null>>();
 const CACHE_TTL = 15 * 60 * 1000;      // 15 minutes cache for successful fetches
 const NEGATIVE_CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache for failed fetches
 
+// ─── Server-side result cache (additive — prevents redundant DB + Yahoo Finance calls) ───
+interface ResultCacheEntry { data: any[]; ts: number; }
+const resultCache = new Map<string, ResultCacheEntry>();
+const RESULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // ─── Helper: Fetch overall price change % for the range (with Finviz fallback) ──
 async function fetchPriceChange(symbol: string, range: string): Promise<number | null> {
   const cacheKey = `${symbol}-${range}`;
@@ -184,6 +189,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const symbolsParam = searchParams.get("symbols");
     const range = searchParams.get("range")?.toLowerCase() || "24h";
+
+    // ── Result cache check (additive — logic below untouched) ────────────────
+    const resultCacheKey = `sentiment-${range}-${symbolsParam ?? "all"}`;
+    const cachedResult = resultCache.get(resultCacheKey);
+    if (cachedResult && Date.now() - cachedResult.ts < RESULT_CACHE_TTL) {
+      return NextResponse.json({ success: true, data: cachedResult.data });
+    }
 
     let cutoffDate: Date | null = null;
     if (range === "24h") {
@@ -495,6 +507,9 @@ export async function GET(request: NextRequest) {
       });
       await Promise.all(fallbackPromises);
     }
+
+    // Store in result cache before returning
+    resultCache.set(resultCacheKey, { data: results, ts: Date.now() });
 
     return NextResponse.json({ success: true, data: results });
 

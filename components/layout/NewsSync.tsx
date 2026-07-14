@@ -65,8 +65,8 @@ export default function NewsSync() {
     // Run initially
     sync();
 
-    // Poll every 3 seconds
-    const interval = setInterval(sync, 3000);
+    // Poll every 30 seconds (reduced from 3s to lower Finviz scrape frequency and server load)
+    const interval = setInterval(sync, 30_000);
 
     return () => {
       active = false;

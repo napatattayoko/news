@@ -69,11 +69,11 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
     const currentId = ++fetchIdRef.current;
     fetchStats(currentId);
 
-    // Poll every 5 seconds to keep the stats real-time
+    // Poll every 60 seconds (reduced from 5s — sentiment data changes on bot scrape cycle, not per-second)
     const interval = setInterval(() => {
       const pollId = ++fetchIdRef.current;
       fetchStats(pollId);
-    }, 5000);
+    }, 60_000);
 
     return () => clearInterval(interval);
   }, [symbols.join(','), range]); // re-run when the list of symbols or selected range changes
