@@ -290,16 +290,16 @@ export async function GET(request: NextRequest) {
             ? (priceMagnitudeImpact as "high" | "medium" | "low")
             : (newsImpact as "high" | "medium" | "low");
 
-        let impactMultiplier = 0.3;
-        if (impactLevel === "high") impactMultiplier = 3.0;
-        else if (impactLevel === "medium") impactMultiplier = 1.5;
+        let impactMultiplier = 0.4;
+        if (impactLevel === "high") impactMultiplier = 2.5;
+        else if (impactLevel === "medium") impactMultiplier = 1.2;
 
         // ── Time-weighted voting: fresh news has more influence ──────────
         function getTimeWeight(publishedAt: Date): number {
           const hoursOld = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60);
           if (hoursOld < 12) return 1.0;   // 0-12 hours: full weight
-          if (hoursOld < 72) return 0.5;   // 1-3 days: half weight
-          return 0.1;                       // 4-7+ days: 10% weight
+          if (hoursOld < 72) return 0.3;   // 1-3 days: 30% weight
+          return 0.02;                      // 4-7+ days: 2% weight (almost expired)
         }
 
         const timeW = getTimeWeight(news.publishedAt);
