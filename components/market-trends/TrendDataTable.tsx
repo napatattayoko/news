@@ -168,7 +168,7 @@ export default function TrendDataTable({ items }: TrendDataTableProps) {
               </span>
             </th>
             <th className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
-              RELIABILITY
+              STAT
             </th>
           </tr>
         </thead>
