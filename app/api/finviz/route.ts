@@ -10,6 +10,11 @@ import { scrapeAndStoreNews } from "@/bot/newsScraper";
 let isScraping = false;
 let lastScrapeTime = 0;
 
+// Global cache for trending action to avoid database query overhead
+let cachedTrending: any = null;
+let lastTrendingCacheTime = 0;
+const TRENDING_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+
 const HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -104,6 +109,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (action === "trending") {
+      if (cachedTrending && Date.now() - lastTrendingCacheTime < TRENDING_CACHE_TTL) {
+        return NextResponse.json({ success: true, data: cachedTrending });
+      }
+
       // Query news published in the last 24 hours
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       let news = await prisma.news.findMany({
@@ -112,12 +121,22 @@ export async function GET(request: NextRequest) {
             gte: oneDayAgo,
           },
         },
+        select: {
+          tickers: true,
+          sentiment: true,
+          impact: true,
+        },
         orderBy: { publishedAt: "desc" },
       });
 
       // Fallback if less than 50 news in last 24 hours to ensure we show a rich dataset
       if (news.length < 50) {
         news = await prisma.news.findMany({
+          select: {
+            tickers: true,
+            sentiment: true,
+            impact: true,
+          },
           orderBy: { publishedAt: "desc" },
           take: 200,
         });
@@ -232,6 +251,8 @@ export async function GET(request: NextRequest) {
           Math.abs(b.score) - Math.abs(a.score),
       );
 
+      cachedTrending = trendingList;
+      lastTrendingCacheTime = Date.now();
       return NextResponse.json({ success: true, data: trendingList });
     }
 
