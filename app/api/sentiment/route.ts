@@ -3,8 +3,29 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+// Global in-memory cache to prevent Yahoo Finance / Finviz network bottlenecks
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+const priceCache = new Map<string, CacheEntry<{ dailyChanges: Record<string, number>; closes: number[] }>>();
+const singlePriceCache = new Map<string, CacheEntry<number | null>>();
+const CACHE_TTL = 15 * 60 * 1000;      // 15 minutes cache for successful fetches
+const NEGATIVE_CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache for failed fetches
+
 // ─── Helper: Fetch overall price change % for the range (with Finviz fallback) ──
 async function fetchPriceChange(symbol: string, range: string): Promise<number | null> {
+  const cacheKey = `${symbol}-${range}`;
+  const cached = singlePriceCache.get(cacheKey);
+  if (cached) {
+    const isErrorCache = cached.data === null;
+    const ttl = isErrorCache ? NEGATIVE_CACHE_TTL : CACHE_TTL;
+    if (Date.now() - cached.timestamp < ttl) {
+      return cached.data;
+    }
+  }
+
+  let finalPct: number | null = null;
   try {
     const yfRangeMap: Record<string, { range: string; interval: string }> = {
       "24h": { range: "2d",  interval: "1d" },
@@ -35,52 +56,66 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
           const latestClose = closes[closes.length - 1];
           const latestOpen  = opens[opens.length - 1];
           if (latestClose != null && latestOpen != null && latestOpen !== 0) {
-            return ((latestClose - latestOpen) / latestOpen) * 100;
+            finalPct = ((latestClose - latestOpen) / latestOpen) * 100;
+          } else {
+            const liveChange = result.meta?.regularMarketChangePercent;
+            if (liveChange != null) finalPct = liveChange;
           }
-          const liveChange = result.meta?.regularMarketChangePercent;
-          if (liveChange != null) return liveChange;
         } else {
           const firstOpen = opens.find((v) => v != null);
           const lastClose = [...closes].reverse().find((v) => v != null);
           if (firstOpen != null && lastClose != null && firstOpen !== 0) {
-            return ((lastClose - firstOpen) / firstOpen) * 100;
+            finalPct = ((lastClose - firstOpen) / firstOpen) * 100;
           }
         }
       }
     }
   } catch { /* fall through to Finviz */ }
 
-  try {
-    const finvizRes = await fetch(`https://finviz.com/quote.ashx?t=${symbol}`, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html",
-        "Referer": "https://finviz.com/",
-      },
-    });
-    if (finvizRes.ok) {
-      const html = await finvizRes.text();
-      const match = html.match(/<td[^>]*>Change<\/td>\s*<td[^>]*>([-\d.]+)%<\/td>/i)
-        ?? html.match(/data-testid="quote-change-percent"[^>]*>([-\d.]+)/i);
+  if (finalPct === null) {
+    try {
+      const finvizRes = await fetch(`https://finviz.com/quote.ashx?t=${symbol}`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "text/html",
+          "Referer": "https://finviz.com/",
+        },
+      });
+      if (finvizRes.ok) {
+        const html = await finvizRes.text();
+        const match = html.match(/<td[^>]*>Change<\/td>\s*<td[^>]*>([-\d.]+)%<\/td>/i)
+          ?? html.match(/data-testid="quote-change-percent"[^>]*>([-\d.]+)/i);
 
-      const changeMatch = html.match(/title="Change"[\s\S]*?<b>([-+]?[\d.]+)%<\/b>/i)
-        ?? html.match(/>Change<\/td>[\s\S]{0,200}?>([-+]?[\d.]+)%</i);
+        const changeMatch = html.match(/title="Change"[\s\S]*?<b>([-+]?[\d.]+)%<\/b>/i)
+          ?? html.match(/>Change<\/td>[\s\S]{0,200}?>([-+]?[\d.]+)%</i);
 
-      const rawChange = match?.[1] ?? changeMatch?.[1];
-      if (rawChange != null) {
-        const pct = parseFloat(rawChange);
-        if (!isNaN(pct)) {
-          return pct;
+        const rawChange = match?.[1] ?? changeMatch?.[1];
+        if (rawChange != null) {
+          const pct = parseFloat(rawChange);
+          if (!isNaN(pct)) {
+            finalPct = pct;
+          }
         }
       }
-    }
-  } catch { /* ignore */ }
+    } catch { /* ignore */ }
+  }
 
-  return null;
+  singlePriceCache.set(cacheKey, { data: finalPct, timestamp: Date.now() });
+  return finalPct;
 }
 
 // ─── Helper: Fetch daily price change map for standard dates ───
 async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ dailyChanges: Record<string, number>; closes: number[] }> {
+  const cacheKey = `${symbol}-${range}`;
+  const cached = priceCache.get(cacheKey);
+  if (cached) {
+    const isErrorCache = Object.keys(cached.data.dailyChanges).length === 0 && cached.data.closes.length === 0;
+    const ttl = isErrorCache ? NEGATIVE_CACHE_TTL : CACHE_TTL;
+    if (Date.now() - cached.timestamp < ttl) {
+      return cached.data;
+    }
+  }
+
   const dailyChanges: Record<string, number> = {};
   const closesList: number[] = [];
   try {
@@ -134,7 +169,10 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ 
   } catch (err) {
     console.error(`[Daily Price Chart] Error fetching for ${symbol}:`, err);
   }
-  return { dailyChanges, closes: closesList };
+
+  const resultData = { dailyChanges, closes: closesList };
+  priceCache.set(cacheKey, { data: resultData, timestamp: Date.now() });
+  return resultData;
 }
 
 function clamp(val: number, min: number, max: number) {
@@ -439,7 +477,7 @@ export async function GET(request: NextRequest) {
 
     // ── 3. Fallback: Generate overall price action for symbols with 0 news if symbolsParam is set ──
     if (filterSymbols) {
-      for (const symbol of filterSymbols) {
+      const fallbackPromises = Array.from(filterSymbols).map(async (symbol) => {
         if (!matchedSymbols.has(symbol)) {
           const priceChangePercent = await fetchPriceChange(symbol, range);
           const priceScore =
@@ -472,7 +510,8 @@ export async function GET(request: NextRequest) {
             priceTrend: trendCloses,
           });
         }
-      }
+      });
+      await Promise.all(fallbackPromises);
     }
 
     return NextResponse.json({ success: true, data: results });
