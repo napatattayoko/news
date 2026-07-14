@@ -259,8 +259,6 @@ export async function GET(request: NextRequest) {
         neuCount: number;
         latestNewsDate: string | null;
         priceTrend: number[];
-        // Per-news accuracy tracking: each entry = { rawAccuracy: 0-70, publishedAt: Date }
-        accuracyEntries: Array<{ rawAccuracy: number; publishedAt: Date }>;
       }
     >();
 
@@ -296,7 +294,6 @@ export async function GET(request: NextRequest) {
             neuCount: 0,
             latestNewsDate: null,
             priceTrend: [],
-            accuracyEntries: [],
           });
         }
         const group = groupedMap.get(symbol)!;
@@ -367,33 +364,8 @@ export async function GET(request: NextRequest) {
 
         group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + combinedWeight;
 
-        // ── Per-news accuracy (raw, before time decay) ──────────────────
-        // Only calculate if we have price data for that day
-        if (dailyPriceChanges[dateKey] !== undefined) {
-          const pricePct = dailyPriceChanges[dateKey]; // positive = price up, negative = price down
-          const scoreDir = news.sentiment === "good" ? 1 : news.sentiment === "bad" ? -1 : 0;
-          const priceDir = pricePct > 0.3 ? 1 : pricePct < -0.3 ? -1 : 0; // ±0.3% deadzone
-
-          // Direction match: 0 or 40 pts
-          let dirPts = 0;
-          if (scoreDir === 0 && priceDir === 0) dirPts = 40; // neutral + flat = correct
-          else if (scoreDir === priceDir && scoreDir !== 0) dirPts = 40;
-
-          // Magnitude match: 0 or 30 pts (Only calculated if direction matched!)
-          let magPts = 0;
-          if (dirPts > 0) {
-            const absPct = Math.abs(pricePct);
-            const scoreAbsLevel = newsImpact; // high/medium/low already computed above
-            if (scoreAbsLevel === 'high' && absPct >= 2) magPts = 30;
-            else if (scoreAbsLevel === 'medium' && absPct >= 1) magPts = 30;
-            else if (scoreAbsLevel === 'low' && absPct < 1) magPts = 30;
-          }
-
-          group.accuracyEntries.push({
-            rawAccuracy: dirPts + magPts, // 0 (if wrong direction) or 40-70 (if correct)
-            publishedAt: news.publishedAt,
-          });
-        }
+        // (per-news accuracy removed — accuracy is now computed at the symbol level
+        //  by comparing the final Score against the actual price change over the range)
       }
     }
 
@@ -426,33 +398,45 @@ export async function GET(request: NextRequest) {
 
       const finalScore = getNewsScore(majoritySentiment, majorityImpact);
 
-      // ── Accuracy with Time Decay ─────────────────────────────────────
-      // Time decay factor based on age of each news item
-      function getTimePts(publishedAt: Date): number {
-        const hoursOld = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60);
-        if (hoursOld < 6)   return 30;
-        if (hoursOld < 12)  return 24;
-        if (hoursOld < 24)  return 18;
-        if (hoursOld < 72)  return 9;   // 1-3 days
-        if (hoursOld < 168) return 3;   // 3-7 days
-        return 1; // >7 days: minimal but not zero (history still counts a little)
-      }
-
+      // ── Accuracy: Compare Score direction vs actual price change over the range ──
+      // Uses first and last closing price from priceTrend (already fetched from Yahoo Finance)
       let accuracy: number | null = null;
-      if (group.accuracyEntries.length > 0) {
-        // Weighted average: each news item's accuracy (0-100%) is multiplied by its time decay weight
-        let weightedSum = 0;
-        let weightTotal = 0;
-        for (const entry of group.accuracyEntries) {
-          const timePts = getTimePts(entry.publishedAt);
-          // Normalize time weight to 0.03 - 1.0 scale
-          const timeWeight = timePts / 30;
-          // Convert raw accuracy (0-70) to percentage (0-100%)
-          const normalizedAccuracy = (entry.rawAccuracy / 70) * 100;
-          weightedSum += normalizedAccuracy * timeWeight;
-          weightTotal += timeWeight;
+      const closes = group.priceTrend;
+      if (closes.length >= 2) {
+        const firstClose = closes[0];
+        const lastClose = closes[closes.length - 1];
+        const rangeChangePct = ((lastClose - firstClose) / firstClose) * 100;
+
+        // Deadzone: ignore tiny price moves (±0.5%) to avoid noise
+        const PRICE_DEADZONE = 0.5;
+        const SCORE_DEADZONE = 1; // scores between -1 and +1 treated as neutral
+
+        const scoreDir = finalScore > SCORE_DEADZONE ? 1 : finalScore < -SCORE_DEADZONE ? -1 : 0;
+        const priceDir = rangeChangePct > PRICE_DEADZONE ? 1 : rangeChangePct < -PRICE_DEADZONE ? -1 : 0;
+
+        if (scoreDir === 0 && priceDir === 0) {
+          // Both neutral — perfect alignment
+          accuracy = 100;
+        } else if (scoreDir === 0 || priceDir === 0) {
+          // One is neutral, other is directional — partial mismatch
+          accuracy = 50;
+        } else if (scoreDir !== priceDir) {
+          // Directions are opposite — score is wrong (bidi divergence)
+          // Scale the wrongness: the stronger the score and the larger the opposite move, the worse
+          const scoreStrength = Math.abs(finalScore) / 10; // 0.0 – 1.0
+          const priceStrength = Math.min(Math.abs(rangeChangePct) / 5, 1); // 0.0 – 1.0 (caps at 5%)
+          const penaltyPct = Math.round((scoreStrength + priceStrength) / 2 * 100);
+          accuracy = Math.max(0, 50 - penaltyPct); // ranges from 0 to 50
+        } else {
+          // Directions match — reward based on how well magnitudes agree
+          // scoreStrength: how far from 0 the score is (0–10 scale)
+          const scoreStrength = Math.abs(finalScore) / 10; // 0.0 – 1.0
+          // priceStrength: how large the actual move was (cap at 5% = full score)
+          const priceStrength = Math.min(Math.abs(rangeChangePct) / 5, 1); // 0.0 – 1.0
+          // Alignment bonus: both strong = high accuracy, one weak = medium
+          const alignmentScore = (scoreStrength + priceStrength) / 2; // 0.0 – 1.0
+          accuracy = Math.round(50 + alignmentScore * 50); // ranges from 50 to 100
         }
-        accuracy = weightTotal > 0 ? Math.round(weightedSum / weightTotal) : 0;
       }
 
       results.push({
