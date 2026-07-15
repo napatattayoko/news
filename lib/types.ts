@@ -59,6 +59,15 @@ export interface TickerAnalysis {
   accuracy?: number | null; // 0-100%, null = no price data to compute
 }
 
+export interface DailyStat {
+  date: string;
+  sentiment: 'up' | 'down' | 'flat';
+  impactLevel: ImpactLevel;
+  score: number;
+  mentionCount: number;
+  sentimentHistorical: SentimentHistorical;
+}
+
 export interface LiveUpdate {
   headline: string;
   shortHeadline: string;

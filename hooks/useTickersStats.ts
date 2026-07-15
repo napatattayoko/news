@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ImpactLevel } from '@/lib/types';
+import { ImpactLevel, DailyStat } from '@/lib/types';
 
 export interface TickerStats {
   id?: string;
@@ -12,6 +12,7 @@ export interface TickerStats {
   latestNewsDate?: string | null;
   priceTrend?: number[];
   accuracy?: number | null; // 0-100%, null = no price data to compute
+  dailyBreakdown?: DailyStat[];
 }
 
 // Module-level cache so data survives component unmount/remount (page navigation)

@@ -271,6 +271,16 @@ export async function GET(request: NextRequest) {
         neuCount: number;
         latestNewsDate: string | null;
         priceTrend: number[];
+        dailyStats: Record<string, {
+          positive: number;
+          negative: number;
+          neutral: number;
+          count: number;
+          impacts: Record<string, number>;
+          posCount: number;
+          negCount: number;
+          neuCount: number;
+        }>;
       }
     >();
 
@@ -306,6 +316,7 @@ export async function GET(request: NextRequest) {
             neuCount: 0,
             latestNewsDate: null,
             priceTrend: [],
+            dailyStats: {},
           });
         }
         const group = groupedMap.get(symbol)!;
@@ -375,6 +386,22 @@ export async function GET(request: NextRequest) {
         }
 
         group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + combinedWeight;
+
+        // Populate daily stats
+        if (!group.dailyStats[dateKey]) {
+          group.dailyStats[dateKey] = {
+            positive: 0, negative: 0, neutral: 0,
+            count: 0,
+            impacts: { high: 0, medium: 0, low: 0 },
+            posCount: 0, negCount: 0, neuCount: 0
+          };
+        }
+        const daily = group.dailyStats[dateKey];
+        if (news.sentiment === "good") { daily.positive += combinedWeight; daily.posCount += 1; }
+        else if (news.sentiment === "bad") { daily.negative += combinedWeight; daily.negCount += 1; }
+        else { daily.neutral += combinedWeight; daily.neuCount += 1; }
+        daily.count += 1;
+        daily.impacts[impactLevel] = (daily.impacts[impactLevel] || 0) + combinedWeight;
 
         // (per-news accuracy removed — accuracy is now computed at the symbol level
         //  by comparing the final Score against the actual price change over the range)
@@ -451,6 +478,35 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // ── Build Daily Breakdown if applicable ─────────────────────────
+      let dailyBreakdown: any[] | undefined = undefined;
+      if (range === '7d' || range === '30d') {
+        dailyBreakdown = Object.entries(group.dailyStats).map(([date, stats]) => {
+          const maxSent = Math.max(stats.positive, stats.negative, stats.neutral);
+          let sent: 'up' | 'down' | 'flat' = 'flat';
+          if (maxSent === stats.positive && maxSent > 0) sent = 'up';
+          else if (maxSent === stats.negative && maxSent > 0) sent = 'down';
+
+          const maxImp = Math.max(stats.impacts.high, stats.impacts.medium, stats.impacts.low);
+          let imp: 'high' | 'medium' | 'low' = 'low';
+          if (maxImp === stats.impacts.high && maxImp > 0) imp = 'high';
+          else if (maxImp === stats.impacts.medium && maxImp > 0) imp = 'medium';
+
+          return {
+            date,
+            sentiment: sent,
+            impactLevel: imp,
+            score: getNewsScore(sent, imp),
+            mentionCount: stats.count,
+            sentimentHistorical: {
+              positive: stats.posCount,
+              negative: stats.negCount,
+              neutral: stats.neuCount,
+            }
+          };
+        }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      }
+
       results.push({
         id: symbol,
         symbol,
@@ -466,6 +522,7 @@ export async function GET(request: NextRequest) {
         },
         latestNewsDate: group.latestNewsDate,
         priceTrend: group.priceTrend,
+        dailyBreakdown,
       });
     }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import RangeDropdown, { RangeOption } from '@/components/filters/RangeDropdown';
 import { SentimentHistoricalBar, TopStocksRow } from '@/components/market-trends';
@@ -96,6 +96,16 @@ export default function StockSentimentPage() {
   const [impactFilter, setImpactFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [sortColumn, setSortColumn] = useState<SortColumn | null>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (symbol: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSet = new Set(expandedRows);
+    if (newSet.has(symbol)) newSet.delete(symbol);
+    else newSet.add(symbol);
+    setExpandedRows(newSet);
+  };
 
   const handleRangeChange = (newRange: TimeRange) => {
     setSelectedRange(newRange);
@@ -396,12 +406,20 @@ export default function StockSentimentPage() {
                     const SentIcon = sent.icon;
 
                     return (
-                      <tr
-                        key={row.id || (row.latestNewsDate ? `${row.symbol}-${row.latestNewsDate}` : row.symbol)}
-                        onClick={() => router.push(`/stock-sentiment/${row.symbol.toLowerCase()}`)}
-                        className="border-b border-[#222F44] hover:bg-white/5 transition-colors cursor-pointer"
-                      >
-                        <td className="px-4 py-3">
+                      <Fragment key={row.id || (row.latestNewsDate ? `${row.symbol}-${row.latestNewsDate}` : row.symbol)}>
+                        <tr
+                          onClick={() => router.push(`/stock-sentiment/${row.symbol.toLowerCase()}`)}
+                          className={cn(
+                            "transition-colors cursor-pointer",
+                            expandedRows.has(row.symbol)
+                              ? "bg-[#0D7FF2]/[0.03] border-b border-[#0D7FF2]/20"
+                              : "border-b border-[#222F44] hover:bg-white/5"
+                          )}
+                        >
+                        <td className="px-4 py-3 relative">
+                          {expandedRows.has(row.symbol) && (
+                            <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#0D7FF2]" />
+                          )}
                           <span className="text-[#0D7FF2] font-bold text-sm">${row.symbol}</span>
                         </td>
                         <td className="px-4 py-3">
@@ -443,25 +461,93 @@ export default function StockSentimentPage() {
                             <span className="text-slate-500 text-xs">N/A</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right text-xs text-slate-400 font-bold whitespace-nowrap">
-                          {row.latestNewsDate ? (
-                            new Date(row.latestNewsDate).toLocaleString('en-US', {
-                              timeZone: 'America/New_York',
-                              month: 'short',
-                              day: 'numeric',
-                              ...(selectedRange === '24H' ? {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true,
-                              } : {})
-                            })
-                          ) : (
-                            '-'
-                          )}
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="text-xs text-slate-400 font-bold whitespace-nowrap">
+                              {row.latestNewsDate ? (
+                                new Date(row.latestNewsDate).toLocaleString('en-US', {
+                                  timeZone: 'America/New_York',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  ...(selectedRange === '24H' ? {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                  } : {})
+                                })
+                              ) : (
+                                '-'
+                              )}
+                            </span>
+                            {selectedRange === '7D' && row.dailyBreakdown && row.dailyBreakdown.length > 0 ? (
+                              <button
+                                onClick={(e) => toggleRow(row.symbol, e)}
+                                className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400"
+                              >
+                                <ChevronDown size={16} className={cn("transition-transform duration-200", expandedRows.has(row.symbol) ? "rotate-180" : "")} />
+                              </button>
+                            ) : (
+                              <div className="w-[24px]" /> /* Placeholder to keep alignment */
+                            )}
+                          </div>
                         </td>
                       </tr>
-                    );
-                  })}
+                      
+                      {/* Expanded Daily Breakdown Rows */}
+                      {expandedRows.has(row.symbol) && row.dailyBreakdown && row.dailyBreakdown.length > 0 && row.dailyBreakdown.map(day => {
+                        const dayImpact = impactConfigCompact[day.impactLevel];
+                        const daySent = sentimentConfig[day.sentiment];
+                        const DayIcon = daySent.icon;
+                        
+                        // Parse date string like "7/14/2026"
+                        const parsedDate = new Date(day.date);
+                        const formattedDate = !isNaN(parsedDate.getTime()) 
+                          ? parsedDate.toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' })
+                          : day.date;
+                          
+                        return (
+                          <tr key={day.date} className="border-b border-[#222F44]/30 bg-[#0D7FF2]/[0.02] hover:bg-[#0D7FF2]/[0.05] transition-colors">
+                            <td className="px-4 py-3 pl-4 relative">
+                              <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#0D7FF2]/40" />
+                              <div className="flex items-center gap-2 ml-4">
+                                <span className="text-[#0D7FF2]/40 text-lg leading-none -mt-1">↳</span>
+                                <span className="text-[#0D7FF2] font-bold text-sm opacity-70">${row.symbol}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={cn('text-xs font-bold px-4 py-1.5 rounded-full', dayImpact.bg, dayImpact.text, dayImpact.border)}>
+                                {dayImpact.label}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold', daySent.bg)}>
+                                <DayIcon size={14} className={daySent.iconColor} />
+                                <span className={daySent.textColor}>{daySent.label}</span>
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span className="text-slate-400 text-sm font-bold">{day.mentionCount}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <SentimentHistoricalBar data={day.sentimentHistorical} height={6} />
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full border border-[#222F44] text-slate-300 font-bold text-sm opacity-80">
+                                {day.score}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span className="text-slate-600 text-xs">-</span>
+                            </td>
+                            <td className="px-4 py-3 text-right pr-12">
+                              <span className="text-xs text-slate-400 font-bold whitespace-nowrap">{formattedDate}</span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </Fragment>
+                  );
+                })}
                 </tbody>
               </table>
             </div>
