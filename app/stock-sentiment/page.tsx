@@ -13,11 +13,12 @@ import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import { usePagination } from '@/hooks/usePagination';
 import { useTickersStats } from '@/hooks/useTickersStats';
 
-type TimeRange = '24H' | '7D';
+type TimeRange = '24H' | '7D' | '30D';
 
 const rangeOptions: RangeOption<TimeRange>[] = [
   { value: '24H', label: 'Last 24H' },
   { value: '7D', label: 'Last 7D' },
+  { value: '30D', label: 'Last 30D' },
 ];
 
 type SortColumn = 'symbol' | 'impact' | 'sentiment' | 'mention' | 'score' | 'date';
@@ -94,6 +95,7 @@ export default function StockSentimentPage() {
   const [activeFilter, setActiveFilter] = useState<TrendFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [impactFilter, setImpactFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [statRange, setStatRange] = useState<number>(5);
   const [sortColumn, setSortColumn] = useState<SortColumn | null>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -131,10 +133,10 @@ export default function StockSentimentPage() {
   }, []);
 
   // Fetch all tickers stats by passing an empty array
-  const { stats: baseRows, isLoading } = useTickersStats([], selectedRange);
+  const { stats: baseRows, isLoading } = useTickersStats([], selectedRange, statRange);
 
   // Fetch specific major tickers for top cards to get correct price action stats when there's no news
-  const { stats: topRows } = useTickersStats(['NVDA', 'AAPL', 'TSLA', 'AMZN'], selectedRange);
+  const { stats: topRows } = useTickersStats(['NVDA', 'AAPL', 'TSLA', 'AMZN'], selectedRange, statRange);
 
   // Map NVDA, AAPL, TSLA, AMZN stats dynamically for top stock cards
   const topStocks = useMemo(() => {
@@ -298,6 +300,23 @@ export default function StockSentimentPage() {
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             </div>
 
+            {/* Stat Range Dropdown */}
+            <div className="relative w-full sm:w-[140px]">
+              <select
+                value={statRange}
+                onChange={(e: any) => {
+                  setStatRange(Number(e.target.value));
+                  pagination.setPage(0);
+                }}
+                className="w-full bg-[#0a1017] border border-[#222F44] text-white text-sm px-3 py-2.5 rounded-lg outline-none cursor-pointer focus:border-[#0D7FF2] appearance-none pr-8 font-semibold"
+              >
+                {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
+                  <option key={n} value={n}>Stat: {n} Candles</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+
             {/* Impact Dropdown */}
             <div className="relative w-full sm:w-[140px]">
               <select
@@ -447,10 +466,10 @@ export default function StockSentimentPage() {
                         <td className="px-4 py-3 text-center">
                           {row.accuracy != null ? (() => {
                             const acc = row.accuracy as number;
-                            const color = acc >= 70
+                            const color = acc >= 60
                               ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                              : acc >= 40
-                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                              : acc >= 50
+                                ? 'bg-slate-500/20 text-slate-400 border-slate-500/30'
                                 : 'bg-red-500/20 text-red-400 border-red-500/30';
                             return (
                               <span className={cn('inline-flex items-center justify-center min-w-[64px] px-2 py-1 rounded-full border text-xs font-bold', color)}>
@@ -458,28 +477,47 @@ export default function StockSentimentPage() {
                               </span>
                             );
                           })() : (
-                            <span className="text-slate-500 text-xs">N/A</span>
+                            <span className="text-white/10 text-xs">-</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <span className="text-xs text-slate-400 font-bold whitespace-nowrap">
-                              {row.latestNewsDate ? (
-                                new Date(row.latestNewsDate).toLocaleString('en-US', {
-                                  timeZone: 'America/New_York',
-                                  month: 'short',
-                                  day: 'numeric',
-                                  ...(selectedRange === '24H' ? {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    hour12: true,
-                                  } : {})
-                                })
+                            <div className="flex flex-col items-end">
+                              {row.parentStatStartDate && row.parentStatStartPrice != null && row.parentStatEndDate && row.parentStatEndPrice != null ? (
+                                <>
+                                  <span className="text-xs text-slate-400 font-bold whitespace-nowrap">
+                                    {new Date(row.parentStatStartDate).toLocaleString('en-US', {
+                                      timeZone: 'America/New_York',
+                                      month: 'short',
+                                      day: 'numeric'
+                                    })} - {new Date(row.parentStatEndDate).toLocaleString('en-US', {
+                                      timeZone: 'America/New_York',
+                                      month: 'short',
+                                      day: 'numeric'
+                                    })}
+                                  </span>
+                                  <span className="text-xs text-[#0D7FF2]/80 font-bold whitespace-nowrap">
+                                    ${row.parentStatStartPrice.toFixed(2)} - ${row.parentStatEndPrice.toFixed(2)}
+                                  </span>
+                                </>
+                              ) : row.latestNewsDate ? (
+                                <span className="text-xs text-slate-400 font-bold whitespace-nowrap">
+                                  {new Date(row.latestNewsDate).toLocaleString('en-US', {
+                                    timeZone: 'America/New_York',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    ...(selectedRange === '24H' ? {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                      hour12: true,
+                                    } : {})
+                                  })}
+                                </span>
                               ) : (
-                                '-'
+                                <span className="text-xs text-slate-400 font-bold whitespace-nowrap">-</span>
                               )}
-                            </span>
-                            {selectedRange === '7D' && row.dailyBreakdown && row.dailyBreakdown.length > 0 ? (
+                            </div>
+                            {selectedRange !== '24H' && row.dailyBreakdown && row.dailyBreakdown.length > 0 ? (
                               <button
                                 onClick={(e) => toggleRow(row.symbol, e)}
                                 className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400"
@@ -499,12 +537,32 @@ export default function StockSentimentPage() {
                         const daySent = sentimentConfig[day.sentiment];
                         const DayIcon = daySent.icon;
                         
-                        // Parse date string like "7/14/2026"
-                        const parsedDate = new Date(day.date);
-                        const formattedDate = !isNaN(parsedDate.getTime()) 
-                          ? parsedDate.toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' })
-                          : day.date;
-                          
+                        // day.date is already in M/D/YYYY format representing New York time.
+                        // We must parse it as UTC and format it as UTC to prevent the browser's local timezone from shifting it backwards.
+                        let formattedDate = day.date;
+                        if (day.date && day.date.includes('/')) {
+                          const [m, d, y] = day.date.split('/');
+                          const dateObj = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)));
+                          if (!isNaN(dateObj.getTime())) {
+                            formattedDate = dateObj.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' });
+                          }
+                        }
+                        
+                        let formattedEndDate = '';
+                        if (day.endDate && day.endDate.includes('/')) {
+                          const [m, d, y] = day.endDate.split('/');
+                          const dateObj = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)));
+                          if (!isNaN(dateObj.getTime())) {
+                            // If the end date is in the same month, just show the day (e.g. "Jul 5 - 10")
+                            const startParts = formattedDate.split(' ');
+                            const endParts = dateObj.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).split(' ');
+                            if (startParts[0] === endParts[0]) {
+                              formattedEndDate = ` - ${endParts[1]}`;
+                            } else {
+                              formattedEndDate = ` - ${endParts[0]} ${endParts[1]}`;
+                            }
+                          }
+                        }
                         return (
                           <tr key={day.date} className="border-b border-[#222F44]/30 bg-[#0D7FF2]/[0.02] hover:bg-[#0D7FF2]/[0.05] transition-colors">
                             <td className="px-4 py-3 pl-4 relative">
@@ -537,10 +595,34 @@ export default function StockSentimentPage() {
                               </span>
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <span className="text-slate-600 text-xs">-</span>
+                              {day.accuracy != null ? (() => {
+                                const acc = day.accuracy as number;
+                                const color = acc >= 60
+                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                  : acc >= 50
+                                    ? 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                                    : 'bg-red-500/20 text-red-400 border-red-500/30';
+                                return (
+                                  <span className={cn('inline-flex items-center justify-center min-w-[50px] px-2 py-1 rounded-full border text-xs font-bold', color)}>
+                                    {(acc / 10).toFixed(1)}/10
+                                  </span>
+                                );
+                              })() : (
+                                <span className="text-white/10 text-xs">-</span>
+                              )}
                             </td>
                             <td className="px-4 py-3 text-right pr-12">
-                              <span className="text-xs text-slate-400 font-bold whitespace-nowrap">{formattedDate}</span>
+                              <div className="flex flex-col items-end">
+                                <span className="text-xs text-slate-400 font-bold whitespace-nowrap">
+                                  {formattedDate}
+                                  {day.accuracy != null && formattedEndDate}
+                                </span>
+                                {day.accuracy != null && day.startPrice != null && day.endPrice != null && (
+                                  <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap mt-0.5">
+                                    ${day.startPrice.toFixed(2)} → ${day.endPrice.toFixed(2)}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );

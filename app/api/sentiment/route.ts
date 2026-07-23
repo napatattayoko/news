@@ -8,7 +8,7 @@ interface CacheEntry<T> {
   data: T;
   timestamp: number;
 }
-const priceCache = new Map<string, CacheEntry<{ dailyChanges: Record<string, number>; closes: number[] }>>();
+const priceCache = new Map<string, CacheEntry<{ dailyChanges: Record<string, number>; closes: number[]; history: { timestamp: number; close: number; }[]; currentPrice: number | null }>>();
 const singlePriceCache = new Map<string, CacheEntry<number | null>>();
 const CACHE_TTL = 15 * 60 * 1000;      // 15 minutes cache for successful fetches
 const NEGATIVE_CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache for failed fetches
@@ -33,8 +33,8 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
   let finalPct: number | null = null;
   try {
     const yfRangeMap: Record<string, { range: string; interval: string }> = {
-      "24h": { range: "2d",  interval: "1d" },
-      "7d":  { range: "7d",  interval: "1d" },
+      "24h": { range: "2d", interval: "1d" },
+      "7d": { range: "7d", interval: "1d" },
       "30d": { range: "1mo", interval: "1d" },
     };
     const yfParams = yfRangeMap[range] ?? { range: "2d", interval: "1d" };
@@ -55,11 +55,11 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
       const result = data?.chart?.result?.[0];
       if (result) {
         const closes = result.indicators.quote[0].close as (number | null)[];
-        const opens  = result.indicators.quote[0].open  as (number | null)[];
+        const opens = result.indicators.quote[0].open as (number | null)[];
 
         if (range === "24h") {
           const latestClose = closes[closes.length - 1];
-          const latestOpen  = opens[opens.length - 1];
+          const latestOpen = opens[opens.length - 1];
           if (latestClose != null && latestOpen != null && latestOpen !== 0) {
             finalPct = ((latestClose - latestOpen) / latestOpen) * 100;
           } else {
@@ -110,7 +110,7 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
 }
 
 // ─── Helper: Fetch daily price change map for standard dates ───
-async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ dailyChanges: Record<string, number>; closes: number[] }> {
+async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ dailyChanges: Record<string, number>; closes: number[]; history: { timestamp: number; close: number; }[]; currentPrice: number | null }> {
   const cacheKey = `${symbol}-${range}`;
   const cached = priceCache.get(cacheKey);
   if (cached) {
@@ -123,11 +123,13 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ 
 
   const dailyChanges: Record<string, number> = {};
   const closesList: number[] = [];
+  const history: { timestamp: number; close: number }[] = [];
+  let currentPrice: number | null = null;
   try {
     const yfRangeMap: Record<string, { range: string; interval: string }> = {
-      "24h": { range: "5d",  interval: "1d" },
-      "7d":  { range: "10d", interval: "1d" },
-      "30d": { range: "45d", interval: "1d" },
+      "24h": { range: "7d", interval: "1d" }, // ensure at least 4‑day data for 3‑day forward
+      "7d": { range: "1mo", interval: "1d" },
+      "30d": { range: "3mo", interval: "1d" },
     };
     const yfParams = yfRangeMap[range] ?? { range: "5d", interval: "1d" };
 
@@ -151,9 +153,10 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ 
       const data = await res.json();
       const result = data?.chart?.result?.[0];
       if (result) {
+        currentPrice = result.meta?.regularMarketPrice ?? null;
         const timestamps = result.timestamp as number[];
         const closes = result.indicators.quote[0].close as (number | null)[];
-        const opens  = result.indicators.quote[0].open  as (number | null)[];
+        const opens = result.indicators.quote[0].open as (number | null)[];
 
         if (timestamps && closes && opens) {
           for (let i = 0; i < timestamps.length; i++) {
@@ -166,6 +169,7 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ 
               });
               dailyChanges[dateKey] = ((close - open) / open) * 100;
               closesList.push(close);
+              history.push({ timestamp: timestamps[i] * 1000, close });
             }
           }
         }
@@ -175,7 +179,7 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ 
     console.error(`[Daily Price Chart] Error fetching for ${symbol}:`, err);
   }
 
-  const resultData = { dailyChanges, closes: closesList };
+  const resultData = { dailyChanges, closes: closesList, history, currentPrice };
   priceCache.set(cacheKey, { data: resultData, timestamp: Date.now() });
   return resultData;
 }
@@ -189,21 +193,38 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const symbolsParam = searchParams.get("symbols");
     const range = searchParams.get("range")?.toLowerCase() || "24h";
+    const statRangeStr = searchParams.get("statRange");
+    let targetCandles = 5;
+    if (statRangeStr) {
+      const parsed = parseInt(statRangeStr, 10);
+      if (!isNaN(parsed)) {
+        targetCandles = clamp(parsed, 1, 10);
+      }
+    }
 
     // ── Result cache check (additive — logic below untouched) ────────────────
-    const resultCacheKey = `sentiment-${range}-${symbolsParam ?? "all"}`;
+    const resultCacheKey = `sentiment-${range}-${symbolsParam ?? "all"}-${targetCandles}`;
     const cachedResult = resultCache.get(resultCacheKey);
     if (cachedResult && Date.now() - cachedResult.ts < RESULT_CACHE_TTL) {
       return NextResponse.json({ success: true, data: cachedResult.data });
     }
 
+    // ── Validate range parameter ─────────────────────────────────────────
+    const ALLOWED_RANGES = new Set(["24h", "7d", "30d"]);
+    if (!ALLOWED_RANGES.has(range)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid range "${range}". Allowed: 24h, 7d, 30d` },
+        { status: 400 }
+      );
+    }
+
     let cutoffDate: Date | null = null;
     if (range === "24h") {
-      cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      cutoffDate = new Date(Date.now() - (1 + targetCandles * 2) * 24 * 60 * 60 * 1000);
     } else if (range === "7d") {
-      cutoffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      cutoffDate = new Date(Date.now() - (7 + Math.max(8, targetCandles * 2)) * 24 * 60 * 60 * 1000);
     } else if (range === "30d") {
-      cutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      cutoffDate = new Date(Date.now() - (30 + targetCandles * 2) * 24 * 60 * 60 * 1000);
     }
 
     let filterSymbols: Set<string> | null = null;
@@ -212,17 +233,25 @@ export async function GET(request: NextRequest) {
     }
 
     // ── 1. Fetch all news in the selected range ──────────────────────────
+    // Only select lightweight fields needed for aggregation.
+    // Excludes: headline, body, sources (heavy text fields unused in scoring).
     const newsItems = await prisma.news.findMany({
       where: cutoffDate ? { publishedAt: { gte: cutoffDate } } : {},
       orderBy: { publishedAt: "desc" },
-      take: 2000, // Limit to prevent memory exhaustion
+      select: {
+        id: true,
+        publishedAt: true,
+        sentiment: true,
+        impact: true,
+        tickers: true,
+      },
     });
 
     const results: any[] = [];
     const matchedSymbols = new Set<string>();
 
     // Cache price changes in-request to prevent duplicate fetch calls
-    const priceChangesCache = new Map<string, { dailyChanges: Record<string, number>; closes: number[] }>();
+    const priceChangesCache = new Map<string, { dailyChanges: Record<string, number>; closes: number[]; history: { timestamp: number; close: number }[]; currentPrice: number | null }>();
 
     // Pre-collect unique symbols that will be queried
     const uniqueSymbols = new Set<string>();
@@ -230,13 +259,13 @@ export async function GET(request: NextRequest) {
       try {
         const parsed = JSON.parse(news.tickers as string) || [];
         const tickersList = parsed.map((t: any) => (typeof t === "string" ? t : t.symbol).toUpperCase());
-        const active = filterSymbols 
+        const active = filterSymbols
           ? tickersList.filter((t: string) => filterSymbols!.has(t))
           : tickersList;
         for (const sym of active) {
           uniqueSymbols.add(sym);
         }
-      } catch (err) {}
+      } catch (err) { }
     }
 
     // Fetch all price changes in batches of 10
@@ -250,7 +279,7 @@ export async function GET(request: NextRequest) {
             priceChangesCache.set(symbol, data);
           } catch (err) {
             console.error(`[Pre-fetch Price Error] Failed for ${symbol}:`, err);
-            priceChangesCache.set(symbol, { dailyChanges: {}, closes: [] });
+            priceChangesCache.set(symbol, { dailyChanges: {}, closes: [], history: [], currentPrice: null });
           }
         })
       );
@@ -270,7 +299,10 @@ export async function GET(request: NextRequest) {
         negCount: number;
         neuCount: number;
         latestNewsDate: string | null;
+        oldestNewsDate: string | null;
         priceTrend: number[];
+        priceHistory: { timestamp: number; close: number }[];
+        currentPrice: number | null;
         dailyStats: Record<string, {
           positive: number;
           negative: number;
@@ -295,7 +327,7 @@ export async function GET(request: NextRequest) {
       }
 
       // If filter is active, only include matching symbols for this news item
-      const activeTickers = filterSymbols 
+      const activeTickers = filterSymbols
         ? tickersList.filter(t => filterSymbols!.has(t))
         : tickersList;
 
@@ -315,18 +347,22 @@ export async function GET(request: NextRequest) {
             negCount: 0,
             neuCount: 0,
             latestNewsDate: null,
+            oldestNewsDate: null,
             priceTrend: [],
+            priceHistory: [],
+            currentPrice: null,
             dailyStats: {},
           });
         }
         const group = groupedMap.get(symbol)!;
 
-        // Retrieve pre-fetched price changes instantly
-        const priceData = priceChangesCache.get(symbol) ?? { dailyChanges: {}, closes: [] };
+        const priceData = priceChangesCache.get(symbol) ?? { dailyChanges: {}, closes: [], history: [], currentPrice: null };
         const dailyPriceChanges = priceData.dailyChanges;
-        
+
         if (group.priceTrend.length === 0) {
           group.priceTrend = priceData.closes;
+          group.priceHistory = priceData.history;
+          group.currentPrice = priceData.currentPrice;
         }
 
         const dateKey = news.publishedAt.toLocaleDateString("en-US", {
@@ -352,40 +388,25 @@ export async function GET(request: NextRequest) {
         if (impactLevel === "high") impactMultiplier = 2.5;
         else if (impactLevel === "medium") impactMultiplier = 1.2;
 
-        // ── Time-weighted voting: fresh news has more influence ──────────
-        function getTimeWeight(publishedAt: Date): number {
-          const hoursOld = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60);
-          if (hoursOld < 12) return 1.0;   // 0-12 hours: full weight
-          if (hoursOld < 72) return 0.3;   // 1-3 days: 30% weight
-          return 0.02;                      // 4-7+ days: 2% weight (almost expired)
-        }
-
-        const timeW = getTimeWeight(news.publishedAt);
-        const combinedWeight = timeW * impactMultiplier;
-
+        // We will just use count of news for majority vote as requested by user.
+        // No time decay weighting.
         if (news.sentiment === "good") {
-          group.positive += combinedWeight;
           group.posCount += 1;
-          group.sumPriceScore += 1 * combinedWeight;
-          group.totalNewsVal += combinedWeight;
         } else if (news.sentiment === "bad") {
-          group.negative += combinedWeight;
           group.negCount += 1;
-          group.sumPriceScore += -1 * combinedWeight;
-          group.totalNewsVal += combinedWeight;
         } else {
-          group.neutral += combinedWeight;
           group.neuCount += 1;
-          group.sumPriceScore += 0;
-          group.totalNewsVal += combinedWeight;
         }
 
         group.count += 1;
         if (!group.latestNewsDate || new Date(news.publishedAt) > new Date(group.latestNewsDate)) {
           group.latestNewsDate = news.publishedAt.toISOString();
         }
+        if (!group.oldestNewsDate || new Date(news.publishedAt) < new Date(group.oldestNewsDate)) {
+          group.oldestNewsDate = news.publishedAt.toISOString();
+        }
 
-        group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + combinedWeight;
+        group.impacts[impactLevel] = (group.impacts[impactLevel] || 0) + 1;
 
         // Populate daily stats
         if (!group.dailyStats[dateKey]) {
@@ -397,11 +418,11 @@ export async function GET(request: NextRequest) {
           };
         }
         const daily = group.dailyStats[dateKey];
-        if (news.sentiment === "good") { daily.positive += combinedWeight; daily.posCount += 1; }
-        else if (news.sentiment === "bad") { daily.negative += combinedWeight; daily.negCount += 1; }
-        else { daily.neutral += combinedWeight; daily.neuCount += 1; }
+        if (news.sentiment === "good") { daily.posCount += 1; }
+        else if (news.sentiment === "bad") { daily.negCount += 1; }
+        else { daily.neuCount += 1; }
         daily.count += 1;
-        daily.impacts[impactLevel] = (daily.impacts[impactLevel] || 0) + combinedWeight;
+        daily.impacts[impactLevel] = (daily.impacts[impactLevel] || 0) + 1;
 
         // (per-news accuracy removed — accuracy is now computed at the symbol level
         //  by comparing the final Score against the actual price change over the range)
@@ -409,11 +430,11 @@ export async function GET(request: NextRequest) {
     }
 
     for (const [symbol, group] of groupedMap.entries()) {
-      // Majority logic
-      const maxSentimentVal = Math.max(group.positive, group.negative, group.neutral);
+      // Majority logic based on raw counts
+      const maxSentimentVal = Math.max(group.posCount, group.negCount, group.neuCount);
       let majoritySentiment = "flat";
-      if (maxSentimentVal === group.positive && maxSentimentVal > 0) majoritySentiment = "up";
-      else if (maxSentimentVal === group.negative && maxSentimentVal > 0) majoritySentiment = "down";
+      if (maxSentimentVal === group.posCount && maxSentimentVal > 0) majoritySentiment = "up";
+      else if (maxSentimentVal === group.negCount && maxSentimentVal > 0) majoritySentiment = "down";
 
       const maxImpactVal = Math.max(group.impacts.high, group.impacts.medium, group.impacts.low);
       let majorityImpact = "low";
@@ -437,55 +458,17 @@ export async function GET(request: NextRequest) {
 
       const finalScore = getNewsScore(majoritySentiment, majorityImpact);
 
-      // ── Accuracy: Compare Score direction vs actual price change over the range ──
-      // Uses first and last closing price from priceTrend (already fetched from Yahoo Finance)
-      let accuracy: number | null = null;
-      const closes = group.priceTrend;
-      if (closes.length >= 2) {
-        const firstClose = closes[0];
-        const lastClose = closes[closes.length - 1];
-        const rangeChangePct = ((lastClose - firstClose) / firstClose) * 100;
-
-        // Deadzone: ignore tiny price moves (±0.5%) to avoid noise
-        const PRICE_DEADZONE = 0.5;
-        const SCORE_DEADZONE = 1; // scores between -1 and +1 treated as neutral
-
-        const scoreDir = finalScore > SCORE_DEADZONE ? 1 : finalScore < -SCORE_DEADZONE ? -1 : 0;
-        const priceDir = rangeChangePct > PRICE_DEADZONE ? 1 : rangeChangePct < -PRICE_DEADZONE ? -1 : 0;
-
-        if (scoreDir === 0 && priceDir === 0) {
-          // Both neutral — perfect alignment
-          accuracy = 100;
-        } else if (scoreDir === 0 || priceDir === 0) {
-          // One is neutral, other is directional — partial mismatch
-          accuracy = 50;
-        } else if (scoreDir !== priceDir) {
-          // Directions are opposite — score is wrong (bidi divergence)
-          // Scale the wrongness: the stronger the score and the larger the opposite move, the worse
-          const scoreStrength = Math.abs(finalScore) / 10; // 0.0 – 1.0
-          const priceStrength = Math.min(Math.abs(rangeChangePct) / 5, 1); // 0.0 – 1.0 (caps at 5%)
-          const penaltyPct = Math.round((scoreStrength + priceStrength) / 2 * 100);
-          accuracy = Math.max(0, 50 - penaltyPct); // ranges from 0 to 50
-        } else {
-          // Directions match — reward based on how well magnitudes agree
-          // scoreStrength: how far from 0 the score is (0–10 scale)
-          const scoreStrength = Math.abs(finalScore) / 10; // 0.0 – 1.0
-          // priceStrength: how large the actual move was (cap at 5% = full score)
-          const priceStrength = Math.min(Math.abs(rangeChangePct) / 5, 1); // 0.0 – 1.0
-          // Alignment bonus: both strong = high accuracy, one weak = medium
-          const alignmentScore = (scoreStrength + priceStrength) / 2; // 0.0 – 1.0
-          accuracy = Math.round(50 + alignmentScore * 50); // ranges from 50 to 100
-        }
-      }
-
       // ── Build Daily Breakdown if applicable ─────────────────────────
       let dailyBreakdown: any[] | undefined = undefined;
+      let averageDailyScore = finalScore;
       if (range === '7d' || range === '30d') {
+        const priceData = priceChangesCache.get(symbol) ?? { dailyChanges: {} };
+        const dailyPriceChanges = priceData.dailyChanges as Record<string, number>;
         dailyBreakdown = Object.entries(group.dailyStats).map(([date, stats]) => {
-          const maxSent = Math.max(stats.positive, stats.negative, stats.neutral);
+          const maxSent = Math.max(stats.posCount, stats.negCount, stats.neuCount);
           let sent: 'up' | 'down' | 'flat' = 'flat';
-          if (maxSent === stats.positive && maxSent > 0) sent = 'up';
-          else if (maxSent === stats.negative && maxSent > 0) sent = 'down';
+          if (maxSent === stats.posCount && maxSent > 0) sent = 'up';
+          else if (maxSent === stats.negCount && maxSent > 0) sent = 'down';
 
           const maxImp = Math.max(stats.impacts.high, stats.impacts.medium, stats.impacts.low);
           let imp: 'high' | 'medium' | 'low' = 'low';
@@ -505,6 +488,156 @@ export async function GET(request: NextRequest) {
             }
           };
         }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        if (dailyBreakdown.length > 0) {
+          const totalScore = dailyBreakdown.reduce((sum, day) => sum + day.score, 0);
+          averageDailyScore = totalScore / dailyBreakdown.length;
+        }
+      }
+
+      // ── Accuracy: Compare Score direction vs actual price change over the range ──
+      let accuracy: number | null = null;
+      let parentStatStartDate: string | null = null;
+      let parentStatStartPrice: number | null = null;
+      let parentStatEndDate: string | null = null;
+      let parentStatEndPrice: number | null = null;
+      const history = group.priceHistory;
+
+      // The user wants the parent row to calculate backward by 'targetCandles' from the latest price, ignoring news dates.
+      let hasReachedTarget = false;
+      let startEntry = null;
+      let endEntry = null;
+
+      if (history && history.length >= targetCandles + 1) {
+        hasReachedTarget = true;
+        endEntry = history[history.length - 1]; // latest
+        startEntry = history[history.length - 1 - targetCandles]; // targetCandles ago
+      }
+
+      if (hasReachedTarget && startEntry && endEntry) {
+        const firstClose = startEntry.close;
+        const lastClose = endEntry.close;
+        const rangeChangePct = ((lastClose - firstClose) / firstClose) * 100;
+        
+        parentStatStartDate = new Date(startEntry.timestamp).toISOString();
+        parentStatStartPrice = firstClose;
+        parentStatEndDate = new Date(endEntry.timestamp).toISOString();
+        parentStatEndPrice = lastClose;
+
+        // Deadzone: ignore tiny price moves (±0.5%) to avoid noise
+        const PRICE_DEADZONE = 0.5;
+        let priceSentiment = "flat";
+        if (rangeChangePct > PRICE_DEADZONE) priceSentiment = "up";
+        else if (rangeChangePct < -PRICE_DEADZONE) priceSentiment = "down";
+
+        // Calculate accuracy based on whether the overall finalScore correctly predicted the price move
+        if (priceSentiment === "flat" || finalScore === 0) {
+          accuracy = 50; // Neutral accuracy
+        } else {
+          const isCorrect = 
+            (finalScore > 0 && priceSentiment === "up") || 
+            (finalScore < 0 && priceSentiment === "down");
+            
+          if (isCorrect) {
+            const scoreStrength = Math.abs(finalScore) / 10; // 0.0 – 1.0
+            const priceStrength = Math.min(Math.abs(rangeChangePct) / 5, 1); // cap at 5% move
+            const alignmentScore = (scoreStrength + priceStrength) / 2; // 0.0 – 1.0
+            accuracy = Math.round(50 + alignmentScore * 50); // ranges from 50 to 100
+          } else {
+            const scoreStrength = Math.abs(finalScore) / 10;
+            const priceStrength = Math.min(Math.abs(rangeChangePct) / 5, 1);
+            const conflictScore = (scoreStrength + priceStrength) / 2;
+            accuracy = Math.round(50 - conflictScore * 50); // ranges from 0 to 50
+          }
+        }
+      }
+
+      // Calculate daily breakdown accuracies
+      if (history && history.length > 0 && dailyBreakdown) {
+        const dailyAccuracies: number[] = [];
+
+        for (const day of dailyBreakdown) {
+          // Parse date as UTC to prevent server's local timezone from shifting it back by 7 hours
+          let dayDate = 0;
+          if (day.date && day.date.includes('/')) {
+            const [m, d, y] = day.date.split('/');
+            dayDate = Date.UTC(Number(y), Number(m) - 1, Number(d));
+          } else {
+            dayDate = new Date(day.date).getTime();
+          }
+
+          const nowTime = Date.now();
+          const daysSinceNews = (nowTime - dayDate) / (1000 * 60 * 60 * 24);
+
+          // Calculate accuracy based on trading days (candles) instead of calendar days
+          // Find the start price (price on or just after the news date)
+          const startEntry = history.find(entry => entry.timestamp >= dayDate);
+
+          if (startEntry) {
+            const startIndex = history.indexOf(startEntry);
+
+            let endEntry;
+            let isEarly = false;
+
+            if (startIndex + targetCandles < history.length) {
+              endEntry = history[startIndex + targetCandles];
+            } else {
+              // Target candles haven't appeared yet, fallback to the latest available candle
+              endEntry = history[history.length - 1];
+              isEarly = true;
+            }
+
+            if (endEntry) {
+              day.endDate = new Date(endEntry.timestamp).toLocaleDateString('en-US', { timeZone: 'America/New_York' });
+              day.startPrice = startEntry.close;
+              day.endPrice = endEntry.close;
+
+              if (!isEarly) {
+                const startClose = startEntry.close;
+                const endClose = endEntry.close;
+                const pctChange = ((endClose - startClose) / startClose) * 100;
+                const score = day.score;
+
+                const PRICE_DEADZONE = 0.5; // percent
+                const SCORE_DEADZONE = 1.0;
+
+                let priceDir = 0;
+                if (pctChange > PRICE_DEADZONE) priceDir = 1;
+                else if (pctChange < -PRICE_DEADZONE) priceDir = -1;
+
+                let scoreDir = 0;
+                if (score > SCORE_DEADZONE) scoreDir = 1;
+                else if (score < -SCORE_DEADZONE) scoreDir = -1;
+
+                let dayAccuracy = 50;
+                if (scoreDir === 0 && priceDir === 0) {
+                  dayAccuracy = 100;
+                } else if (scoreDir === 0 || priceDir === 0) {
+                  dayAccuracy = 50;
+                } else if (scoreDir === priceDir) {
+                  const scoreStrength = Math.abs(score) / 10;
+                  const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
+                  const alignmentScore = (scoreStrength + priceStrength) / 2;
+                  dayAccuracy = Math.round(50 + alignmentScore * 50);
+                } else {
+                  const scoreStrength = Math.abs(score) / 10;
+                  const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
+                  const conflictScore = (scoreStrength + priceStrength) / 2;
+                  dayAccuracy = Math.round(50 - conflictScore * 50);
+                }
+
+                dailyAccuracies.push(dayAccuracy);
+                day.accuracy = dayAccuracy;
+              } else {
+                day.accuracy = null;
+              }
+            } else {
+              day.accuracy = null;
+            }
+          } else {
+            day.accuracy = null;
+          }
+        }
       }
 
       results.push({
@@ -521,6 +654,10 @@ export async function GET(request: NextRequest) {
           neutral: group.neuCount,
         },
         latestNewsDate: group.latestNewsDate,
+        parentStatStartDate,
+        parentStatStartPrice,
+        parentStatEndDate,
+        parentStatEndPrice,
         priceTrend: group.priceTrend,
         dailyBreakdown,
       });
@@ -546,7 +683,7 @@ export async function GET(request: NextRequest) {
             try {
               const data = await fetchDailyPriceChanges(symbol, range);
               trendCloses = data.closes;
-            } catch {}
+            } catch { }
           }
 
           results.push({
@@ -569,7 +706,6 @@ export async function GET(request: NextRequest) {
     resultCache.set(resultCacheKey, { data: results, ts: Date.now() });
 
     return NextResponse.json({ success: true, data: results });
-
   } catch (error: any) {
     console.error("[Sentiment API] Error:", error);
     return NextResponse.json(

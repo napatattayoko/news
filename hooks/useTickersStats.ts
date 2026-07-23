@@ -10,6 +10,10 @@ export interface TickerStats {
   score: number;
   sentimentHistorical: { positive: number; negative: number; neutral: number };
   latestNewsDate?: string | null;
+  parentStatStartDate?: string | null;
+  parentStatStartPrice?: number | null;
+  parentStatEndDate?: string | null;
+  parentStatEndPrice?: number | null;
   priceTrend?: number[];
   accuracy?: number | null; // 0-100%, null = no price data to compute
   dailyBreakdown?: DailyStat[];
@@ -18,12 +22,12 @@ export interface TickerStats {
 // Module-level cache so data survives component unmount/remount (page navigation)
 const statsCache = new Map<string, TickerStats[]>();
 
-function getCacheKey(symbols: string[], range: string) {
-  return `${symbols.join(',')}_${range}`;
+function getCacheKey(symbols: string[], range: string, statRange: number) {
+  return `${symbols.join(',')}_${range}_${statRange}`;
 }
 
-export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' | 'All' = '24H') {
-  const cacheKey = getCacheKey(symbols, range);
+export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' | 'All' = '24H', statRange: number = 5) {
+  const cacheKey = getCacheKey(symbols, range, statRange);
   const cached = statsCache.get(cacheKey);
 
   // Initialize from cache if available, skip loading skeleton
@@ -44,7 +48,7 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
     const fetchStats = async (id: number) => {
       try {
         const queryPart = symbols.length > 0 ? `symbols=${symbols.join(',')}&` : '';
-        const res = await fetch(`/api/sentiment?${queryPart}range=${range}`);
+        const res = await fetch(`/api/sentiment?${queryPart}range=${range}&statRange=${statRange}`);
         const result = await res.json();
 
         // Only apply if this is still the latest request (prevents race condition)
@@ -77,7 +81,7 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
     }, 60_000);
 
     return () => clearInterval(interval);
-  }, [symbols.join(','), range]); // re-run when the list of symbols or selected range changes
+  }, [symbols.join(','), range, statRange]); // re-run when the list of symbols, range, or statRange changes
 
   // Map to ensure all requested symbols exist in output, allowing multiple rows per symbol
   if (symbols.length > 0) {
@@ -104,7 +108,7 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
   return { stats: data, isLoading };
 }
 
-export function useTickerStats(symbol: string, range: '24H' | '7D' | '30D' | 'All' = '24H') {
-  const { stats } = useTickersStats([symbol], range);
+export function useTickerStats(symbol: string, range: '24H' | '7D' | '30D' | 'All' = '24H', statRange: number = 5) {
+  const { stats } = useTickersStats([symbol], range, statRange);
   return stats[0];
 }

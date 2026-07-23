@@ -66,6 +66,10 @@ export interface DailyStat {
   score: number;
   mentionCount: number;
   sentimentHistorical: SentimentHistorical;
+  accuracy?: number | null;
+  endDate?: string | null;
+  startPrice?: number;
+  endPrice?: number;
 }
 
 export interface LiveUpdate {
