@@ -29,7 +29,7 @@ TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 // Simple wrapper component for easier usage
 interface TooltipProps {
   children: React.ReactNode;
-  content: string;
+  content: React.ReactNode;
   delayDuration?: number;
 }
 
@@ -41,7 +41,7 @@ function Tooltip({ children, content, delayDuration = 200 }: TooltipProps) {
           <span className="cursor-help">{children}</span>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{content}</p>
+          <div>{content}</div>
         </TooltipContent>
       </TooltipRoot>
     </TooltipProvider>

@@ -6,12 +6,13 @@ import RangeDropdown, { RangeOption } from '@/components/filters/RangeDropdown';
 import { SentimentHistoricalBar, TopStocksRow } from '@/components/market-trends';
 import { cn } from '@/lib/utils';
 import { impactConfigCompact } from '@/lib/constants';
-import { Rss, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronLeft, ChevronRight, Search, ArrowUp, ArrowDown } from 'lucide-react';
+import { Rss, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronLeft, ChevronRight, Search, ArrowUp, ArrowDown, Info } from 'lucide-react';
 import { ImpactLevel, TrendFilter } from '@/lib/types';
 import SentimentFilterRibbon from '@/components/filters/SentimentFilterRibbon';
 import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import { usePagination } from '@/hooks/usePagination';
 import { useTickersStats } from '@/hooks/useTickersStats';
+import { TooltipProvider, TooltipRoot, TooltipTrigger, TooltipContent } from '@/components/ui/Tooltip';
 
 type TimeRange = '24H' | '7D' | '30D';
 
@@ -364,12 +365,43 @@ export default function StockSentimentPage() {
                       onClick={() => handleSort('score')}
                       className="text-right text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
                     >
-                      <span className="inline-flex items-center gap-1 justify-end">
-                        Score <SortIcon column="score" sortColumn={sortColumn} sortDirection={sortDirection} />
-                      </span>
+                      <TooltipProvider delayDuration={200}>
+                        <TooltipRoot>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1 justify-end">
+                              Score 
+                              <Info size={13} className="text-slate-400 hidden sm:block" />
+                              <SortIcon column="score" sortColumn={sortColumn} sortDirection={sortDirection} />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
+                              <div className="font-bold text-white mb-1 text-xs">News Score (คะแนนข่าว)</div>
+                              คะแนนความรุนแรงของข่าว (High = ±10, Medium = ±8, Low = ±5)<br/>
+                              <span className="text-slate-400 mt-1 block">💡 ช่วยให้ประเมินได้ทันทีว่าข่าวนี้มีน้ำหนักพอที่จะทำให้กราฟขยับรุนแรงแค่ไหน</span>
+                            </div>
+                          </TooltipContent>
+                        </TooltipRoot>
+                      </TooltipProvider>
                     </th>
                     <th className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
-                      Stat
+                      <TooltipProvider delayDuration={200}>
+                        <TooltipRoot>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1 justify-center">
+                              Stat
+                              <Info size={13} className="text-slate-400 hidden sm:block" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
+                              <div className="font-bold text-white mb-1 text-xs">Historical Accuracy (สถิติความแม่นยำ)</div>
+                              วัดผลจากอดีตว่าเมื่อเกิดข่าวระดับนี้ หุ้นมักจะวิ่งตามทิศทางของข่าว (ทายถูก) คิดเป็นกี่เปอร์เซ็นต์ ในระยะ 3-7 วัน<br/>
+                              <span className="text-slate-400 mt-1 block">💡 ช่วยกรองข่าวลวง ถ้า STAT ยิ่งใกล้ 10/10 แปลว่าข่าวทรงนี้กราฟขึ้น/ลงชัวร์!</span>
+                            </div>
+                          </TooltipContent>
+                        </TooltipRoot>
+                      </TooltipProvider>
                     </th>
                     <th
                       onClick={() => handleSort('date')}
