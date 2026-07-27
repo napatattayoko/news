@@ -95,7 +95,6 @@ export default function StockSentimentPage() {
   const [activeFilter, setActiveFilter] = useState<TrendFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [impactFilter, setImpactFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
-  const [statRange, setStatRange] = useState<number>(5);
   const [sortColumn, setSortColumn] = useState<SortColumn | null>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -132,11 +131,10 @@ export default function StockSentimentPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  // Fetch all tickers stats by passing an empty array
-  const { stats: baseRows, isLoading } = useTickersStats([], selectedRange, statRange);
+  const { stats: baseRows, isLoading } = useTickersStats([], selectedRange);
 
   // Fetch specific major tickers for top cards to get correct price action stats when there's no news
-  const { stats: topRows } = useTickersStats(['NVDA', 'AAPL', 'TSLA', 'AMZN'], selectedRange, statRange);
+  const { stats: topRows } = useTickersStats(['NVDA', 'AAPL', 'TSLA', 'AMZN'], selectedRange);
 
   // Map NVDA, AAPL, TSLA, AMZN stats dynamically for top stock cards
   const topStocks = useMemo(() => {
@@ -298,23 +296,6 @@ export default function StockSentimentPage() {
                 className="w-full bg-[#0a1017] border border-[#222F44] focus:border-[#0D7FF2] text-white text-sm pl-9 pr-4 py-2.5 rounded-lg outline-none transition-colors placeholder:text-slate-500"
               />
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-            </div>
-
-            {/* Stat Range Dropdown */}
-            <div className="relative w-full sm:w-[140px]">
-              <select
-                value={statRange}
-                onChange={(e: any) => {
-                  setStatRange(Number(e.target.value));
-                  pagination.setPage(0);
-                }}
-                className="w-full bg-[#0a1017] border border-[#222F44] text-white text-sm px-3 py-2.5 rounded-lg outline-none cursor-pointer focus:border-[#0D7FF2] appearance-none pr-8 font-semibold"
-              >
-                {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
-                  <option key={n} value={n}>Stat: {n} Candles</option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
 
             {/* Impact Dropdown */}
