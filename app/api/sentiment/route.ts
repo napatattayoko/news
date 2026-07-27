@@ -193,17 +193,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const symbolsParam = searchParams.get("symbols");
     const range = searchParams.get("range")?.toLowerCase() || "24h";
-    const statRangeStr = searchParams.get("statRange");
-    let targetCandles = 5;
-    if (statRangeStr) {
-      const parsed = parseInt(statRangeStr, 10);
-      if (!isNaN(parsed)) {
-        targetCandles = clamp(parsed, 1, 10);
-      }
-    }
 
     // ── Result cache check (additive — logic below untouched) ────────────────
-    const resultCacheKey = `sentiment-${range}-${symbolsParam ?? "all"}-${targetCandles}`;
+    const resultCacheKey = `sentiment-${range}-${symbolsParam ?? "all"}`;
     const cachedResult = resultCache.get(resultCacheKey);
     if (cachedResult && Date.now() - cachedResult.ts < RESULT_CACHE_TTL) {
       return NextResponse.json({ success: true, data: cachedResult.data });
@@ -219,12 +211,13 @@ export async function GET(request: NextRequest) {
     }
 
     let cutoffDate: Date | null = null;
+    // Since dynamic candles is up to 7 days, we fetch history far enough back to calculate 7 days of future price action
     if (range === "24h") {
-      cutoffDate = new Date(Date.now() - (1 + targetCandles * 2) * 24 * 60 * 60 * 1000);
+      cutoffDate = new Date(Date.now() - (1 + 7 * 2) * 24 * 60 * 60 * 1000);
     } else if (range === "7d") {
-      cutoffDate = new Date(Date.now() - (7 + Math.max(8, targetCandles * 2)) * 24 * 60 * 60 * 1000);
-    } else if (range === "30d") {
-      cutoffDate = new Date(Date.now() - (30 + targetCandles * 2) * 24 * 60 * 60 * 1000);
+      cutoffDate = new Date(Date.now() - (7 + 14) * 24 * 60 * 60 * 1000);
+    } else {
+      cutoffDate = new Date(Date.now() - (30 + 14) * 24 * 60 * 60 * 1000);
     }
 
     let filterSymbols: Set<string> | null = null;
@@ -503,53 +496,39 @@ export async function GET(request: NextRequest) {
       let parentStatEndPrice: number | null = null;
       const history = group.priceHistory;
 
-      // The user wants the parent row to calculate backward by 'targetCandles' from the latest price, ignoring news dates.
-      let hasReachedTarget = false;
+      // The user wants the parent row to use a dynamic window starting from the latest news date.
+      const dynamicTargetCandles = majorityImpact === 'high' ? 3 : 7;
       let startEntry = null;
       let endEntry = null;
+      let isEarly = false;
 
-      if (history && history.length >= targetCandles + 1) {
-        hasReachedTarget = true;
-        endEntry = history[history.length - 1]; // latest
-        startEntry = history[history.length - 1 - targetCandles]; // targetCandles ago
+      if (group.latestNewsDate && history && history.length > 0) {
+        // Strip hours to match history timestamps (which are UTC midnights)
+        const dateStr = new Date(group.latestNewsDate).toLocaleDateString("en-US", { timeZone: "America/New_York" });
+        const [m, d, y] = dateStr.split('/');
+        const latestDateMidnight = Date.UTC(Number(y), Number(m) - 1, Number(d));
+        
+        startEntry = history.find(entry => entry.timestamp >= latestDateMidnight);
+        if (startEntry) {
+          const startIndex = history.indexOf(startEntry);
+          if (startIndex + dynamicTargetCandles < history.length) {
+            endEntry = history[startIndex + dynamicTargetCandles];
+          } else {
+            // If dynamic target candles not reached, use the latest available price
+            endEntry = history[history.length - 1];
+            isEarly = true;
+          }
+        }
       }
 
-      if (hasReachedTarget && startEntry && endEntry) {
+      if (startEntry && endEntry) {
         const firstClose = startEntry.close;
-        const lastClose = endEntry.close;
-        const rangeChangePct = ((lastClose - firstClose) / firstClose) * 100;
+        const lastClose = isEarly && group.currentPrice != null ? group.currentPrice : endEntry.close;
         
         parentStatStartDate = new Date(startEntry.timestamp).toISOString();
         parentStatStartPrice = firstClose;
-        parentStatEndDate = new Date(endEntry.timestamp).toISOString();
+        parentStatEndDate = isEarly && group.currentPrice != null ? new Date().toISOString() : new Date(endEntry.timestamp).toISOString();
         parentStatEndPrice = lastClose;
-
-        // Deadzone: ignore tiny price moves (±0.5%) to avoid noise
-        const PRICE_DEADZONE = 0.5;
-        let priceSentiment = "flat";
-        if (rangeChangePct > PRICE_DEADZONE) priceSentiment = "up";
-        else if (rangeChangePct < -PRICE_DEADZONE) priceSentiment = "down";
-
-        // Calculate accuracy based on whether the overall finalScore correctly predicted the price move
-        if (priceSentiment === "flat" || finalScore === 0) {
-          accuracy = 50; // Neutral accuracy
-        } else {
-          const isCorrect = 
-            (finalScore > 0 && priceSentiment === "up") || 
-            (finalScore < 0 && priceSentiment === "down");
-            
-          if (isCorrect) {
-            const scoreStrength = Math.abs(finalScore) / 10; // 0.0 – 1.0
-            const priceStrength = Math.min(Math.abs(rangeChangePct) / 5, 1); // cap at 5% move
-            const alignmentScore = (scoreStrength + priceStrength) / 2; // 0.0 – 1.0
-            accuracy = Math.round(50 + alignmentScore * 50); // ranges from 50 to 100
-          } else {
-            const scoreStrength = Math.abs(finalScore) / 10;
-            const priceStrength = Math.min(Math.abs(rangeChangePct) / 5, 1);
-            const conflictScore = (scoreStrength + priceStrength) / 2;
-            accuracy = Math.round(50 - conflictScore * 50); // ranges from 0 to 50
-          }
-        }
       }
 
       // Calculate daily breakdown accuracies
@@ -576,11 +555,12 @@ export async function GET(request: NextRequest) {
           if (startEntry) {
             const startIndex = history.indexOf(startEntry);
 
+            const childTargetCandles = day.impactLevel === 'high' ? 3 : 7;
             let endEntry;
             let isEarly = false;
 
-            if (startIndex + targetCandles < history.length) {
-              endEntry = history[startIndex + targetCandles];
+            if (startIndex + childTargetCandles < history.length) {
+              endEntry = history[startIndex + childTargetCandles];
             } else {
               // Target candles haven't appeared yet, fallback to the latest available candle
               endEntry = history[history.length - 1];
@@ -588,55 +568,89 @@ export async function GET(request: NextRequest) {
             }
 
             if (endEntry) {
-              day.endDate = new Date(endEntry.timestamp).toLocaleDateString('en-US', { timeZone: 'America/New_York' });
+              // Note: Using 'America/New_York' consistently for dates as that is the trading timezone
+              const endDateObj = isEarly && group.currentPrice != null ? new Date() : new Date(endEntry.timestamp);
+              day.endDate = endDateObj.toLocaleDateString('en-US', { timeZone: 'America/New_York' });
+              
               day.startPrice = startEntry.close;
-              day.endPrice = endEntry.close;
+              day.endPrice = isEarly && group.currentPrice != null ? group.currentPrice : endEntry.close;
 
-              if (!isEarly) {
-                const startClose = startEntry.close;
-                const endClose = endEntry.close;
-                const pctChange = ((endClose - startClose) / startClose) * 100;
-                const score = day.score;
+              const startClose = day.startPrice;
+              const endClose = day.endPrice;
+              const pctChange = ((endClose - startClose) / startClose) * 100;
+              const score = day.score;
 
-                const PRICE_DEADZONE = 0.5; // percent
-                const SCORE_DEADZONE = 1.0;
+              const PRICE_DEADZONE = 0.5; // percent
+              const SCORE_DEADZONE = 1.0;
 
-                let priceDir = 0;
-                if (pctChange > PRICE_DEADZONE) priceDir = 1;
-                else if (pctChange < -PRICE_DEADZONE) priceDir = -1;
+              let priceDir = 0;
+              if (pctChange > PRICE_DEADZONE) priceDir = 1;
+              else if (pctChange < -PRICE_DEADZONE) priceDir = -1;
 
-                let scoreDir = 0;
-                if (score > SCORE_DEADZONE) scoreDir = 1;
-                else if (score < -SCORE_DEADZONE) scoreDir = -1;
+              let scoreDir = 0;
+              if (score > SCORE_DEADZONE) scoreDir = 1;
+              else if (score < -SCORE_DEADZONE) scoreDir = -1;
 
-                let dayAccuracy = 50;
-                if (scoreDir === 0 && priceDir === 0) {
-                  dayAccuracy = 100;
-                } else if (scoreDir === 0 || priceDir === 0) {
-                  dayAccuracy = 50;
-                } else if (scoreDir === priceDir) {
-                  const scoreStrength = Math.abs(score) / 10;
-                  const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
-                  const alignmentScore = (scoreStrength + priceStrength) / 2;
-                  dayAccuracy = Math.round(50 + alignmentScore * 50);
-                } else {
-                  const scoreStrength = Math.abs(score) / 10;
-                  const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
-                  const conflictScore = (scoreStrength + priceStrength) / 2;
-                  dayAccuracy = Math.round(50 - conflictScore * 50);
-                }
-
-                dailyAccuracies.push(dayAccuracy);
-                day.accuracy = dayAccuracy;
+              let dayAccuracy = 50;
+              if (scoreDir === 0 && priceDir === 0) {
+                dayAccuracy = 100;
+              } else if (scoreDir === 0 || priceDir === 0) {
+                dayAccuracy = 50;
+              } else if (scoreDir === priceDir) {
+                const scoreStrength = Math.abs(score) / 10;
+                const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
+                const alignmentScore = (scoreStrength + priceStrength) / 2;
+                dayAccuracy = Math.round(50 + alignmentScore * 50);
               } else {
-                day.accuracy = null;
+                const scoreStrength = Math.abs(score) / 10;
+                const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
+                const conflictScore = (scoreStrength + priceStrength) / 2;
+                dayAccuracy = Math.round(50 - conflictScore * 50);
               }
+
+              dailyAccuracies.push(dayAccuracy);
+              day.accuracy = dayAccuracy;
             } else {
               day.accuracy = null;
             }
           } else {
             day.accuracy = null;
           }
+        }
+      }
+
+      // Calculate Parent Row STAT as the average of ALL available daily historical STATs (ignoring sentiment matching per user request)
+      if (dailyBreakdown) {
+        const validStats = dailyBreakdown.filter(d => d.accuracy != null);
+        if (validStats.length > 0) {
+          const totalAcc = validStats.reduce((sum, d) => sum + d.accuracy!, 0);
+          accuracy = Math.round(totalAcc / validStats.length);
+          
+          // Use the latest child row that actually has a STAT to represent the parent row's START date and price
+          const latestValid = validStats[0];
+          let validDateMs;
+          if (latestValid.date.includes('/')) {
+            const [m, d, y] = latestValid.date.split('/');
+            // Set to 12:00 UTC so timezone shifts (-5 or +7) don't change the date
+            validDateMs = Date.UTC(Number(y), Number(m) - 1, Number(d), 12);
+          } else {
+            validDateMs = new Date(latestValid.date).getTime();
+          }
+
+          parentStatStartDate = new Date(validDateMs).toISOString();
+          parentStatStartPrice = latestValid.startPrice;
+          
+          // End date and price should be the CURRENT real-time data
+          parentStatEndDate = new Date().toISOString();
+          if (group.currentPrice != null) {
+            parentStatEndPrice = group.currentPrice;
+          } else if (history && history.length > 0) {
+            parentStatEndPrice = history[history.length - 1].close;
+          } else {
+            parentStatEndPrice = latestValid.endPrice;
+          }
+        } else {
+          accuracy = null; // No historical data matching the sentiment completed yet
         }
       }
 
