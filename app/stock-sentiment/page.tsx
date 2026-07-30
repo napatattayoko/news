@@ -350,8 +350,7 @@ export default function StockSentimentPage() {
                           <TooltipContent>
                             <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
                               <div className="font-bold text-white mb-1 text-xs">Impact</div>
-                              News magnitude analyzed by AI (ProsusAI/finbert).<br/>
-                              Higher confidence = Higher impact (High/Medium/Low).
+                              News impact severity (High / Medium / Low).
                             </div>
                           </TooltipContent>
                         </TooltipRoot>
@@ -373,8 +372,7 @@ export default function StockSentimentPage() {
                           <TooltipContent>
                             <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
                               <div className="font-bold text-white mb-1 text-xs">Sentiment</div>
-                              Market sentiment analyzed by AI (ProsusAI/finbert).<br/>
-                              Classifies news into Positive, Negative, or Neutral.
+                              Market sentiment (Positive / Neutral / Negative).
                             </div>
                           </TooltipContent>
                         </TooltipRoot>
@@ -396,7 +394,7 @@ export default function StockSentimentPage() {
                           <TooltipContent>
                             <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
                               <div className="font-bold text-white mb-1 text-xs">Mention</div>
-                              Number of times this ticker was mentioned in the news during the selected period.
+                              News mention count in selected period.
                             </div>
                           </TooltipContent>
                         </TooltipRoot>
@@ -414,7 +412,7 @@ export default function StockSentimentPage() {
                           <TooltipContent>
                             <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
                               <div className="font-bold text-white mb-1 text-xs">Sentiment Historical</div>
-                              A breakdown of past news sentiments (Positive / Neutral / Negative) for this ticker.
+                              Recent news sentiment breakdown.
                             </div>
                           </TooltipContent>
                         </TooltipRoot>
