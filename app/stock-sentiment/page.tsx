@@ -453,7 +453,7 @@ export default function StockSentimentPage() {
                           <TooltipContent>
                             <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
                               <div className="font-bold text-white mb-1 text-xs">Stat</div>
-                              Historical accuracy index.
+                              Historical accuracy of the Score.
                             </div>
                           </TooltipContent>
                         </TooltipRoot>
