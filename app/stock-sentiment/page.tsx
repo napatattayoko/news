@@ -434,9 +434,8 @@ export default function StockSentimentPage() {
                           <TooltipContent>
                             <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
                               <div className="font-bold text-white mb-1 text-xs">Score</div>
-                              News direction and price impact score.<br/><br/>
-                              <span className="text-green-400 font-bold">- Positive (+):</span> Drives price up<br/>
-                              <span className="text-red-400 font-bold">- Negative (-):</span> Drives price down
+                              News direction and price impact.<br/>
+                              <span className="text-green-400">(+)</span> Drives price up, <span className="text-red-400">(-)</span> Drives price down.
                             </div>
                           </TooltipContent>
                         </TooltipRoot>
@@ -453,9 +452,8 @@ export default function StockSentimentPage() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
-                              <div className="font-bold text-white mb-1 text-xs">STAT (Confidence Score)</div>
-                              Historical accuracy index.<br/>
-                              <span className="text-slate-400 mt-1 block">Higher Score = Price aligns strongly with news sentiment.</span>
+                              <div className="font-bold text-white mb-1 text-xs">Stat</div>
+                              Historical accuracy index.
                             </div>
                           </TooltipContent>
                         </TooltipRoot>
