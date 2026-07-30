@@ -338,28 +338,87 @@ export default function StockSentimentPage() {
                       onClick={() => handleSort('impact')}
                       className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
                     >
-                      <span className="inline-flex items-center gap-1">
-                        Impact <SortIcon column="impact" sortColumn={sortColumn} sortDirection={sortDirection} />
-                      </span>
+                      <TooltipProvider delayDuration={200}>
+                        <TooltipRoot>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1">
+                              Impact 
+                              <Info size={13} className="text-slate-400 hidden sm:block" />
+                              <SortIcon column="impact" sortColumn={sortColumn} sortDirection={sortDirection} />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
+                              <div className="font-bold text-white mb-1 text-xs">Impact</div>
+                              News magnitude analyzed by AI (ProsusAI/finbert).<br/>
+                              Higher confidence = Higher impact (High/Medium/Low).
+                            </div>
+                          </TooltipContent>
+                        </TooltipRoot>
+                      </TooltipProvider>
                     </th>
                     <th
                       onClick={() => handleSort('sentiment')}
                       className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
                     >
-                      <span className="inline-flex items-center gap-1">
-                        Sentiment <SortIcon column="sentiment" sortColumn={sortColumn} sortDirection={sortDirection} />
-                      </span>
+                      <TooltipProvider delayDuration={200}>
+                        <TooltipRoot>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1">
+                              Sentiment 
+                              <Info size={13} className="text-slate-400 hidden sm:block" />
+                              <SortIcon column="sentiment" sortColumn={sortColumn} sortDirection={sortDirection} />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
+                              <div className="font-bold text-white mb-1 text-xs">Sentiment</div>
+                              Market sentiment analyzed by AI (ProsusAI/finbert).<br/>
+                              Classifies news into Positive, Negative, or Neutral.
+                            </div>
+                          </TooltipContent>
+                        </TooltipRoot>
+                      </TooltipProvider>
                     </th>
                     <th
                       onClick={() => handleSort('mention')}
                       className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
                     >
-                      <span className="inline-flex items-center gap-1 justify-center">
-                        Mention <SortIcon column="mention" sortColumn={sortColumn} sortDirection={sortDirection} />
-                      </span>
+                      <TooltipProvider delayDuration={200}>
+                        <TooltipRoot>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1 justify-center">
+                              Mention 
+                              <Info size={13} className="text-slate-400 hidden sm:block" />
+                              <SortIcon column="mention" sortColumn={sortColumn} sortDirection={sortDirection} />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
+                              <div className="font-bold text-white mb-1 text-xs">Mention</div>
+                              Number of times this ticker was mentioned in the news during the selected period.
+                            </div>
+                          </TooltipContent>
+                        </TooltipRoot>
+                      </TooltipProvider>
                     </th>
                     <th className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
-                      Sentiment Historical
+                      <TooltipProvider delayDuration={200}>
+                        <TooltipRoot>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1">
+                              Sentiment Historical
+                              <Info size={13} className="text-slate-400 hidden sm:block" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
+                              <div className="font-bold text-white mb-1 text-xs">Sentiment Historical</div>
+                              A breakdown of past news sentiments (Positive / Neutral / Negative) for this ticker.
+                            </div>
+                          </TooltipContent>
+                        </TooltipRoot>
+                      </TooltipProvider>
                     </th>
                     <th
                       onClick={() => handleSort('score')}
@@ -376,9 +435,10 @@ export default function StockSentimentPage() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
-                              <div className="font-bold text-white mb-1 text-xs">News Score (คะแนนข่าว)</div>
-                              คะแนนความรุนแรงของข่าว (High = ±10, Medium = ±8, Low = ±5)<br/>
-                              <span className="text-slate-400 mt-1 block">💡 ช่วยให้ประเมินได้ทันทีว่าข่าวนี้มีน้ำหนักพอที่จะทำให้กราฟขยับรุนแรงแค่ไหน</span>
+                              <div className="font-bold text-white mb-1 text-xs">Score</div>
+                              News direction and price impact score.<br/><br/>
+                              <span className="text-green-400 font-bold">- Positive (+):</span> Drives price up<br/>
+                              <span className="text-red-400 font-bold">- Negative (-):</span> Drives price down
                             </div>
                           </TooltipContent>
                         </TooltipRoot>
@@ -395,9 +455,9 @@ export default function StockSentimentPage() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
-                              <div className="font-bold text-white mb-1 text-xs">Historical Accuracy (สถิติความแม่นยำ)</div>
-                              วัดผลจากอดีตว่าเมื่อเกิดข่าวระดับนี้ หุ้นมักจะวิ่งตามทิศทางของข่าว (ทายถูก) คิดเป็นกี่เปอร์เซ็นต์ ในระยะ 3-7 วัน<br/>
-                              <span className="text-slate-400 mt-1 block">💡 ช่วยกรองข่าวลวง ถ้า STAT ยิ่งใกล้ 10/10 แปลว่าข่าวทรงนี้กราฟขึ้น/ลงชัวร์!</span>
+                              <div className="font-bold text-white mb-1 text-xs">STAT (Confidence Score)</div>
+                              Historical accuracy index.<br/>
+                              <span className="text-slate-400 mt-1 block">Higher Score = Price aligns strongly with news sentiment.</span>
                             </div>
                           </TooltipContent>
                         </TooltipRoot>
