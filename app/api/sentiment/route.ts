@@ -608,26 +608,41 @@ export async function GET(request: NextRequest) {
                 dayAccuracy = Math.round(50 - conflictScore * 50);
               }
 
-              dailyAccuracies.push(dayAccuracy);
-              day.accuracy = dayAccuracy;
+              // Store raw accuracy temporarily
+              (day as any)._rawAccuracy = dayAccuracy;
             } else {
-              day.accuracy = null;
+              (day as any)._rawAccuracy = null;
             }
+          } else {
+            (day as any)._rawAccuracy = null;
+          }
+        }
+
+        // Calculate cumulative accuracy from oldest to newest
+        let runningSum = 0;
+        let validCount = 0;
+        for (let i = dailyBreakdown.length - 1; i >= 0; i--) {
+          const day = dailyBreakdown[i];
+          if ((day as any)._rawAccuracy != null) {
+            runningSum += (day as any)._rawAccuracy;
+            validCount++;
+            day.accuracy = Math.round(runningSum / validCount);
+            dailyAccuracies.unshift(day.accuracy); // store in newest-first order
           } else {
             day.accuracy = null;
           }
+          delete (day as any)._rawAccuracy;
         }
       }
 
-      // Calculate Parent Row STAT as the average of ALL available daily historical STATs (ignoring sentiment matching per user request)
+      // Calculate Parent Row STAT as the cumulative average of the latest day
       if (dailyBreakdown) {
         const validStats = dailyBreakdown.filter(d => d.accuracy != null);
         if (validStats.length > 0) {
-          const totalAcc = validStats.reduce((sum, d) => sum + d.accuracy!, 0);
-          accuracy = Math.round(totalAcc / validStats.length);
+          const latestValid = validStats[0];
+          accuracy = latestValid.accuracy!; // This is already the cumulative average of all previous days
           
           // Use the latest child row that actually has a STAT to represent the parent row's START date and price
-          const latestValid = validStats[0];
           let validDateMs;
           if (latestValid.date.includes('/')) {
             const [m, d, y] = latestValid.date.split('/');
