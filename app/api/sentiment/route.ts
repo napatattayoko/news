@@ -592,9 +592,10 @@ export async function GET(request: NextRequest) {
               else if (day.sentiment === 'down' || day.sentiment === 'negative') sentDir = -1;
 
               let dayAccuracy = 50;
+              
               if (sentDir === 0 && priceDir === 0) {
-                dayAccuracy = 100;
-              } else if (sentDir === 0 || priceDir === 0) {
+                dayAccuracy = 50;
+              } else if (sentDir !== 0 && priceDir === 0) {
                 dayAccuracy = 50;
               } else if (sentDir === priceDir) {
                 const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
@@ -602,9 +603,12 @@ export async function GET(request: NextRequest) {
                 const alignmentScore = (impactMult + priceStrength) / 2;
                 dayAccuracy = Math.round(50 + alignmentScore * 50);
               } else {
+                const isOpposite = Math.abs(sentDir - priceDir) === 2;
+                const conflictMultiplier = isOpposite ? 1.0 : 0.75;
+                
                 const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
                 const impactMult = day.impactLevel === 'high' ? 1.0 : day.impactLevel === 'medium' ? 0.8 : 0.5;
-                const conflictScore = (impactMult + priceStrength) / 2;
+                const conflictScore = ((impactMult + priceStrength) / 2) * conflictMultiplier;
                 dayAccuracy = Math.round(50 - conflictScore * 50);
               }
 
