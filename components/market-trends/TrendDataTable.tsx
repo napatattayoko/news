@@ -156,17 +156,7 @@ export default function TrendDataTable({ items }: TrendDataTableProps) {
             <th className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
               SENTIMENT HISTORICAL
             </th>
-            <th
-              onClick={() => handleSort('score')}
-              className="text-right text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
-            >
-              <span className="inline-flex flex-col items-end">
-                <span className="inline-flex items-center gap-1">
-                  SCORE <SortIcon column="score" sortColumn={sortColumn} sortDirection={sortDirection} />
-                </span>
-                <span className="text-[11px] font-medium text-slate-400 tracking-normal">(-10 to 10)</span>
-              </span>
-            </th>
+
             <th className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
               STAT
             </th>
@@ -234,12 +224,7 @@ export default function TrendDataTable({ items }: TrendDataTableProps) {
                   <SentimentHistoricalBar data={item.sentimentHistorical} height={6} />
                 </td>
 
-                {/* Score */}
-                <td className="px-4 py-3 text-right">
-                  <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full border border-[#222F44] text-white font-bold text-sm">
-                    {item.score}
-                  </span>
-                </td>
+
 
                 {/* Reliability */}
                 <td className="px-4 py-3 text-center">

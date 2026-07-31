@@ -587,24 +587,24 @@ export async function GET(request: NextRequest) {
               if (pctChange > PRICE_DEADZONE) priceDir = 1;
               else if (pctChange < -PRICE_DEADZONE) priceDir = -1;
 
-              let scoreDir = 0;
-              if (score > SCORE_DEADZONE) scoreDir = 1;
-              else if (score < -SCORE_DEADZONE) scoreDir = -1;
+              let sentDir = 0;
+              if (day.sentiment === 'up' || day.sentiment === 'positive') sentDir = 1;
+              else if (day.sentiment === 'down' || day.sentiment === 'negative') sentDir = -1;
 
               let dayAccuracy = 50;
-              if (scoreDir === 0 && priceDir === 0) {
+              if (sentDir === 0 && priceDir === 0) {
                 dayAccuracy = 100;
-              } else if (scoreDir === 0 || priceDir === 0) {
+              } else if (sentDir === 0 || priceDir === 0) {
                 dayAccuracy = 50;
-              } else if (scoreDir === priceDir) {
-                const scoreStrength = Math.abs(score) / 10;
+              } else if (sentDir === priceDir) {
                 const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
-                const alignmentScore = (scoreStrength + priceStrength) / 2;
+                const impactMult = day.impactLevel === 'high' ? 1.0 : day.impactLevel === 'medium' ? 0.8 : 0.5;
+                const alignmentScore = (impactMult + priceStrength) / 2;
                 dayAccuracy = Math.round(50 + alignmentScore * 50);
               } else {
-                const scoreStrength = Math.abs(score) / 10;
                 const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
-                const conflictScore = (scoreStrength + priceStrength) / 2;
+                const impactMult = day.impactLevel === 'high' ? 1.0 : day.impactLevel === 'medium' ? 0.8 : 0.5;
+                const conflictScore = (impactMult + priceStrength) / 2;
                 dayAccuracy = Math.round(50 - conflictScore * 50);
               }
 
