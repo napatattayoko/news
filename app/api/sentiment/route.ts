@@ -598,17 +598,16 @@ export async function GET(request: NextRequest) {
               } else if (sentDir !== 0 && priceDir === 0) {
                 dayAccuracy = 50;
               } else if (sentDir === priceDir) {
+                // Rely purely on percentage change (cap at 5%)
                 const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
-                const impactMult = day.impactLevel === 'high' ? 1.0 : day.impactLevel === 'medium' ? 0.8 : 0.5;
-                const alignmentScore = (impactMult + priceStrength) / 2;
-                dayAccuracy = Math.round(50 + alignmentScore * 50);
+                dayAccuracy = Math.round(50 + priceStrength * 50);
               } else {
                 const isOpposite = Math.abs(sentDir - priceDir) === 2;
                 const conflictMultiplier = isOpposite ? 1.0 : 0.75;
                 
+                // Rely purely on percentage change (cap at 5%)
                 const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
-                const impactMult = day.impactLevel === 'high' ? 1.0 : day.impactLevel === 'medium' ? 0.8 : 0.5;
-                const conflictScore = ((impactMult + priceStrength) / 2) * conflictMultiplier;
+                const conflictScore = priceStrength * conflictMultiplier;
                 dayAccuracy = Math.round(50 - conflictScore * 50);
               }
 
