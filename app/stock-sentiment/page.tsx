@@ -606,7 +606,11 @@ export default function StockSentimentPage() {
                           }
                         }
                         return (
-                          <tr key={day.date} className="border-b border-[#222F44]/30 bg-[#0D7FF2]/[0.02] hover:bg-[#0D7FF2]/[0.05] transition-colors">
+                          <tr 
+                            key={day.date} 
+                            onClick={() => router.push(`/stock-sentiment/${row.symbol.toLowerCase()}?date=${encodeURIComponent(day.date)}`)}
+                            className="border-b border-[#222F44]/30 bg-[#0D7FF2]/[0.02] hover:bg-[#0D7FF2]/[0.05] transition-colors cursor-pointer"
+                          >
                             <td className="px-4 py-3 pl-4 relative">
                               <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#0D7FF2]/40" />
                               <div className="flex items-center gap-2 ml-4">

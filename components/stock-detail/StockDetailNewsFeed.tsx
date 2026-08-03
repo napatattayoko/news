@@ -11,10 +11,11 @@ import { TrendingDown, TrendingUp } from 'lucide-react';
 interface StockDetailNewsFeedProps {
   symbol: string;
   range?: '24H' | '7D' | '30D' | 'All';
+  date?: string;
   isLoading?: boolean;
 }
 
-export default function StockDetailNewsFeed({ symbol, range = '24H', isLoading: externalIsLoading = false }: StockDetailNewsFeedProps) {
+export default function StockDetailNewsFeed({ symbol, range = '24H', date, isLoading: externalIsLoading = false }: StockDetailNewsFeedProps) {
   const mobileSentiment = useTerminalStore((s) => s.mobileSentiment);
   const [localNews, setLocalNews] = useState<NewsItem[]>([]);
   const [isFetching, setIsFetching] = useState(true);
@@ -24,7 +25,11 @@ export default function StockDetailNewsFeed({ symbol, range = '24H', isLoading: 
     const fetchNews = async () => {
       setIsFetching(true);
       try {
-        const res = await fetch(`/api/finviz?action=news&symbol=${symbol}&range=${range}`, { cache: 'no-store' });
+        let url = `/api/finviz?action=news&symbol=${symbol}&range=${range}`;
+        if (date) {
+          url += `&date=${encodeURIComponent(date)}`;
+        }
+        const res = await fetch(url, { cache: 'no-store' });
         const result = await res.json();
         if (isMounted && result.success) {
           setLocalNews(result.data);
@@ -39,7 +44,7 @@ export default function StockDetailNewsFeed({ symbol, range = '24H', isLoading: 
     return () => {
       isMounted = false;
     };
-  }, [symbol, range]);
+  }, [symbol, range, date]);
 
   const filteredByRange = localNews; // already filtered by API
 

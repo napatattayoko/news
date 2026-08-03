@@ -284,6 +284,7 @@ export async function GET(request: NextRequest) {
 
     const symbolParam = searchParams.get("symbol");
     const rangeParam = searchParams.get("range");
+    const dateParam = searchParams.get("date"); // YYYY-MM-DD or MM/DD/YYYY format
 
     let cutoffDate: Date | undefined;
     if (rangeParam === "24H") {
@@ -299,9 +300,33 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     const whereClause: any = {};
-    if (cutoffDate) {
+    if (dateParam) {
+      let targetDateMs;
+      if (dateParam.includes('/')) {
+        const [m, d, y] = dateParam.split('/');
+        // Use New York timezone midnight for the given date
+        const nyDateString = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T00:00:00.000-04:00`;
+        const startOfDay = new Date(nyDateString);
+        const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+        
+        whereClause.publishedAt = {
+          gte: startOfDay,
+          lt: endOfDay
+        };
+      } else {
+        // Fallback for full ISO string if passed
+        const exactDate = new Date(dateParam);
+        const startOfDay = new Date(exactDate.getFullYear(), exactDate.getMonth(), exactDate.getDate());
+        const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+        whereClause.publishedAt = {
+          gte: startOfDay,
+          lt: endOfDay
+        };
+      }
+    } else if (cutoffDate) {
       whereClause.publishedAt = { gte: cutoffDate };
     }
+    
     if (symbolParam) {
       whereClause.tickers = { contains: `"${symbolParam}"`, mode: "insensitive" };
     }

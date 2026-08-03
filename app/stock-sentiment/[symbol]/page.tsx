@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import RangeDropdown, { RangeOption } from '@/components/filters/RangeDropdown';
 import { SentimentDonutChart, SentimentScoreCard, StockDetailNewsFeed } from '@/components/stock-detail';
 import { mockStockSentiment, mockAIOutlook } from '@/lib/api';
@@ -20,6 +20,8 @@ const rangeOptions: RangeOption<TimeRange>[] = [
 
 export default function StockDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const dateParam = searchParams?.get('date');
   const symbol = (params.symbol as string)?.toUpperCase() ?? '';
   const [selectedRange, setSelectedRange] = useState<TimeRange>(() => {
     if (typeof window !== 'undefined') {
@@ -137,7 +139,7 @@ export default function StockDetailPage() {
               aiOutlook={aiOutlook}
             />
           </div>
-          <StockDetailNewsFeed symbol={symbol} range={selectedRange} />
+          <StockDetailNewsFeed symbol={symbol} range={selectedRange} date={dateParam || undefined} />
         </div>
       </div>
     </TooltipProvider>
