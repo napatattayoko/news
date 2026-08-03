@@ -362,20 +362,8 @@ export async function GET(request: NextRequest) {
           timeZone: "America/New_York",
         });
 
-        // Determine if price had huge swing
-        let priceMagnitudeImpact: "high" | "medium" | "low" = "low";
-        if (dailyPriceChanges[dateKey] !== undefined) {
-          const absPct = Math.abs(dailyPriceChanges[dateKey]);
-          if (absPct >= 3.5) priceMagnitudeImpact = "high";
-          else if (absPct >= 2.0) priceMagnitudeImpact = "medium";
-        }
-
-        const impactRank = { high: 3, medium: 2, low: 1 };
         const newsImpact = news.impact === "high" ? "high" : news.impact === "medium" ? "medium" : "low";
-        const impactLevel: "high" | "medium" | "low" =
-          impactRank[priceMagnitudeImpact] >= impactRank[newsImpact]
-            ? (priceMagnitudeImpact as "high" | "medium" | "low")
-            : (newsImpact as "high" | "medium" | "low");
+        const impactLevel: "high" | "medium" | "low" = newsImpact;
 
         let impactMultiplier = 0.4;
         if (impactLevel === "high") impactMultiplier = 2.5;
