@@ -625,11 +625,13 @@ export async function GET(request: NextRequest) {
           delete (day as any)._rawAccuracy;
         }
 
-        // Calculate Parent Row STAT as the cumulative average of the latest day
+        // Calculate Parent Row STAT as the average of the child rows' STATs
         const validStats = dailyBreakdown.filter(d => d.accuracy != null);
         if (validStats.length > 0) {
+          const sumOfAccuracies = validStats.reduce((sum, d) => sum + d.accuracy!, 0);
+          accuracy = Math.round(sumOfAccuracies / validStats.length);
+          
           const latestValid = validStats[0];
-          accuracy = latestValid.accuracy!; // This is already the cumulative average of all previous days
           
           // Use the latest child row that actually has a STAT to represent the parent row's START date and price
           let validDateMs;
