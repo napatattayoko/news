@@ -609,18 +609,16 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Calculate cumulative accuracy from oldest to newest for the parent row
+        // Calculate cumulative accuracy from oldest to newest
         let runningSum = 0;
         let validCount = 0;
-        let finalCumulativeAccuracy: number | null = null;
         for (let i = dailyBreakdown.length - 1; i >= 0; i--) {
           const day = dailyBreakdown[i];
           if ((day as any)._rawAccuracy != null) {
             runningSum += (day as any)._rawAccuracy;
             validCount++;
-            finalCumulativeAccuracy = Math.round(runningSum / validCount);
-            day.accuracy = (day as any)._rawAccuracy; // Child row shows its OWN raw accuracy
-            dailyAccuracies.unshift(day.accuracy);
+            day.accuracy = Math.round(runningSum / validCount);
+            dailyAccuracies.unshift(day.accuracy); // store in newest-first order
           } else {
             day.accuracy = null;
           }
@@ -631,7 +629,7 @@ export async function GET(request: NextRequest) {
         const validStats = dailyBreakdown.filter(d => d.accuracy != null);
         if (validStats.length > 0) {
           const latestValid = validStats[0];
-          accuracy = finalCumulativeAccuracy; // Parent row shows the cumulative average
+          accuracy = latestValid.accuracy!; // This is already the cumulative average of all previous days
           
           // Use the latest child row that actually has a STAT to represent the parent row's START date and price
           let validDateMs;
