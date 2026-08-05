@@ -212,11 +212,19 @@ export async function GET(request: NextRequest) {
     }
 
     // ── 1. Fetch all news in the selected range ──────────────────────────
-    const newsItems = await prisma.news.findMany({
+    let newsItems = await prisma.news.findMany({
       where: cutoffDate ? { publishedAt: { gte: cutoffDate } } : {},
       orderBy: { publishedAt: "desc" },
       take: 2000, // Limit to prevent memory exhaustion
     });
+
+    // Fallback: If less than 20 news items found in the range, pull the latest 300 news from DB to avoid empty table
+    if (newsItems.length < 20) {
+      newsItems = await prisma.news.findMany({
+        orderBy: { publishedAt: "desc" },
+        take: 300,
+      });
+    }
 
     const results: any[] = [];
     const matchedSymbols = new Set<string>();

@@ -1,19 +1,29 @@
 'use client';
 
 import { TrendingUp } from 'lucide-react';
+import { TradingViewAdvancedChart } from '@/components/market-trends';
 
-export default function MarketTrendsPlaceholderPage() {
+export default function MarketTrendsPage() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-[#0a1017] min-h-[80vh]">
-      <div className="p-4 bg-[#111722] border border-[#222F44] rounded-full mb-4 animate-bounce">
-        <TrendingUp size={48} className="text-[#0D7FF2]" />
+    <div className="flex-1 p-6 flex flex-col gap-5 h-[calc(100vh-64px)] overflow-hidden">
+      {/* Page Header */}
+      <div className="flex items-center justify-between select-none">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={22} className="text-[#0D7FF2]" />
+          <h1 className="text-lg font-extrabold text-white uppercase tracking-wide">
+            Trending Overview
+          </h1>
+        </div>
       </div>
-      <h1 className="text-2xl font-extrabold text-white uppercase tracking-wider mb-2">
-        Trending Page
-      </h1>
-      <p className="text-slate-400 text-sm max-w-sm leading-relaxed">
-        Exciting new real-time market data analytics and visualizers are coming soon! Stay tuned.
-      </p>
+
+      {/* TradingView Advanced Chart Widget - Full Page View */}
+      <div className="flex-1 w-full min-h-0">
+        <TradingViewAdvancedChart
+          symbol="NASDAQ:AAPL"
+          theme="dark"
+          height="100%"
+        />
+      </div>
     </div>
   );
 }

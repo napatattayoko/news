@@ -162,6 +162,15 @@ export default function StockSentimentPage() {
     });
   }, [topRows]);
 
+  const trendingSymbols = useMemo(() => {
+    if (!baseRows || baseRows.length === 0) return [];
+    const sorted = [...baseRows]
+      .filter(row => row.mentionCount > 0)
+      .sort((a, b) => b.mentionCount - a.mentionCount);
+    const uniqueSymbols = Array.from(new Set(sorted.map(row => row.symbol.toUpperCase())));
+    return uniqueSymbols.slice(0, 8);
+  }, [baseRows]);
+
   // Apply search query, sentiment filter + sort
   const filteredRows = useMemo(() => {
     let filtered = [...baseRows];
