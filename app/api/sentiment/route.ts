@@ -493,7 +493,7 @@ export async function GET(request: NextRequest) {
       const history = group.priceHistory;
 
       // The user wants the parent row to use a dynamic window starting from the latest news date.
-      const dynamicTargetCandles = majorityImpact === 'high' ? 3 : 7;
+      const dynamicTargetCandles = majorityImpact === 'high' ? 3 : majorityImpact === 'medium' ? 5 : 7;
       let startEntry = null;
       let endEntry = null;
       let isEarly = false;
@@ -551,7 +551,7 @@ export async function GET(request: NextRequest) {
           if (startEntry) {
             const startIndex = history.indexOf(startEntry);
 
-            const childTargetCandles = day.impactLevel === 'high' ? 3 : 7;
+            const childTargetCandles = day.impactLevel === 'high' ? 3 : day.impactLevel === 'medium' ? 5 : 7;
             let endEntry;
             let isEarly = false;
 
