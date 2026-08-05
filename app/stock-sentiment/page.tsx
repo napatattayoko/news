@@ -427,29 +427,7 @@ export default function StockSentimentPage() {
                         </TooltipRoot>
                       </TooltipProvider>
                     </th>
-                    <th
-                      onClick={() => handleSort('score')}
-                      className="text-right text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
-                    >
-                      <TooltipProvider delayDuration={200}>
-                        <TooltipRoot>
-                          <TooltipTrigger asChild>
-                            <span className="inline-flex items-center gap-1 justify-end">
-                              Score 
-                              <Info size={13} className="text-slate-400 hidden sm:block" />
-                              <SortIcon column="score" sortColumn={sortColumn} sortDirection={sortDirection} />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="text-[11px] leading-relaxed max-w-[260px] text-left">
-                              <div className="font-bold text-white mb-1 text-xs">Score</div>
-                              News direction and price impact.<br/>
-                              <span className="text-green-400">(+)</span> Drives price up, <span className="text-red-400">(-)</span> Drives price down.
-                            </div>
-                          </TooltipContent>
-                        </TooltipRoot>
-                      </TooltipProvider>
-                    </th>
+
                     <th className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
                       <TooltipProvider delayDuration={200}>
                         <TooltipRoot>
@@ -487,13 +465,12 @@ export default function StockSentimentPage() {
                         <td className="px-4 py-4"><div className="h-6 w-20 bg-slate-700/30 rounded-full" /></td>
                         <td className="px-4 py-4 text-center"><div className="h-4 w-6 bg-slate-700/50 rounded mx-auto" /></td>
                         <td className="px-4 py-4"><div className="h-2 w-full bg-slate-700/20 rounded" /></td>
-                        <td className="px-4 py-4 text-right"><div className="h-6 w-10 bg-slate-700/30 rounded-full ml-auto" /></td>
                         <td className="px-4 py-4 text-center"><div className="h-4 w-10 bg-slate-700/50 rounded mx-auto" /></td>
                       </tr>
                     ))
                   ) : paged.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-slate-500 text-sm">
+                      <td colSpan={6} className="px-4 py-8 text-center text-slate-500 text-sm">
                         No results found
                       </td>
                     </tr>
@@ -536,11 +513,7 @@ export default function StockSentimentPage() {
                         <td className="px-4 py-3">
                           <SentimentHistoricalBar data={row.sentimentHistorical} height={6} />
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full border border-[#222F44] text-white font-bold text-sm">
-                            {row.score}
-                          </span>
-                        </td>
+
                         <td className="px-4 py-3 text-center">
                           {row.accuracy != null ? (() => {
                             const acc = row.accuracy as number;
@@ -642,7 +615,11 @@ export default function StockSentimentPage() {
                           }
                         }
                         return (
-                          <tr key={day.date} className="border-b border-[#222F44]/30 bg-[#0D7FF2]/[0.02] hover:bg-[#0D7FF2]/[0.05] transition-colors">
+                          <tr 
+                            key={day.date} 
+                            onClick={() => router.push(`/stock-sentiment/${row.symbol.toLowerCase()}?date=${encodeURIComponent(day.date)}`)}
+                            className="border-b border-[#222F44]/30 bg-[#0D7FF2]/[0.02] hover:bg-[#0D7FF2]/[0.05] transition-colors cursor-pointer"
+                          >
                             <td className="px-4 py-3 pl-4 relative">
                               <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#0D7FF2]/40" />
                               <div className="flex items-center gap-2 ml-4">
@@ -667,11 +644,7 @@ export default function StockSentimentPage() {
                             <td className="px-4 py-3">
                               <SentimentHistoricalBar data={day.sentimentHistorical} height={6} />
                             </td>
-                            <td className="px-4 py-3 text-right">
-                              <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-full border border-[#222F44] text-slate-300 font-bold text-sm opacity-80">
-                                {day.score}
-                              </span>
-                            </td>
+
                             <td className="px-4 py-3 text-center">
                               {day.accuracy != null ? (() => {
                                 const acc = day.accuracy as number;

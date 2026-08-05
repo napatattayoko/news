@@ -370,20 +370,8 @@ export async function GET(request: NextRequest) {
           timeZone: "America/New_York",
         });
 
-        // Determine if price had huge swing
-        let priceMagnitudeImpact: "high" | "medium" | "low" = "low";
-        if (dailyPriceChanges[dateKey] !== undefined) {
-          const absPct = Math.abs(dailyPriceChanges[dateKey]);
-          if (absPct >= 3.5) priceMagnitudeImpact = "high";
-          else if (absPct >= 2.0) priceMagnitudeImpact = "medium";
-        }
-
-        const impactRank = { high: 3, medium: 2, low: 1 };
         const newsImpact = news.impact === "high" ? "high" : news.impact === "medium" ? "medium" : "low";
-        const impactLevel: "high" | "medium" | "low" =
-          impactRank[priceMagnitudeImpact] >= impactRank[newsImpact]
-            ? (priceMagnitudeImpact as "high" | "medium" | "low")
-            : (newsImpact as "high" | "medium" | "low");
+        const impactLevel: "high" | "medium" | "low" = newsImpact;
 
         let impactMultiplier = 0.4;
         if (impactLevel === "high") impactMultiplier = 2.5;
@@ -595,47 +583,65 @@ export async function GET(request: NextRequest) {
               if (pctChange > PRICE_DEADZONE) priceDir = 1;
               else if (pctChange < -PRICE_DEADZONE) priceDir = -1;
 
-              let scoreDir = 0;
-              if (score > SCORE_DEADZONE) scoreDir = 1;
-              else if (score < -SCORE_DEADZONE) scoreDir = -1;
+              let sentDir = 0;
+              if (day.sentiment === 'up' || day.sentiment === 'positive') sentDir = 1;
+              else if (day.sentiment === 'down' || day.sentiment === 'negative') sentDir = -1;
 
               let dayAccuracy = 50;
-              if (scoreDir === 0 && priceDir === 0) {
-                dayAccuracy = 100;
-              } else if (scoreDir === 0 || priceDir === 0) {
+              
+              if (sentDir === 0 && priceDir === 0) {
                 dayAccuracy = 50;
-              } else if (scoreDir === priceDir) {
-                const scoreStrength = Math.abs(score) / 10;
+              } else if (sentDir !== 0 && priceDir === 0) {
+                dayAccuracy = 50;
+              } else if (sentDir === priceDir) {
+                // Rely purely on percentage change (cap at 5%)
                 const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
-                const alignmentScore = (scoreStrength + priceStrength) / 2;
-                dayAccuracy = Math.round(50 + alignmentScore * 50);
+                dayAccuracy = Math.round(50 + priceStrength * 50);
               } else {
-                const scoreStrength = Math.abs(score) / 10;
+                const isOpposite = Math.abs(sentDir - priceDir) === 2;
+                const conflictMultiplier = isOpposite ? 1.0 : 0.75;
+                
+                // Rely purely on percentage change (cap at 5%)
                 const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
-                const conflictScore = (scoreStrength + priceStrength) / 2;
+                const conflictScore = priceStrength * conflictMultiplier;
                 dayAccuracy = Math.round(50 - conflictScore * 50);
               }
 
-              dailyAccuracies.push(dayAccuracy);
-              day.accuracy = dayAccuracy;
+              // Store raw accuracy temporarily
+              (day as any)._rawAccuracy = dayAccuracy;
             } else {
-              day.accuracy = null;
+              (day as any)._rawAccuracy = null;
             }
+          } else {
+            (day as any)._rawAccuracy = null;
+          }
+        }
+
+        // Calculate cumulative accuracy from oldest to newest
+        let runningSum = 0;
+        let validCount = 0;
+        for (let i = dailyBreakdown.length - 1; i >= 0; i--) {
+          const day = dailyBreakdown[i];
+          if ((day as any)._rawAccuracy != null) {
+            runningSum += (day as any)._rawAccuracy;
+            validCount++;
+            day.accuracy = Math.round(runningSum / validCount);
+            dailyAccuracies.unshift(day.accuracy); // store in newest-first order
           } else {
             day.accuracy = null;
           }
+          delete (day as any)._rawAccuracy;
         }
-      }
 
-      // Calculate Parent Row STAT as the average of ALL available daily historical STATs (ignoring sentiment matching per user request)
-      if (dailyBreakdown) {
+        // Calculate Parent Row STAT as the average of the child rows' STATs
         const validStats = dailyBreakdown.filter(d => d.accuracy != null);
         if (validStats.length > 0) {
-          const totalAcc = validStats.reduce((sum, d) => sum + d.accuracy!, 0);
-          accuracy = Math.round(totalAcc / validStats.length);
+          const sumOfAccuracies = validStats.reduce((sum, d) => sum + d.accuracy!, 0);
+          accuracy = Math.round(sumOfAccuracies / validStats.length);
+          
+          const latestValid = validStats[0];
           
           // Use the latest child row that actually has a STAT to represent the parent row's START date and price
-          const latestValid = validStats[0];
           let validDateMs;
           if (latestValid.date.includes('/')) {
             const [m, d, y] = latestValid.date.split('/');
