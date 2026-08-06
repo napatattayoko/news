@@ -259,7 +259,12 @@ export async function GET(request: NextRequest) {
     for (const news of newsItems) {
       try {
         const parsed = JSON.parse(news.tickers as string) || [];
-        const tickersList = parsed.map((t: any) => (typeof t === "string" ? t : t.symbol).toUpperCase());
+        const tickersList = parsed.map((t: any) => {
+          if (typeof t === "string") return t.toUpperCase();
+          if (t && t.symbol) return t.symbol.toUpperCase();
+          if (t && t.Symbol) return t.Symbol.toUpperCase();
+          return "";
+        }).filter((t: string) => t !== "");
         const active = filterSymbols
           ? tickersList.filter((t: string) => filterSymbols!.has(t))
           : tickersList;
@@ -322,7 +327,12 @@ export async function GET(request: NextRequest) {
       let tickersList: string[] = [];
       try {
         const parsed = JSON.parse(news.tickers as string) || [];
-        tickersList = parsed.map((t: any) => (typeof t === "string" ? t : t.symbol).toUpperCase());
+        tickersList = parsed.map((t: any) => {
+          if (typeof t === "string") return t.toUpperCase();
+          if (t && t.symbol) return t.symbol.toUpperCase();
+          if (t && t.Symbol) return t.Symbol.toUpperCase();
+          return "";
+        }).filter((t: string) => t !== "");
       } catch (err) {
         continue;
       }
