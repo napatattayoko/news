@@ -16,37 +16,57 @@ export interface AIAnalysisResult {
 }
 
 export async function analyzeArticle(headline: string, body: string): Promise<AIAnalysisResult> {
-  // Analyze only the headline. Financial headlines contain the core sentiment,
-  // and the body from Finviz ("Published at... Sourced from...") can dilute it.
   const textToAnalyze = headline.substring(0, 500);
 
+  const prompt = `You are a strict quantitative financial analyst. Analyze this headline and output a JSON object EXACTLY matching this schema: {"sentiment": "good"|"neutral"|"bad", "impact": "high"|"medium"|"low"}
+
+Rules for Impact:
+- 'high': Only for MATERIAL events (Earnings, M&A, Bankruptcies, CEO changes, FDA approvals, Lawsuits).
+- 'medium': Product launches, operational updates, analyst upgrades/downgrades.
+- 'low': Fluff, opinions, market commentary, "top stocks to buy", generic PR.
+
+Rules for Sentiment:
+- If it's fluff or purely generic market recap, default to 'neutral'.
+- Otherwise, 'good' for positive news, 'bad' for negative.
+
+Output ONLY valid JSON. No explanations, no markdown block.
+
+Headline: "${textToAnalyze}"`;
+
   try {
-    const response = await hf.textClassification({
-      model: SENTIMENT_MODEL,
-      inputs: textToAnalyze,
+    const response = await hf.chatCompletion({
+      model: 'meta-llama/Meta-Llama-3-8B-Instruct',
+      messages: [
+        { role: 'system', content: 'You are a JSON-only financial analyzer. Output only valid JSON.' },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 50,
+      temperature: 0.1,
     });
 
-    const topResult = response[0];
-    const topLabel = topResult.label.toLowerCase();
-    const topScore = topResult.score;
+    const outputText = response.choices[0]?.message?.content?.trim() || '{}';
+    
+    // Clean up potential markdown formatting if the model disobeys
+    const jsonStr = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const result = JSON.parse(jsonStr);
 
     let sentiment: SentimentResult = 'neutral';
-    if (topLabel === 'positive') sentiment = 'good';
-    else if (topLabel === 'negative') sentiment = 'bad';
+    if (result.sentiment === 'good' || result.sentiment === 'bad') {
+      sentiment = result.sentiment;
+    }
 
     let impact: ImpactResult = 'low';
-    
-    if (sentiment !== 'neutral') {
-      if (topScore >= 0.8) {
-        impact = 'high';
-      } else if (topScore >= 0.5) {
-        impact = 'medium';
-      }
+    if (result.impact === 'high' || result.impact === 'medium') {
+      impact = result.impact;
     }
+
+    // Double check: if it's neutral, impact shouldn't matter but we can force it low
+    if (sentiment === 'neutral') impact = 'low';
 
     return { sentiment, impact };
   } catch (error) {
-    console.error("[AI] Error analyzing sentiment via Hugging Face API:", error);
+    console.error("[AI] Error analyzing sentiment via LLaMA-3:", error);
+    // Fallback to safe defaults so it gets skipped by the neutral filter
     return { sentiment: 'neutral', impact: 'low' };
   }
 }
