@@ -572,26 +572,16 @@ export async function GET(request: NextRequest) {
               day.endPrice = isEarly && group.currentPrice != null ? group.currentPrice : endEntry.close;
 
               const startClose = day.startPrice;
-              
-              // MFE/MAE Calculation: Scan the window for highest and lowest close
-              let maxClose = startClose;
-              let minClose = startClose;
-              const actualEndIndex = isEarly ? history.length - 1 : startIndex + childTargetCandles;
-              for (let j = startIndex + 1; j <= actualEndIndex; j++) {
-                  if (history[j]) {
-                      if (history[j].close > maxClose) maxClose = history[j].close;
-                      if (history[j].close < minClose) minClose = history[j].close;
-                  }
-              }
-              
-              // Include current price if it's the most recent data
-              if (isEarly && group.currentPrice != null) {
-                  if (group.currentPrice > maxClose) maxClose = group.currentPrice;
-                  if (group.currentPrice < minClose) minClose = group.currentPrice;
-              }
+              const endClose = day.endPrice;
+              const pctChange = ((endClose - startClose) / startClose) * 100;
+              const score = day.score;
 
-              const maxPctChange = ((maxClose - startClose) / startClose) * 100;
-              const minPctChange = ((minClose - startClose) / startClose) * 100;
+              const PRICE_DEADZONE = 0.5; // percent
+              const SCORE_DEADZONE = 1.0;
+
+              let priceDir = 0;
+              if (pctChange > PRICE_DEADZONE) priceDir = 1;
+              else if (pctChange < -PRICE_DEADZONE) priceDir = -1;
 
               let sentDir = 0;
               if (day.sentiment === 'up' || day.sentiment === 'positive') sentDir = 1;
@@ -599,24 +589,22 @@ export async function GET(request: NextRequest) {
 
               let dayAccuracy = 50;
               
-              if (sentDir !== 0) {
-                let favorableChange = 0;
-                let adverseChange = 0;
+              if (sentDir === 0 && priceDir === 0) {
+                dayAccuracy = 50;
+              } else if (sentDir !== 0 && priceDir === 0) {
+                dayAccuracy = 50;
+              } else if (sentDir === priceDir) {
+                // Rely purely on percentage change (cap at 5%)
+                const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
+                dayAccuracy = Math.round(50 + priceStrength * 50);
+              } else {
+                const isOpposite = Math.abs(sentDir - priceDir) === 2;
+                const conflictMultiplier = isOpposite ? 1.0 : 0.75;
                 
-                if (sentDir === 1) {
-                  favorableChange = Math.max(0, maxPctChange);
-                  adverseChange = Math.max(0, Math.abs(minPctChange));
-                } else if (sentDir === -1) {
-                  favorableChange = Math.max(0, Math.abs(minPctChange));
-                  adverseChange = Math.max(0, maxPctChange);
-                }
-                
-                // Cap the changes to 5% for scoring purposes (1% move = 10 accuracy points)
-                const cappedFav = Math.min(favorableChange, 5);
-                const cappedAdv = Math.min(adverseChange, 5);
-                
-                dayAccuracy = Math.round(50 + (cappedFav * 10) - (cappedAdv * 10));
-                dayAccuracy = Math.max(0, Math.min(100, dayAccuracy));
+                // Rely purely on percentage change (cap at 5%)
+                const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
+                const conflictScore = priceStrength * conflictMultiplier;
+                dayAccuracy = Math.round(50 - conflictScore * 50);
               }
 
               // Store raw accuracy temporarily
