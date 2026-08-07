@@ -65,9 +65,38 @@ Headline: "${textToAnalyze}"`;
 
     return { sentiment, impact };
   } catch (error) {
-    console.error("[AI] Error analyzing sentiment via LLaMA-3:", error);
-    // Fallback to safe defaults so it gets skipped by the neutral filter
-    return { sentiment: 'neutral', impact: 'low' };
+    console.error("[AI] LLaMA-3 API Error, falling back to FinBERT:", error);
+    
+    // FALLBACK: Use FinBERT if LLaMA-3 is overloaded or rate limited
+    try {
+      const response = await hf.textClassification({
+        model: SENTIMENT_MODEL, // ProsusAI/finbert
+        inputs: textToAnalyze,
+      });
+
+      const topResult = response[0];
+      const topLabel = topResult.label.toLowerCase();
+      const topScore = topResult.score;
+
+      let sentiment: SentimentResult = 'neutral';
+      if (topLabel === 'positive') sentiment = 'good';
+      else if (topLabel === 'negative') sentiment = 'bad';
+
+      let impact: ImpactResult = 'low';
+      
+      if (sentiment !== 'neutral') {
+        if (topScore >= 0.8) {
+          impact = 'high';
+        } else if (topScore >= 0.5) {
+          impact = 'medium';
+        }
+      }
+
+      return { sentiment, impact };
+    } catch (fallbackError) {
+      console.error("[AI] FinBERT Fallback also failed:", fallbackError);
+      return { sentiment: 'neutral', impact: 'low' };
+    }
   }
 }
 
