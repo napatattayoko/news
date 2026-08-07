@@ -548,7 +548,7 @@ export default function StockSentimentPage() {
                                     })}
                                   </span>
                                   <span className="text-xs text-[#0D7FF2]/80 font-bold whitespace-nowrap">
-                                    ${row.parentStatStartPrice.toFixed(2)} - ${row.parentStatEndPrice.toFixed(2)}
+                                    ${row.parentStatStartPrice.toFixed(2)} → ${row.parentStatEndPrice.toFixed(2)}
                                   </span>
                                 </>
                               ) : row.latestNewsDate ? (
@@ -670,7 +670,7 @@ export default function StockSentimentPage() {
                                 </span>
                                 {day.accuracy != null && day.startPrice != null && day.endPrice != null && (
                                   <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap mt-0.5">
-                                    ${day.startPrice.toFixed(2)} → ${day.endPrice.toFixed(2)}
+                                    ${day.startPrice.toFixed(2)} → <span className={day.sentiment === 'up' || day.sentiment === 'positive' ? 'text-emerald-500/80' : day.sentiment === 'down' || day.sentiment === 'negative' ? 'text-rose-500/80' : ''}>{(day.sentiment === 'up' || day.sentiment === 'positive') ? 'Peak' : (day.sentiment === 'down' || day.sentiment === 'negative') ? 'Dip' : ''} ${day.endPrice.toFixed(2)}</span>
                                   </span>
                                 )}
                               </div>
