@@ -647,16 +647,12 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Calculate cumulative accuracy from oldest to newest
-        let runningSum = 0;
-        let validCount = 0;
+        // Assign raw accuracy directly to each day instead of cumulative averaging
         for (let i = dailyBreakdown.length - 1; i >= 0; i--) {
           const day = dailyBreakdown[i];
           if ((day as any)._rawAccuracy != null) {
-            runningSum += (day as any)._rawAccuracy;
-            validCount++;
-            day.accuracy = Math.round(runningSum / validCount);
-            dailyAccuracies.unshift(day.accuracy); // store in newest-first order
+            day.accuracy = (day as any)._rawAccuracy;
+            dailyAccuracies.unshift(day.accuracy);
           } else {
             day.accuracy = null;
           }
