@@ -80,7 +80,7 @@ export function TradingViewSymbolOverview({
       noTimeScale: false,
       valuesTracking: '1',
       changeMode: 'price-and-percent',
-      chartType: 'area',
+      chartType: 'candlesticks',
       isTransparent: true,
     };
 
