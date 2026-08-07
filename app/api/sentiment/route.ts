@@ -579,8 +579,32 @@ export async function GET(request: NextRequest) {
               day.endDate = endDateObj.toLocaleDateString('en-US', { timeZone: 'America/New_York' });
               
               day.startPrice = startEntry.close;
-              day.endPrice = isEarly && group.currentPrice != null ? group.currentPrice : endEntry.close;
+              
+              let sentDir = 0;
+              if (day.sentiment === 'up' || day.sentiment === 'positive') sentDir = 1;
+              else if (day.sentiment === 'down' || day.sentiment === 'negative') sentDir = -1;
 
+              // --- MFE / MAE Logic (Maximum Favorable Excursion) ---
+              // Instead of just taking the final close price, we scan the window (3-7 days)
+              // to see if the price ever moved in the predicted direction.
+              const windowEntries = history.slice(startIndex, startIndex + childTargetCandles + 1);
+              
+              let bestPrice = endEntry.close;
+              if (isEarly && group.currentPrice != null) {
+                bestPrice = group.currentPrice;
+              }
+
+              if (sentDir === 1) {
+                // Look for the absolute highest peak in the timeframe
+                const maxHigh = Math.max(...windowEntries.map(e => e.high));
+                if (maxHigh > startEntry.close) bestPrice = maxHigh;
+              } else if (sentDir === -1) {
+                // Look for the absolute lowest dip in the timeframe
+                const minLow = Math.min(...windowEntries.map(e => e.low));
+                if (minLow < startEntry.close) bestPrice = minLow;
+              }
+
+              day.endPrice = bestPrice;
               const startClose = day.startPrice;
               const endClose = day.endPrice;
               const pctChange = ((endClose - startClose) / startClose) * 100;
@@ -592,10 +616,6 @@ export async function GET(request: NextRequest) {
               let priceDir = 0;
               if (pctChange > PRICE_DEADZONE) priceDir = 1;
               else if (pctChange < -PRICE_DEADZONE) priceDir = -1;
-
-              let sentDir = 0;
-              if (day.sentiment === 'up' || day.sentiment === 'positive') sentDir = 1;
-              else if (day.sentiment === 'down' || day.sentiment === 'negative') sentDir = -1;
 
               let dayAccuracy = 50;
               
