@@ -26,8 +26,9 @@ Rules for Impact:
 - 'low': Fluff, opinions, market commentary, "top stocks to buy", generic PR.
 
 Rules for Sentiment:
-- If it's fluff or purely generic market recap, default to 'neutral'.
-- Otherwise, 'good' for positive news, 'bad' for negative.
+- 'good': MUST indicate a clear, definitive positive catalyst (e.g., crushed earnings, major contract won).
+- 'bad': MUST indicate a clear, definitive negative catalyst (e.g., missed earnings, bankruptcy).
+- 'neutral': Use for ANY speculation, predictions, rumors, "might", "expected to", generic market recap, or fluff. If it is NOT a confirmed hard fact that guarantees price movement, it is 'neutral'.
 
 Output ONLY valid JSON. No explanations, no markdown block.
 
