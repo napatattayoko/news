@@ -7,20 +7,44 @@ const prisma = new PrismaClient();
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
-  console.log("🚀 Starting Safe Re-analysis of Old News...");
+  const args = process.argv.slice(2);
+  const targetTicker = args[0] ? args[0].toUpperCase() : null;
 
-  // 1. Fetch news from the last 15 days (to cover the recent ones but not overload)
+  console.log("🚀 Starting Safe Re-analysis of Old News...");
+  if (targetTicker) {
+    console.log(`🎯 Targeting specifically for ticker: ${targetTicker}`);
+  }
+
+  // 1. Fetch news from the last 15 days
   const daysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
   
-  const newsToUpdate = await prisma.news.findMany({
+  let newsToUpdate = await prisma.news.findMany({
     where: {
       publishedAt: { gte: daysAgo }
     },
-    select: { id: true, headline: true, body: true, sentiment: true, impact: true },
+    select: { id: true, headline: true, body: true, sentiment: true, impact: true, tickers: true },
     orderBy: { publishedAt: 'desc' }
   });
 
-  console.log(`Found ${newsToUpdate.length} articles from the last 15 days.`);
+  // Filter in memory if a specific ticker is requested
+  if (targetTicker) {
+    newsToUpdate = newsToUpdate.filter(item => {
+      try {
+        const parsed = JSON.parse(item.tickers as string) || [];
+        const tickersList = parsed.map((t: any) => {
+          if (typeof t === "string") return t.toUpperCase();
+          if (t && t.symbol) return t.symbol.toUpperCase();
+          if (t && t.Symbol) return t.Symbol.toUpperCase();
+          return "";
+        });
+        return tickersList.includes(targetTicker);
+      } catch (err) {
+        return false;
+      }
+    });
+  }
+
+  console.log(`Found ${newsToUpdate.length} articles from the last 15 days${targetTicker ? ` for ${targetTicker}` : ''}.`);
 
   let successCount = 0;
   let failCount = 0;
