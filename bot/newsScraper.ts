@@ -486,54 +486,51 @@ export async function scrapeAndStoreNews() {
     );
 
     if (newArticles.length > 0) {
-      const BATCH_SIZE = 5;
-      for (let i = 0; i < newArticles.length; i += BATCH_SIZE) {
-        const batch = newArticles.slice(i, i + BATCH_SIZE);
-        await Promise.all(
-          batch.map(async (item) => {
-            try {
-              console.log(
-                `[NewsBot] Categorizing & Analyzing: "${item.headline.substring(0, 50)}..."`,
-              );
+      // Process sequentially instead of batching to prevent Hugging Face API rate limits
+      for (const item of newArticles) {
+        try {
+          console.log(
+            `[NewsBot] Categorizing & Analyzing: "${item.headline.substring(0, 50)}..."`,
+          );
 
-              // 1. Categorize using HF API (facebook/bart-large-mnli)
-              const catResult = await categorizeArticle(
-                item.headline,
-                candidateLabels,
-              );
-              item.category =
-                catResult.score > 0.45 ? catResult.label : "markets";
+          // 1. Categorize using HF API (facebook/bart-large-mnli)
+          const catResult = await categorizeArticle(
+            item.headline,
+            candidateLabels,
+          );
+          item.category =
+            catResult.score > 0.45 ? catResult.label : "markets";
 
-              // 2. Analyze Sentiment & Impact using HF API (ProsusAI/finbert)
-              const analysis = await analyzeArticle(item.headline, item.body);
-              item.sentiment = analysis.sentiment;
-              item.impact = analysis.impact;
+          // 2. Analyze Sentiment & Impact using HF API
+          const analysis = await analyzeArticle(item.headline, item.body);
+          item.sentiment = analysis.sentiment;
+          item.impact = analysis.impact;
 
-              await prisma.news.upsert({
-                where: { id: item.id },
-                update: {},
-                create: {
-                  id: item.id,
-                  headline: item.headline,
-                  body: item.body,
-                  publishedAt: new Date(item.publishedAt),
-                  category: item.category,
-                  impact: item.impact,
-                  sentiment: item.sentiment,
-                  countryCode: item.countryCode,
-                  regionTag: item.regionTag,
-                  tickers: JSON.stringify(item.tickers),
-                  sources: JSON.stringify(item.sources),
-                },
-              });
-            } catch (err) {
-              console.error(
-                `[NewsBot] Error processing article ${item.id}:`,
-                err,
-              );
-            }
-          }),
-        );
+          await prisma.news.upsert({
+            where: { id: item.id },
+            update: {},
+            create: {
+              id: item.id,
+              headline: item.headline,
+              body: item.body,
+              publishedAt: new Date(item.publishedAt),
+              category: item.category,
+              sentiment: item.sentiment,
+              impact: item.impact,
+              countryCode: item.countryCode,
+              regionTag: item.regionTag,
+              tickers: JSON.stringify(item.tickers),
+              sources: JSON.stringify(item.sources),
+            },
+          });
+          
+          // Sleep for 2.5 seconds to respect Hugging Face Free API rate limits
+          console.log(`[NewsBot] Waiting 2.5s to respect API rate limits...`);
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+          
+        } catch (error) {
+          console.error(`[NewsBot] Error processing article ${item.id}:`, error);
+        }
       }
       console.log(
         `[NewsBot] Successfully processed ${newArticles.length} articles!`,
