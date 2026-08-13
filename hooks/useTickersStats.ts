@@ -109,6 +109,6 @@ export function useTickersStats(symbols: string[], range: '24H' | '7D' | '30D' |
 }
 
 export function useTickerStats(symbol: string, range: '24H' | '7D' | '30D' | 'All' = '24H') {
-  const { stats } = useTickersStats([symbol], range);
-  return stats[0];
+  const { stats, isLoading } = useTickersStats([symbol], range);
+  return { row: stats[0], isLoading };
 }

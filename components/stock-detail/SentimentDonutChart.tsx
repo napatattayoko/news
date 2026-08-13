@@ -3,6 +3,7 @@
 interface SentimentDonutChartProps {
   historical: { positive: number; neutral: number; negative: number };
   mentionCount: number;
+  isLoading?: boolean;
 }
 
 type Segment = {
@@ -13,7 +14,42 @@ type Segment = {
   color: string;
 };
 
-export default function SentimentDonutChart({ historical, mentionCount }: SentimentDonutChartProps) {
+export default function SentimentDonutChart({ historical, mentionCount, isLoading }: SentimentDonutChartProps) {
+  if (isLoading) {
+    return (
+      <div className="bg-[#0a1017] border border-[#333333] rounded-xl p-5 flex flex-col h-full">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="h-5 w-36 bg-slate-800 rounded animate-pulse" />
+          <div className="h-6 w-20 bg-slate-800 rounded-full animate-pulse" />
+        </div>
+
+        {/* Donut Skeleton */}
+        <div className="flex justify-center items-center mb-5 flex-1 min-h-[160px]">
+          <div className="relative w-[160px] h-[160px] rounded-full border-[18px] border-slate-800/40 animate-pulse flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-6 w-12 bg-slate-800 rounded animate-pulse" />
+              <div className="h-4 w-16 bg-slate-800 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+
+        {/* Legend Skeleton */}
+        <div className="flex items-start justify-between px-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className="w-3 h-3 rounded-full bg-slate-800 animate-pulse mt-1.5" />
+              <div className="flex flex-col items-start gap-1">
+                <div className="h-4 w-12 bg-slate-800 rounded animate-pulse" />
+                <div className="h-4 w-16 bg-slate-800 rounded animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const { positive, neutral, negative } = historical;
   const total = positive + neutral + negative;
 

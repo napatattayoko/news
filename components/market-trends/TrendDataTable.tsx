@@ -125,7 +125,7 @@ export default function TrendDataTable({ items }: TrendDataTableProps) {
               onClick={() => handleSort('symbol')}
               className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
             >
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 TICKER <SortIcon column="symbol" sortColumn={sortColumn} sortDirection={sortDirection} />
               </span>
             </th>
@@ -133,7 +133,7 @@ export default function TrendDataTable({ items }: TrendDataTableProps) {
               onClick={() => handleSort('impact')}
               className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
             >
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 IMPACT <SortIcon column="impact" sortColumn={sortColumn} sortDirection={sortDirection} />
               </span>
             </th>
@@ -141,7 +141,7 @@ export default function TrendDataTable({ items }: TrendDataTableProps) {
               onClick={() => handleSort('sentiment')}
               className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
             >
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 SENTIMENT <SortIcon column="sentiment" sortColumn={sortColumn} sortDirection={sortDirection} />
               </span>
             </th>
@@ -149,16 +149,16 @@ export default function TrendDataTable({ items }: TrendDataTableProps) {
               onClick={() => handleSort('mention')}
               className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
             >
-              <span className="inline-flex items-center gap-1 justify-center">
+              <span className="inline-flex items-center gap-1 justify-center whitespace-nowrap">
                 MENTION <SortIcon column="mention" sortColumn={sortColumn} sortDirection={sortDirection} />
               </span>
             </th>
             <th className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
-              SENTIMENT HISTORICAL
+              <span className="whitespace-nowrap">SENTIMENT HISTORICAL</span>
             </th>
 
             <th className="text-center text-xs font-bold text-white uppercase tracking-wider px-4 py-3">
-              STAT
+              <span className="whitespace-nowrap">STAT</span>
             </th>
           </tr>
         </thead>

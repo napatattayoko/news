@@ -339,7 +339,7 @@ export default function StockSentimentPage() {
                       onClick={() => handleSort('symbol')}
                       className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
                     >
-                      <span className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1 whitespace-nowrap">
                         Ticker <SortIcon column="symbol" sortColumn={sortColumn} sortDirection={sortDirection} />
                       </span>
                     </th>
@@ -350,7 +350,7 @@ export default function StockSentimentPage() {
                       <TooltipProvider delayDuration={200}>
                         <TooltipRoot>
                           <TooltipTrigger asChild>
-                            <span className="inline-flex items-center gap-1">
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap">
                               Impact
                               <Info size={13} className="text-slate-400 hidden sm:block" />
                               <SortIcon column="impact" sortColumn={sortColumn} sortDirection={sortDirection} />
@@ -372,7 +372,7 @@ export default function StockSentimentPage() {
                       <TooltipProvider delayDuration={200}>
                         <TooltipRoot>
                           <TooltipTrigger asChild>
-                            <span className="inline-flex items-center gap-1">
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap">
                               Sentiment
                               <Info size={13} className="text-slate-400 hidden sm:block" />
                               <SortIcon column="sentiment" sortColumn={sortColumn} sortDirection={sortDirection} />
@@ -394,7 +394,7 @@ export default function StockSentimentPage() {
                       <TooltipProvider delayDuration={200}>
                         <TooltipRoot>
                           <TooltipTrigger asChild>
-                            <span className="inline-flex items-center gap-1 justify-center">
+                            <span className="inline-flex items-center gap-1 justify-center whitespace-nowrap">
                               Mention
                               <Info size={13} className="text-slate-400 hidden sm:block" />
                               <SortIcon column="mention" sortColumn={sortColumn} sortDirection={sortDirection} />
@@ -413,7 +413,7 @@ export default function StockSentimentPage() {
                       <TooltipProvider delayDuration={200}>
                         <TooltipRoot>
                           <TooltipTrigger asChild>
-                            <span className="inline-flex items-center gap-1">
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap">
                               Sentiment Historical
                               <Info size={13} className="text-slate-400 hidden sm:block" />
                             </span>
@@ -432,7 +432,7 @@ export default function StockSentimentPage() {
                       <TooltipProvider delayDuration={200}>
                         <TooltipRoot>
                           <TooltipTrigger asChild>
-                            <span className="inline-flex items-center gap-1 justify-center">
+                            <span className="inline-flex items-center gap-1 justify-center whitespace-nowrap">
                               Stat
                               <Info size={13} className="text-slate-400 hidden sm:block" />
                             </span>
@@ -450,7 +450,7 @@ export default function StockSentimentPage() {
                       onClick={() => handleSort('date')}
                       className="text-right text-xs font-bold text-white uppercase tracking-wider px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
                     >
-                      <span className="inline-flex items-center gap-1 justify-end">
+                      <span className="inline-flex items-center gap-1 justify-end whitespace-nowrap">
                         Date <SortIcon column="date" sortColumn={sortColumn} sortDirection={sortDirection} />
                       </span>
                     </th>

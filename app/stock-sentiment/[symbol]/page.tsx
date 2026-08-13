@@ -44,7 +44,7 @@ export default function StockDetailPage() {
   const [priceChangeVal, setPriceChangeVal] = useState<number>(0);
   const [aiOutlook, setAiOutlook] = useState<string>('Analyzing market signals...');
 
-  const row = useTickerStats(symbol, selectedRange);
+  const { row, isLoading } = useTickerStats(symbol, selectedRange);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,7 +94,7 @@ export default function StockDetailPage() {
     };
   }, [symbol]);
 
-  if (!row) {
+  if (!row && !isLoading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
         <p className="text-slate-400 text-sm">No sentiment data found for <span className="text-[#0D7FF2] font-bold">${symbol}</span></p>
@@ -145,13 +145,15 @@ export default function StockDetailPage() {
           {/* Collateral Sentiment Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
             <SentimentDonutChart
-              historical={row.sentimentHistorical}
-              mentionCount={row.mentionCount}
+              historical={row?.sentimentHistorical || { positive: 0, neutral: 0, negative: 0 }}
+              mentionCount={row?.mentionCount || 0}
+              isLoading={isLoading}
             />
             <SentimentScoreCard
-              sentiment={row.sentiment}
-              score={row.score}
+              sentiment={row?.sentiment || 'flat'}
+              accuracy={row?.accuracy}
               aiOutlook={aiOutlook}
+              isLoading={isLoading}
             />
           </div>
           {/* Related News Feed */}
