@@ -3,7 +3,7 @@
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import RangeDropdown, { RangeOption } from '@/components/filters/RangeDropdown';
 import { SentimentDonutChart, SentimentScoreCard, StockDetailNewsFeed } from '@/components/stock-detail';
-import { TradingViewSymbolOverview } from '@/components/market-trends';
+
 import { useTickerStats } from '@/hooks/useTickersStats';
 import { TooltipProvider } from '@/components/ui/Tooltip';
 import { useState, useEffect } from 'react';
@@ -140,14 +140,7 @@ export default function StockDetailPage() {
         </div>
 
         <div className="px-6 pb-6 pt-0 flex flex-col gap-6">
-          {/* Full Screen TradingView Symbol Overview Chart (Featured First) */}
-          <div>
-            <TradingViewSymbolOverview
-              symbols={[symbol]}
-              title={`${symbol} — Live TradingView Symbol Overview`}
-              height={650}
-            />
-          </div>
+
 
           {/* Collateral Sentiment Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">

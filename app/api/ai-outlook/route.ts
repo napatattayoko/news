@@ -15,7 +15,8 @@ export async function GET(request: NextRequest) {
 
     // 1. Fetch current price change from Yahoo Finance
     const yfRes = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1d&interval=1d`
+      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1d&interval=1d`,
+      { cache: 'no-store' }
     );
     let priceChange = 0;
     if (yfRes.ok) {

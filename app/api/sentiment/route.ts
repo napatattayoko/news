@@ -15,7 +15,7 @@ const NEGATIVE_CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache for failed fetches
 
 // ─── Server-side result cache (additive — prevents redundant DB + Yahoo Finance calls) ───
 interface ResultCacheEntry { data: any[]; ts: number; }
-const resultCache = new Map<string, ResultCacheEntry>();
+const resultCache = new Map<string, ResultCacheEntry>(); // cleared
 const RESULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // ─── Helper: Fetch overall price change % for the range (with Finviz fallback) ──
@@ -47,6 +47,7 @@ async function fetchPriceChange(symbol: string, range: string): Promise<number |
           "Accept": "application/json",
           "Accept-Language": "en-US,en;q=0.9",
         },
+        cache: "no-store",
       }
     );
 
@@ -143,7 +144,7 @@ async function fetchDailyPriceChanges(symbol: string, range: string): Promise<{ 
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           "Accept": "application/json",
         },
-        next: { revalidate: 3600 },
+        cache: "no-store",
         signal: controller.signal,
       }
     );
@@ -429,11 +430,22 @@ export async function GET(request: NextRequest) {
     }
 
     for (const [symbol, group] of groupedMap.entries()) {
-      // Majority logic based on raw counts
-      const maxSentimentVal = Math.max(group.posCount, group.negCount, group.neuCount);
+      // Majority logic based on raw counts (correctly handling ties as flat/neutral)
       let majoritySentiment = "flat";
-      if (maxSentimentVal === group.posCount && maxSentimentVal > 0) majoritySentiment = "up";
-      else if (maxSentimentVal === group.negCount && maxSentimentVal > 0) majoritySentiment = "down";
+      if (group.posCount > group.negCount) {
+        majoritySentiment = "up";
+      } else if (group.negCount > group.posCount) {
+        majoritySentiment = "down";
+      } else {
+        majoritySentiment = "flat";
+      }
+
+      // Do not include neutral / flat sentiment tickers in results,
+      // UNLESS it is a tie between positive and negative mentions (i.e. posCount === negCount and posCount > 0)
+      const isTie = group.posCount > 0 && group.posCount === group.negCount;
+      if (majoritySentiment === "flat" && !isTie) {
+        continue;
+      }
 
       const maxImpactVal = Math.max(group.impacts.high, group.impacts.medium, group.impacts.low);
       let majorityImpact = "low";
@@ -508,12 +520,12 @@ export async function GET(request: NextRequest) {
       let endEntry = null;
       let isEarly = false;
 
-      if (group.latestNewsDate && history && history.length > 0) {
+      if (majoritySentiment !== 'flat' && group.latestNewsDate && history && history.length > 0) {
         // Strip hours to match history timestamps (which are UTC midnights)
         const dateStr = new Date(group.latestNewsDate).toLocaleDateString("en-US", { timeZone: "America/New_York" });
         const [m, d, y] = dateStr.split('/');
         const latestDateMidnight = Date.UTC(Number(y), Number(m) - 1, Number(d));
-        
+
         startEntry = history.find(entry => entry.timestamp >= latestDateMidnight);
         if (startEntry) {
           const startIndex = history.indexOf(startEntry);
@@ -530,7 +542,7 @@ export async function GET(request: NextRequest) {
       if (startEntry && endEntry) {
         const firstClose = startEntry.close;
         const lastClose = isEarly && group.currentPrice != null ? group.currentPrice : endEntry.close;
-        
+
         parentStatStartDate = new Date(startEntry.timestamp).toISOString();
         parentStatStartPrice = firstClose;
         parentStatEndDate = isEarly && group.currentPrice != null ? new Date().toISOString() : new Date(endEntry.timestamp).toISOString();
@@ -561,6 +573,12 @@ export async function GET(request: NextRequest) {
           if (startEntry) {
             const startIndex = history.indexOf(startEntry);
 
+            // Exclude neutral / flat days from accuracy calculations
+            if (day.sentiment === 'flat' || day.sentiment === 'neutral') {
+              (day as any)._rawAccuracy = null;
+              continue;
+            }
+
             const childTargetCandles = day.impactLevel === 'high' ? 3 : day.impactLevel === 'medium' ? 5 : 7;
             let endEntry;
             let isEarly = false;
@@ -577,9 +595,9 @@ export async function GET(request: NextRequest) {
               // Note: Using 'America/New_York' consistently for dates as that is the trading timezone
               const endDateObj = isEarly && group.currentPrice != null ? new Date() : new Date(endEntry.timestamp);
               day.endDate = endDateObj.toLocaleDateString('en-US', { timeZone: 'America/New_York' });
-              
+
               day.startPrice = startEntry.close;
-              
+
               let sentDir = 0;
               if (day.sentiment === 'up' || day.sentiment === 'positive') sentDir = 1;
               else if (day.sentiment === 'down' || day.sentiment === 'negative') sentDir = -1;
@@ -588,7 +606,7 @@ export async function GET(request: NextRequest) {
               // Instead of just taking the final close price, we scan the window (3-7 days)
               // to see if the price ever moved in the predicted direction.
               const windowEntries = history.slice(startIndex, startIndex + childTargetCandles + 1);
-              
+
               let bestPrice = endEntry.close;
               if (isEarly && group.currentPrice != null) {
                 bestPrice = group.currentPrice;
@@ -596,11 +614,11 @@ export async function GET(request: NextRequest) {
 
               if (sentDir === 1) {
                 // Look for the absolute highest peak in the timeframe
-                const maxHigh = Math.max(...windowEntries.map(e => e.high));
+                const maxHigh = Math.max(...windowEntries.map(e => e.close));
                 if (maxHigh > startEntry.close) bestPrice = maxHigh;
               } else if (sentDir === -1) {
                 // Look for the absolute lowest dip in the timeframe
-                const minLow = Math.min(...windowEntries.map(e => e.low));
+                const minLow = Math.min(...windowEntries.map(e => e.close));
                 if (minLow < startEntry.close) bestPrice = minLow;
               }
 
@@ -618,7 +636,7 @@ export async function GET(request: NextRequest) {
               else if (pctChange < -PRICE_DEADZONE) priceDir = -1;
 
               let dayAccuracy = 50;
-              
+
               if (sentDir === 0 && priceDir === 0) {
                 dayAccuracy = 50;
               } else if (sentDir !== 0 && priceDir === 0) {
@@ -630,7 +648,7 @@ export async function GET(request: NextRequest) {
               } else {
                 const isOpposite = Math.abs(sentDir - priceDir) === 2;
                 const conflictMultiplier = isOpposite ? 1.0 : 0.75;
-                
+
                 // Rely purely on percentage change (cap at 5%)
                 const priceStrength = Math.min(Math.abs(pctChange) / 5, 1);
                 const conflictScore = priceStrength * conflictMultiplier;
@@ -668,9 +686,9 @@ export async function GET(request: NextRequest) {
         if (validStats.length > 0) {
           const sumOfAccuracies = validStats.reduce((sum, d) => sum + d.accuracy!, 0);
           accuracy = Math.round(sumOfAccuracies / validStats.length);
-          
+
           const latestValid = validStats[0];
-          
+
           // Use the latest child row that actually has a STAT to represent the parent row's START date and price
           let validDateMs;
           if (latestValid.date.includes('/')) {
@@ -683,7 +701,7 @@ export async function GET(request: NextRequest) {
 
           parentStatStartDate = new Date(validDateMs).toISOString();
           parentStatStartPrice = latestValid.startPrice;
-          
+
           // End date and price should be the CURRENT real-time data
           parentStatEndDate = new Date().toISOString();
           if (group.currentPrice != null) {

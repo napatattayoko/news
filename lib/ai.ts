@@ -1,59 +1,138 @@
-import { HfInference } from '@huggingface/inference';
-
-// Initialize the Hugging Face Inference client
-// Ensure HUGGINGFACE_API_KEY is in your .env or .env.local file
-const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
-
-const SENTIMENT_MODEL = 'ProsusAI/finbert';
-const CATEGORY_MODEL = 'facebook/bart-large-mnli';
-
 export type SentimentResult = 'good' | 'neutral' | 'bad';
 export type ImpactResult = 'high' | 'medium' | 'low';
 
 export interface AIAnalysisResult {
+  pass: boolean;
+  reason: string;
+  category: string;
   sentiment: SentimentResult;
   impact: ImpactResult;
+}
+
+async function fetchGeminiWithRetry(url: string, body: any, maxRetries = 10): Promise<Response> {
+  let retries = maxRetries;
+  let delay = 6000; // Start with 6s sleep
+
+  while (retries > 0) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (Number(response.status) === 429) {
+      console.warn(`[AI] Gemini rate limited (429). Retrying in ${delay / 1000}s... (Retries left: ${retries - 1})`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      retries--;
+      delay = Math.min(delay * 2, 60000); // Exponential backoff up to 60s max
+      continue;
+    }
+
+    return response;
+  }
+
+  throw new Error("Exceeded maximum retries for Gemini API due to rate limits.");
 }
 
 export async function analyzeArticle(headline: string, body: string): Promise<AIAnalysisResult> {
   const textToAnalyze = headline.substring(0, 500);
 
-  const prompt = `You are a strict quantitative financial analyst. Analyze this headline and output a JSON object EXACTLY matching this schema: {"sentiment": "good"|"neutral"|"bad", "impact": "high"|"medium"|"low"}
+  const prompt = `You are a strict Quantitative Trader and Financial Sentiment Analyst. Analyze this news headline and determine its IMMEDIATE price action impact on the underlying stock or market index.
 
-Rules for Impact:
-- 'high': Only for MATERIAL events (Earnings, M&A, Bankruptcies, CEO changes, FDA approvals, Lawsuits).
-- 'medium': Product launches, operational updates, analyst upgrades/downgrades.
-- 'low': Fluff, opinions, market commentary, "top stocks to buy", generic PR.
+Output a JSON object EXACTLY matching this schema:
+{
+  "pass": true|false,
+  "reason": "brief explanation of market impact and expected price reaction",
+  "category": "markets"|"economy"|"geopolitics"|"tech"|"ai"|"energy"|"commodities"|"healthcare"|"real-estate"|"climate"|"defense"|"banking"|"automotive"|"trade"|"entertainment",
+  "price_trend": "bullish_up"|"bearish_down",
+  "target_horizon": "intraday"|"1_to_3_days"|"long_term"|"none",
+  "sentiment": "good"|"bad",
+  "impact": "high"|"medium"|"low"
+}
 
-Rules for Sentiment:
-- 'good': MUST indicate a clear, definitive positive catalyst (e.g., crushed earnings, major contract won).
-- 'bad': MUST indicate a clear, definitive negative catalyst (e.g., missed earnings, bankruptcy).
-- 'neutral': Use for ANY speculation, predictions, rumors, "might", "expected to", generic market recap, or fluff. If it is NOT a confirmed hard fact that guarantees price movement, it is 'neutral'.
+Rules for 'pass' (Gatekeeper Filter):
+- Set "pass" to true ONLY if the headline contains a CLEAR and DEFINITE directional price catalyst (e.g., earnings beat/miss, major contract win/loss, M&A, executive changes, lawsuits, FDA decisions, rate decisions).
+- Set "pass" to false if the headline is neutral, priced-in, ambiguous, speculative fluff, clickbait, listicles (e.g. "3 stocks to watch"), or lacks clear market-moving catalyst to push price explicitly up or down.
 
-Output ONLY valid JSON. No explanations, no markdown block.
+Rules for 'price_trend' (Directional Bias):
+- 'bullish_up': The headline contains a definite POSITIVE catalyst that drives immediate buying pressure and pushes price UP.
+- 'bearish_down': The headline contains a definite NEGATIVE catalyst that triggers immediate selling pressure and pushes price DOWN.
+(Note: Do NOT predict sideways. If it lacks directional impact, set 'pass' to false).
+
+Rules for 'target_horizon' (Expected Timeframe):
+- 'intraday': Immediate price jump or drop expected within the trading session.
+- '1_to_3_days': Momentum reaction likely to unfold over 1-3 trading days.
+- 'long_term': Structural fundamental shift affecting weeks or months.
+- 'none': Set to 'none' if "pass" is false.
+
+Rules for 'impact':
+- 'high': Material events (Earnings, M&A, CEO departure, Bankruptcies, Interest rates).
+- 'medium': Product releases, operational updates, analyst upgrades/downgrades.
+- 'low': Minor PR, routine announcements.
+
+Rules for 'sentiment':
+- 'good': Clear positive catalyst driving price UP.
+- 'bad': Clear negative catalyst driving price DOWN.
 
 Headline: "${textToAnalyze}"`;
 
+  let response: any;
+  let outputText = '';
   try {
-    const response = await hf.chatCompletion({
-      model: 'meta-llama/Meta-Llama-3-8B-Instruct',
-      messages: [
-        { role: 'system', content: 'You are a JSON-only financial analyzer. Output only valid JSON.' },
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: 50,
-      temperature: 0.1,
-    });
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not defined in env variables");
+    }
 
-    const outputText = response.choices[0]?.message?.content?.trim() || '{}';
-    
-    // Clean up potential markdown formatting if the model disobeys
-    const jsonStr = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const result = JSON.parse(jsonStr);
+    response = await fetchGeminiWithRetry(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
+      {
+        contents: [
+          {
+            parts: [
+              { text: prompt }
+            ]
+          }
+        ],
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.1,
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Gemini API returned status: ${response.status}`);
+    }
+
+    const data = await response.json() as any;
+    outputText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '{}';
+    const firstBrace = outputText.indexOf('{');
+    const lastBrace = outputText.lastIndexOf('}');
+    if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+      throw new Error("Could not find valid JSON object in output");
+    }
+    const cleanJsonStr = outputText.substring(firstBrace, lastBrace + 1);
+    const result = JSON.parse(cleanJsonStr);
+
+    let pass = true;
+    if (typeof result.pass === 'boolean') {
+      pass = result.pass;
+    }
+
+    let reason = result.reason || '';
+    let category = result.category || 'markets';
 
     let sentiment: SentimentResult = 'neutral';
     if (result.sentiment === 'good' || result.sentiment === 'bad') {
       sentiment = result.sentiment;
+    }
+
+    // Force pass to false if sentiment resolved to neutral (i.e. not good or bad)
+    if (sentiment === 'neutral') {
+      pass = false;
     }
 
     let impact: ImpactResult = 'low';
@@ -61,59 +140,19 @@ Headline: "${textToAnalyze}"`;
       impact = result.impact;
     }
 
-    // Double check: if it's neutral, impact shouldn't matter but we can force it low
-    if (sentiment === 'neutral') impact = 'low';
-
-    return { sentiment, impact };
+    return { pass, reason, category, sentiment, impact };
   } catch (error) {
-    console.error("[AI] LLaMA-3 API Error, falling back to FinBERT:", error);
-    
-    // FALLBACK: Use FinBERT if LLaMA-3 is overloaded or rate limited
-    try {
-      const response = await hf.textClassification({
-        model: SENTIMENT_MODEL, // ProsusAI/finbert
-        inputs: textToAnalyze,
-      });
-
-      const topResult = response[0];
-      const topLabel = topResult.label.toLowerCase();
-      const topScore = topResult.score;
-
-      let sentiment: SentimentResult = 'neutral';
-      if (topLabel === 'positive') sentiment = 'good';
-      else if (topLabel === 'negative') sentiment = 'bad';
-
-      let impact: ImpactResult = 'low';
-      
-      if (sentiment !== 'neutral') {
-        if (topScore >= 0.8) {
-          impact = 'high';
-        } else if (topScore >= 0.5) {
-          impact = 'medium';
-        }
-      }
-
-      return { sentiment, impact };
-    } catch (fallbackError) {
-      console.error("[AI] FinBERT Fallback also failed:", fallbackError);
-      return { sentiment: 'neutral', impact: 'low' };
+    console.error("[AI] Gemini API Error:", error);
+    if (error instanceof SyntaxError) {
+      console.error("[AI] Output text that failed JSON parse:", outputText);
     }
-  }
-}
-
-export async function categorizeArticle(text: string, candidateLabels: string[]): Promise<{ label: string, score: number }> {
-  try {
-    const response = await hf.zeroShotClassification({
-      model: CATEGORY_MODEL,
-      inputs: text,
-      parameters: { candidate_labels: candidateLabels }
-    });
-    // The response is an array of objects: [{label: '...', score: 0.9}, ...]
-    const topResult = response[0] as any;
-    return { label: topResult.label, score: topResult.score };
-  } catch (error) {
-    console.error("[AI] Error categorizing via Hugging Face API:", error);
-    return { label: 'markets', score: 1 };
+    return {
+      pass: false,
+      reason: `Failed to analyze via Gemini: ${error instanceof Error ? error.message : String(error)}`,
+      category: 'markets',
+      sentiment: 'neutral',
+      impact: 'low'
+    };
   }
 }
 
@@ -122,22 +161,36 @@ export async function generateAIOutlook(symbol: string, priceChange: number, hea
   const prompt = `You are a professional quantitative financial analyst. The stock ${symbol} had an actual price change of ${priceChange.toFixed(2)}% today. The recent news headlines are: "${headlinesText}". Write a concise 2-sentence summary explaining whether the price action matches the news sentiment or if there is a divergence (e.g. Sell on the News, or price dropping despite positive headlines). Be highly specific and objective.`;
 
   try {
-    const response = await hf.chatCompletion({
-      model: 'meta-llama/Meta-Llama-3-8B-Instruct',
-      messages: [
-        { role: 'system', content: 'You are a professional quantitative financial analyst.' },
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: 100,
-      temperature: 0.3,
-    });
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not defined in env variables");
+    }
 
-    return response.choices[0]?.message?.content?.trim() || '';
+    const response = await fetchGeminiWithRetry(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
+      {
+        contents: [
+          {
+            parts: [
+              { text: prompt }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.3,
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Gemini API returned status: ${response.status}`);
+    }
+
+    const data = await response.json() as any;
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
   } catch (error) {
-    console.error(`[AI] Error generating outlook for ${symbol}:`, error);
-    // Fallback based on simple logic if HF fails or API key is missing
+    console.error(`[AI] Gemini Error generating outlook for ${symbol}:`, error);
     const direction = priceChange > 0 ? 'upward' : priceChange < 0 ? 'downward' : 'neutral';
     return `${symbol} experienced a ${direction} price movement of ${priceChange.toFixed(2)}% today. The news headlines show mixed correlation with this price action, suggesting standard market volatility.`;
   }
 }
-

@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import { prisma } from "../lib/prisma";
-import { analyzeArticle, categorizeArticle } from "../lib/ai";
+import { analyzeArticle } from "../lib/ai";
 const COMMON_TICKERS = new Set([
   "AAPL",
   "MSFT",
@@ -493,16 +493,17 @@ export async function scrapeAndStoreNews() {
             `[NewsBot] Categorizing & Analyzing: "${item.headline.substring(0, 50)}..."`,
           );
 
-          // 1. Categorize using HF API (facebook/bart-large-mnli)
-          const catResult = await categorizeArticle(
-            item.headline,
-            candidateLabels,
-          );
-          item.category =
-            catResult.score > 0.45 ? catResult.label : "markets";
-
-          // 2. Analyze Sentiment & Impact using HF API
+          // Analyze Sentiment, Impact, Category, and filter fluff in a single AI call
           const analysis = await analyzeArticle(item.headline, item.body);
+
+          if (!analysis.pass) {
+            console.log(
+              `[NewsBot] Discarded article (filtered fluff): "${item.headline.substring(0, 50)}..." | Reason: ${analysis.reason}`
+            );
+            continue;
+          }
+
+          item.category = analysis.category;
           item.sentiment = analysis.sentiment;
           item.impact = analysis.impact;
 
@@ -523,11 +524,11 @@ export async function scrapeAndStoreNews() {
               sources: JSON.stringify(item.sources),
             },
           });
-          
-          // Sleep for 2.5 seconds to respect Hugging Face Free API rate limits
-          console.log(`[NewsBot] Waiting 2.5s to respect API rate limits...`);
-          await new Promise((resolve) => setTimeout(resolve, 2500));
-          
+
+          // Sleep for 4.5 seconds to stay within Gemini's 15 RPM rate limit
+          console.log(`[NewsBot] Waiting 4.5s to respect Gemini API rate limits...`);
+          await new Promise((resolve) => setTimeout(resolve, 4500));
+
         } catch (error) {
           console.error(`[NewsBot] Error processing article ${item.id}:`, error);
         }

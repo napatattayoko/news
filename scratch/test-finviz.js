@@ -11,14 +11,16 @@ async function test() {
   const html = await response.text();
   const $ = cheerio.load(html);
   
-  let countOld = 0;
-  $('table.styled-table-new tr').each(() => countOld++);
-  
-  let countA = 0;
-  $('a.nn-tab-link').each(() => countA++);
+  console.log('styled-table-new tr print:');
 
-  console.log('styled-table-new tr count:', countOld);
-  console.log('a.nn-tab-link count:', countA);
+  $('table.styled-table-new tr').slice(0, 50).each((i, row) => {
+    const time = $(row).find('td.news_date-cell').text().trim();
+    const linkEl = $(row).find('a.nn-tab-link');
+    const title = linkEl.text().trim();
+    if (title) {
+      console.log(`${i + 1}. [${time}] "${title}"`);
+    }
+  });
 }
 
 test();

@@ -15,6 +15,10 @@ let cachedTrending: any = null;
 let lastTrendingCacheTime = 0;
 const TRENDING_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
 
+const MAJOR_POPULAR_TICKERS = new Set([
+  "NVDA", "MSFT", "AAPL", "GOOGL", "GOOG", "AMZN", "META", "TSLA"
+]);
+
 const HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -207,8 +211,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Map map to TickerAnalysis array
-      const trendingList = Array.from(tickerMap.values()).map((stats) => {
+      // Map map to TickerAnalysis array and filter by major tickers
+      const trendingList = Array.from(tickerMap.values())
+        .filter((stats) => MAJOR_POPULAR_TICKERS.has(stats.symbol))
+        .map((stats) => {
         // Net sentiment determination
         let sentiment: "up" | "down" | "flat" = "flat";
         if (stats.positiveCount > stats.negativeCount) {
