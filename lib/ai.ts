@@ -23,6 +23,18 @@ async function fetchGeminiWithRetry(url: string, body: any, maxRetries = 10): Pr
     });
 
     if (Number(response.status) === 429) {
+      try {
+        const cloned = response.clone();
+        const errJson = await cloned.json();
+        const errMsg = errJson?.error?.message || '';
+        if (errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('limit')) {
+          console.error(`[AI] Daily/Monthly Gemini API quota limit reached. Skipping retries.`);
+          return response;
+        }
+      } catch (e) {
+        // Ignore JSON clone/parse errors
+      }
+
       console.warn(`[AI] Gemini rate limited (429). Retrying in ${delay / 1000}s... (Retries left: ${retries - 1})`);
       await new Promise(resolve => setTimeout(resolve, delay));
       retries--;

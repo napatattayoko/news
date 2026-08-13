@@ -2,9 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { TickerAnalysis } from '@/lib/types';
-import { TrendingUp, TrendingDown, Minus, X, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import Tooltip, { TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/Tooltip';
 import { tickerToast } from '@/lib/toast';
 
 interface StockCardProps {
@@ -13,16 +12,15 @@ interface StockCardProps {
 }
 
 const sentimentConfig = {
-  up: { icon: TrendingUp, iconColor: 'text-[#10B981]', bgColor: 'bg-[#17382D]', label: 'Positive', dotColor: 'bg-[#10B981]', barColor: 'bg-[#10B981]', textColor: 'text-white' },
+  up: { icon: TrendingUp, iconColor: 'text-[#10B981]', bgColor: 'bg-[#17382D]', label: 'Positive', dotColor: 'bg-[#10B981]', barColor: 'bg-[#10B981]', textColor: 'text-[#22C55E]' },
   down: { icon: TrendingDown, iconColor: 'text-[#EF4444]', bgColor: 'bg-[#592424]', label: 'Negative', dotColor: 'bg-[#EF4444]', barColor: 'bg-[#EF4444]', textColor: 'text-[#EF4444]' },
-  flat: { icon: Minus, iconColor: 'text-[#808080]', bgColor: 'bg-[#262626]', label: 'Neutral', dotColor: 'bg-[#7F7F7F]', barColor: 'bg-[#7F7F7F]', textColor: 'text-white' },
+  flat: { icon: Minus, iconColor: 'text-[#808080]', bgColor: 'bg-[#262626]', label: 'Neutral', dotColor: 'bg-[#7F7F7F]', barColor: 'bg-[#7F7F7F]', textColor: 'text-slate-400' },
 };
 
 export default function StockCard({ item, onRemove }: StockCardProps) {
   const router = useRouter();
   const config = sentimentConfig[item.sentiment];
   const TrendIcon = config.icon;
-  const barWidth = Math.round((Math.abs(item.score) / 10) * 100);
 
   return (
     <div className={cn('relative', onRemove && 'group')}>
@@ -45,32 +43,25 @@ export default function StockCard({ item, onRemove }: StockCardProps) {
           </div>
         </div>
 
-        {/* Sentiment Score */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-white text-xs font-medium">Sentiment Score</span>
-              <Tooltip content="Score ranges from -10 to +10">
-                <Info size={14} className="text-slate-500 cursor-help" />
-              </Tooltip>
-            </div>
-            <span className="text-white font-semibold text-sm">
-              {item.score > 0 ? `+${item.score}` : item.score}/10
+        {/* Details: Sentiment, Impact, Stat */}
+        <div className="flex flex-col gap-1.5 pt-2 border-t border-[#222F44] text-xs select-none">
+          <div className="flex justify-between items-center">
+            <span className="text-[#808080] text-[11px] font-medium uppercase tracking-wider">Sentiment</span>
+            <span className={cn('font-bold', config.textColor)}>{config.label}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[#808080] text-[11px] font-medium uppercase tracking-wider">Impact</span>
+            <span className={cn('font-bold', 
+              item.impactLevel === 'high' ? 'text-red-400' :
+              item.impactLevel === 'medium' ? 'text-amber-400' : 'text-blue-400'
+            )}>{item.impactLevel?.toUpperCase() || 'LOW'}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[#808080] text-[11px] font-medium uppercase tracking-wider">Stat</span>
+            <span className="font-bold text-white">
+              {item.accuracy != null ? `${(item.accuracy / 10).toFixed(1)}/10` : '-'}
             </span>
           </div>
-          {/* Progress bar */}
-          <div className="h-2 w-full bg-[#2A2A2A] rounded-full overflow-hidden">
-            <div
-              className={cn('h-full rounded-full', config.barColor)}
-              style={{ width: `${barWidth}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Sentiment Badge */}
-        <div className="flex items-center gap-2">
-          <div className={cn('w-2 h-2 rounded-full', config.dotColor)} />
-          <span className={cn('text-xs font-medium', config.textColor)}>{config.label}</span>
         </div>
       </div>
 

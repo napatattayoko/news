@@ -23,20 +23,20 @@ function StockCardSkeleton() {
         <div className="w-8 h-8 bg-slate-700/30 rounded-full shrink-0" />
       </div>
 
-      {/* Sentiment Score Section */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="h-3 w-20 bg-slate-700/40 rounded" />
-          <div className="h-4 w-8 bg-slate-700/40 rounded" />
+      {/* Stats Row Skeleton: Sentiment, Impact, Stat */}
+      <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-[#222F44] text-xs">
+        <div className="flex flex-col gap-1">
+          <div className="h-2 w-12 bg-slate-700/40 rounded" />
+          <div className="h-3 w-16 bg-slate-700/30 rounded" />
         </div>
-        {/* Progress bar */}
-        <div className="h-2 w-full bg-[#2A2A2A] rounded-full" />
-      </div>
-
-      {/* Sentiment Badge */}
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-slate-700/40 rounded-full" />
-        <div className="h-3 w-16 bg-slate-700/30 rounded" />
+        <div className="flex flex-col gap-1">
+          <div className="h-2 w-10 bg-slate-700/40 rounded" />
+          <div className="h-3 w-14 bg-slate-700/30 rounded" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="h-2 w-8 bg-slate-700/40 rounded" />
+          <div className="h-3 w-10 bg-slate-700/30 rounded" />
+        </div>
       </div>
     </div>
   );

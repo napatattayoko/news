@@ -135,42 +135,39 @@ export default function StockSentimentPage() {
   const { stats: baseRows, isLoading } = useTickersStats([], selectedRange);
 
   // Fetch specific major tickers for top cards to get correct price action stats when there's no news
-  const { stats: topRows } = useTickersStats(['NVDA', 'AAPL', 'TSLA', 'AMZN'], selectedRange);
+  const { stats: topRows } = useTickersStats(['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA'], selectedRange);
 
-  // Map NVDA, AAPL, TSLA, AMZN stats dynamically for top stock cards
+  // Map Magnificent 7 stats dynamically for top stock cards
   const topStocks = useMemo(() => {
-    const majorSymbols = ['NVDA', 'AAPL', 'TSLA', 'AMZN'];
+    const majorSymbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA'];
     const companyNames: Record<string, string> = {
-      'NVDA': 'NVIDIA Corporation',
       'AAPL': 'Apple Inc.',
-      'TSLA': 'Tesla, Inc.',
-      'AMZN': 'Amazon.com, Inc.'
+      'MSFT': 'Microsoft Corporation',
+      'GOOGL': 'Alphabet Inc.',
+      'AMZN': 'Amazon.com, Inc.',
+      'NVDA': 'NVIDIA Corporation',
+      'META': 'Meta Platforms, Inc.',
+      'TSLA': 'Tesla, Inc.'
     };
-    return majorSymbols.map(sym => {
-      // Find the latest record for this symbol (since there can be multiple daily rows)
-      const symbolRows = topRows.filter(item => item.symbol.toUpperCase() === sym);
-      const found = symbolRows.sort((a, b) => {
-        const timeA = a.latestNewsDate ? new Date(a.latestNewsDate).getTime() : 0;
-        const timeB = b.latestNewsDate ? new Date(b.latestNewsDate).getTime() : 0;
-        return timeB - timeA;
-      })[0];
+    return majorSymbols
+      .map(sym => {
+        // Find the latest record for this symbol (since there can be multiple daily rows)
+        const symbolRows = topRows.filter(item => item.symbol.toUpperCase() === sym);
+        const found = symbolRows.sort((a, b) => {
+          const timeA = a.latestNewsDate ? new Date(a.latestNewsDate).getTime() : 0;
+          const timeB = b.latestNewsDate ? new Date(b.latestNewsDate).getTime() : 0;
+          return timeB - timeA;
+        })[0];
 
-      if (found) {
-        return {
-          ...found,
-          name: companyNames[sym] || found.symbol
-        };
-      }
-      return {
-        symbol: sym,
-        name: companyNames[sym] || sym,
-        impactLevel: 'low' as const,
-        sentiment: 'flat' as const,
-        mentionCount: 0,
-        sentimentHistorical: { positive: 0, negative: 0, neutral: 0 },
-        score: 0
-      };
-    });
+        if (found && found.mentionCount > 0) {
+          return {
+            ...found,
+            name: companyNames[sym] || found.symbol
+          };
+        }
+        return null;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
   }, [topRows]);
 
   const trendingSymbols = useMemo(() => {
