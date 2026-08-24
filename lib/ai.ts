@@ -48,6 +48,42 @@ async function fetchGeminiWithRetry(url: string, body: any, maxRetries = 10): Pr
   throw new Error("Exceeded maximum retries for Gemini API due to rate limits.");
 }
 
+const MODEL_FALLBACKS = [
+  process.env.GEMINI_MODEL,
+  'gemini-3.7-flash',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+].filter(Boolean) as string[];
+
+async function fetchGeminiWithFallback(body: any): Promise<Response> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not defined in env variables");
+  }
+
+  let lastResponse: Response | null = null;
+  let lastError: any = null;
+
+  for (const model of MODEL_FALLBACKS) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    try {
+      console.log(`[AI] Attempting call with model: ${model}`);
+      const res = await fetchGeminiWithRetry(url, body);
+      if (res.ok) {
+        return res;
+      }
+      lastResponse = res;
+      console.warn(`[AI] Model ${model} failed with status ${res.status}. Trying next...`);
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[AI] Error calling model ${model}:`, err.message);
+    }
+  }
+
+  if (lastResponse) return lastResponse;
+  throw lastError || new Error("All fallback models failed");
+}
+
 export async function analyzeArticle(headline: string, body: string): Promise<AIAnalysisResult> {
   const textToAnalyze = headline.substring(0, 500);
 
@@ -60,18 +96,22 @@ Output a JSON object EXACTLY matching this schema:
   "category": "markets"|"economy"|"geopolitics"|"tech"|"ai"|"energy"|"commodities"|"healthcare"|"real-estate"|"climate"|"defense"|"banking"|"automotive"|"trade"|"entertainment",
   "price_trend": "bullish_up"|"bearish_down",
   "target_horizon": "intraday"|"1_to_3_days"|"long_term"|"none",
-  "sentiment": "good"|"bad",
+  "sentiment": "good"|"bad"|"neutral",
   "impact": "high"|"medium"|"low"
 }
 
 Rules for 'pass' (Gatekeeper Filter):
-- Set "pass" to true ONLY if the headline contains a CLEAR and DEFINITE directional price catalyst (e.g., earnings beat/miss, major contract win/loss, M&A, executive changes, lawsuits, FDA decisions, rate decisions).
-- Set "pass" to false if the headline is neutral, priced-in, ambiguous, speculative fluff, clickbait, listicles (e.g. "3 stocks to watch"), or lacks clear market-moving catalyst to push price explicitly up or down.
+1. KEEP (Set "pass" to true): The headline MUST report actual occurred events, quantitative numbers, regulatory actions, earnings results, official contracts signed, executive changes, or lawsuits.
+2. REJECT (Set "pass" to false): Reject headlines that are purely speculative, future predictions without hard data, general commentary, executive fluff quotes ("plans to", "expects to", "thinks that", "might", "could"), indirect partner mentions, listicles ("3 stocks to watch"), or clickbait.
 
-Rules for 'price_trend' (Directional Bias):
-- 'bullish_up': The headline contains a definite POSITIVE catalyst that drives immediate buying pressure and pushes price UP.
-- 'bearish_down': The headline contains a definite NEGATIVE catalyst that triggers immediate selling pressure and pushes price DOWN.
-(Note: Do NOT predict sideways. If it lacks directional impact, set 'pass' to false).
+Rules for 'category':
+- Set category to "FACT" if "pass" is true.
+- Set category to "SPECULATION" or "NOISE" if "pass" is false, depending on the nature of the headline.
+
+Rules for 'sentiment':
+- 'good': Clear positive catalyst driving price UP.
+- 'bad': Clear negative catalyst driving price DOWN.
+- 'neutral': Use for ANY speculation, predictions, rumors, or if "pass" is false.
 
 Rules for 'target_horizon' (Expected Timeframe):
 - 'intraday': Immediate price jump or drop expected within the trading session.
@@ -93,27 +133,19 @@ Headline: "${textToAnalyze}"`;
   let response: any;
   let outputText = '';
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not defined in env variables");
-    }
-
-    response = await fetchGeminiWithRetry(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
-      {
-        contents: [
-          {
-            parts: [
-              { text: prompt }
-            ]
-          }
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.1,
+    response = await fetchGeminiWithFallback({
+      contents: [
+        {
+          parts: [
+            { text: prompt }
+          ]
         }
+      ],
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.1,
       }
-    );
+    });
 
     if (!response.ok) {
       throw new Error(`Gemini API returned status: ${response.status}`);
@@ -170,29 +202,28 @@ Headline: "${textToAnalyze}"`;
 
 export async function generateAIOutlook(symbol: string, priceChange: number, headlines: string[]): Promise<string> {
   const headlinesText = headlines.length > 0 ? headlines.slice(0, 5).join('; ') : 'No headlines';
-  const prompt = `You are a professional quantitative financial analyst. The stock ${symbol} had an actual price change of ${priceChange.toFixed(2)}% today. The recent news headlines are: "${headlinesText}". Write a concise 2-sentence summary explaining whether the price action matches the news sentiment or if there is a divergence (e.g. Sell on the News, or price dropping despite positive headlines). Be highly specific and objective.`;
+  const prompt = `You are a professional quantitative financial analyst. 
+The stock ${symbol} had an actual price change of ${priceChange.toFixed(2)}% today. 
+The recent news headlines are: "${headlinesText}". 
+
+Write a highly concise, professional 2-sentence summary explaining whether the price action matches the recent news sentiment or if there is a divergence (e.g., Sell on the News, or price dropping despite positive headlines). 
+
+Use markdown bold formatting (e.g., **divergence**, **bullish**, **sell-the-news**, **0.11% gain**) on critical metrics and key insights to make the text extremely easy to read, scan, and understand at a glance. Be highly specific and objective.`;
+
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not defined in env variables");
-    }
-
-    const response = await fetchGeminiWithRetry(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
-      {
-        contents: [
-          {
-            parts: [
-              { text: prompt }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.3,
+    const response = await fetchGeminiWithFallback({
+      contents: [
+        {
+          parts: [
+            { text: prompt }
+          ]
         }
+      ],
+      generationConfig: {
+        temperature: 0.3,
       }
-    );
+    });
 
     if (!response.ok) {
       throw new Error(`Gemini API returned status: ${response.status}`);

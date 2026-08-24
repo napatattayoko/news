@@ -42,14 +42,44 @@ export async function GET(request: NextRequest) {
       orderBy: { publishedAt: 'desc' },
       take: 5,
       select: {
+        id: true,
         headline: true,
       },
     });
 
     const headlines = recentNews.map((n) => n.headline);
+    const newsIds = recentNews.map((n) => n.id).join(',');
+    const priceChangeStr = priceChange.toFixed(2);
+    const newsHash = `${newsIds}|${priceChangeStr}`;
 
-    // 3. Call HF Llama-3 AI Outlook generator
+    // 3. Check database cache
+    const cached = await prisma.stockOutlook.findUnique({
+      where: { symbol },
+    });
+
+    if (cached && cached.newsHash === newsHash) {
+      console.log(`[AI Outlook API] Cache hit for ${symbol}`);
+      return NextResponse.json({ success: true, outlook: cached.outlook });
+    }
+
+    console.log(`[AI Outlook API] Cache miss for ${symbol}. Generating new outlook...`);
+    // 4. Call AI generator
     const outlook = await generateAIOutlook(symbol, priceChange, headlines);
+
+    // 5. Save to cache
+    await prisma.stockOutlook.upsert({
+      where: { symbol },
+      create: {
+        symbol,
+        outlook,
+        newsHash,
+      },
+      update: {
+        outlook,
+        newsHash,
+      },
+    });
+
 
     return NextResponse.json({ success: true, outlook });
   } catch (error: any) {

@@ -22,3 +22,11 @@ model News {
   sources     String
   createdAt   DateTime @default(now())
 }
+
+model StockOutlook {
+  symbol    String   @id
+  outlook   String
+  newsHash  String
+  updatedAt DateTime @updatedAt
+}
+
